@@ -4,10 +4,35 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const os = require('os');
 const sharp = require('sharp');
+const { exiftool } = require('exiftool-vendored');
 
 let mainWindow;
 
 const PRESET_DIR = path.join(os.homedir(), '.snerk', 'presets');
+const RAW_EXTENSIONS = ['.raf', '.arw', '.cr3', '.cr2', '.nef', '.dng', '.orf', '.rw2', '.pef', '.srw'];
+
+function isRawFile(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return RAW_EXTENSIONS.includes(ext);
+}
+
+async function extractRawPreview(rawPath) {
+  try {
+    const tempDir = os.tmpdir();
+    const tempPreviewPath = path.join(tempDir, `preview_${Date.now()}.jpg`);
+
+    await exiftool.extractPreview(rawPath, tempPreviewPath);
+
+    const buffer = await fs.readFile(tempPreviewPath);
+
+    await fs.unlink(tempPreviewPath).catch(() => {});
+
+    return buffer;
+  } catch (error) {
+    console.error('Error extracting RAW preview:', error);
+    throw new Error(`Failed to extract preview from RAW file: ${error.message}`);
+  }
+}
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
@@ -130,20 +155,41 @@ ipcMain.handle('preset:getDirectory', async () => {
 
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
-    const image = sharp(imagePath);
-    const metadata = await image.metadata();
+    let imageBuffer;
+    let metadata;
 
-    const buffer = await image
-      .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 90 })
-      .toBuffer();
+    if (isRawFile(imagePath)) {
+      imageBuffer = await extractRawPreview(imagePath);
+      const image = sharp(imageBuffer);
+      metadata = await image.metadata();
 
-    return {
-      data: buffer.toString('base64'),
-      width: metadata.width,
-      height: metadata.height,
-      format: metadata.format
-    };
+      const processedBuffer = await image
+        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      return {
+        data: processedBuffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: 'raw'
+      };
+    } else {
+      const image = sharp(imagePath);
+      metadata = await image.metadata();
+
+      const buffer = await image
+        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      return {
+        data: buffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: metadata.format
+      };
+    }
   } catch (error) {
     console.error('Error loading image preview:', error);
     throw error;
@@ -152,8 +198,18 @@ ipcMain.handle('image:loadPreview', async (event, imagePath) => {
 
 ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
   try {
-    let image = sharp(imagePath);
-    const metadata = await image.metadata();
+    let imageBuffer;
+    let image;
+    let metadata;
+
+    if (isRawFile(imagePath)) {
+      imageBuffer = await extractRawPreview(imagePath);
+      image = sharp(imageBuffer);
+    } else {
+      image = sharp(imagePath);
+    }
+
+    metadata = await image.metadata();
 
     image = image.resize(2000, 2000, { fit: 'inside', withoutEnlargement: true });
 
@@ -206,7 +262,14 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
 
 ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90) => {
   try {
-    let image = sharp(imagePath);
+    let image;
+
+    if (isRawFile(imagePath)) {
+      const imageBuffer = await extractRawPreview(imagePath);
+      image = sharp(imageBuffer);
+    } else {
+      image = sharp(imagePath);
+    }
 
     if (presetConfig && presetConfig.adjustments) {
       const adj = presetConfig.adjustments;
@@ -268,5 +331,13 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('quit', async () => {
+  try {
+    await exiftool.end();
+  } catch (error) {
+    console.error('Error closing exiftool:', error);
   }
 });
