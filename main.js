@@ -153,6 +153,37 @@ ipcMain.handle('preset:getDirectory', async () => {
   return PRESET_DIR;
 });
 
+async function findAllYamlFiles(dirPath, results = []) {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        await findAllYamlFiles(fullPath, results);
+      } else if (entry.isFile() && entry.name.endsWith('.yaml')) {
+        results.push(fullPath);
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Error finding YAML files:', error);
+    return results;
+  }
+}
+
+ipcMain.handle('preset:findAll', async () => {
+  try {
+    const yamlFiles = await findAllYamlFiles(PRESET_DIR);
+    return yamlFiles;
+  } catch (error) {
+    console.error('Error finding presets:', error);
+    return [];
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;

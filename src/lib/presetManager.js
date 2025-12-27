@@ -6,8 +6,12 @@ class PresetManager {
 
   async loadPresets() {
     try {
-      const presetDir = await window.snerkAPI.getPresetDirectory();
-      await this.scanPresetsRecursive(presetDir);
+      const presetFiles = await window.snerkAPI.findAllPresets();
+
+      for (const filePath of presetFiles) {
+        await this.loadPresetFile(filePath);
+      }
+
       this.organizePresetsByCategory();
       return this.presets;
     } catch (error) {
@@ -16,23 +20,7 @@ class PresetManager {
     }
   }
 
-  async scanPresetsRecursive(dirPath, category = '') {
-    try {
-      const files = await window.snerkAPI.readDirectory(dirPath);
-
-      for (const filePath of files) {
-        const fileName = filePath.split('/').pop();
-
-        if (fileName.endsWith('.yaml')) {
-          await this.loadPresetFile(filePath, category);
-        }
-      }
-    } catch (error) {
-      console.error('Error scanning presets:', error);
-    }
-  }
-
-  async loadPresetFile(filePath, category) {
+  async loadPresetFile(filePath) {
     try {
       const buffer = await window.snerkAPI.readFile(filePath);
       const text = new TextDecoder().decode(buffer);
@@ -40,7 +28,17 @@ class PresetManager {
 
       if (preset && preset.name) {
         preset.filePath = filePath;
-        preset.category = preset.category || category || 'uncategorized';
+
+        if (!preset.category) {
+          const pathParts = filePath.split('/');
+          const presetDirIndex = pathParts.findIndex(part => part === 'presets');
+          if (presetDirIndex >= 0 && pathParts.length > presetDirIndex + 2) {
+            preset.category = pathParts[presetDirIndex + 1];
+          } else {
+            preset.category = 'uncategorized';
+          }
+        }
+
         this.presets.push(preset);
       }
     } catch (error) {

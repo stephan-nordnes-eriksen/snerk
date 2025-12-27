@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   getPresetDirectory: () => ipcRenderer.invoke('preset:getDirectory'),
 
+  findAllPresets: () => ipcRenderer.invoke('preset:findAll'),
+
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),

@@ -110,19 +110,7 @@ footer {
 }
 
 #loadingIndicator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-#loadingIndicator.hidden {
   display: none;
-}
-
-#loadingIndicator progress {
-  margin-bottom: 1rem;
 }
 
 #controls {

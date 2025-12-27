@@ -114,9 +114,6 @@ async function loadCurrentImage() {
   if (!currentImage) return;
 
   try {
-    showLoading(true);
-    elements.mainImage.classList.remove('loaded');
-
     updateImageCounter();
     updateImagePath(currentImage);
 
@@ -127,13 +124,10 @@ async function loadCurrentImage() {
     elements.mainImage.src = imageData.src;
     elements.mainImage.classList.add('loaded');
 
-    showLoading(false);
-
     updateNavigationButtons();
   } catch (error) {
     console.error('Error loading image:', error);
     updateStatus('Error loading image');
-    showLoading(false);
   }
 }
 
