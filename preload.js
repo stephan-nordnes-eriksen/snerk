@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   selectExportFolder: () => ipcRenderer.invoke('dialog:saveFolder'),
 
+  selectXmpFile: () => ipcRenderer.invoke('dialog:openXmpFile'),
+
   readDirectory: (dirPath) => ipcRenderer.invoke('file:readDirectory', dirPath),
 
   readFile: (filePath) => ipcRenderer.invoke('file:readFile', filePath),
@@ -14,6 +16,9 @@ contextBridge.exposeInMainWorld('snerkAPI', {
   getPresetDirectory: () => ipcRenderer.invoke('preset:getDirectory'),
 
   findAllPresets: () => ipcRenderer.invoke('preset:findAll'),
+
+  saveImportedPreset: (presetName, yamlContent) =>
+    ipcRenderer.invoke('preset:saveImported', presetName, yamlContent),
 
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 

@@ -34,6 +34,61 @@ async function extractRawPreview(rawPath) {
   }
 }
 
+function applyTemperature(image, temperature) {
+  // Convert temperature (-100 to +100) to RGB tint
+  const t = temperature / 100;
+  if (t > 0) {
+    // Warm: increase red/orange, reduce blue
+    return image.tint({ r: 255, g: 235 + Math.floor(20 * (1 - t)), b: 200 });
+  } else {
+    // Cool: reduce red, increase blue
+    return image.tint({ r: 200, g: 220, b: 255 });
+  }
+}
+
+function applyTint(image, tint) {
+  // Convert tint (-150 to +150) to green/magenta shift
+  const t = tint / 150;
+  if (t > 0) {
+    // Magenta shift
+    return image.tint({ r: 255, g: 200 + Math.floor(55 * (1 - t)), b: 255 });
+  } else {
+    // Green shift
+    return image.tint({ r: 200 + Math.floor(55 * (1 + t)), g: 255, b: 200 });
+  }
+}
+
+function applyVibrance(image, vibrance) {
+  // Smart saturation (approximation): half the effect of regular saturation
+  const vibranceFactor = 1 + (vibrance / 200);
+  return image.modulate({ saturation: vibranceFactor });
+}
+
+function applyClarity(image, clarity) {
+  // Clarity: mid-tone contrast enhancement
+  const clarityAmount = Math.abs(clarity) / 100;
+  if (clarity > 0) {
+    // Positive: sharpen + increase mid-tone contrast
+    return image
+      .sharpen({ sigma: 0.5 + clarityAmount })
+      .linear(1 + (clarityAmount * 0.2), -(clarityAmount * 10));
+  } else {
+    // Negative: slight blur
+    return image.blur(clarityAmount * 2);
+  }
+}
+
+function applyDehaze(image, dehaze) {
+  // Dehaze: increase contrast and saturation
+  const amount = dehaze / 100;
+  if (amount > 0) {
+    return image
+      .linear(1 + (amount * 0.5), -(amount * 20))
+      .modulate({ saturation: 1 + (amount * 0.3) });
+  }
+  return image;
+}
+
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -115,6 +170,23 @@ ipcMain.handle('dialog:saveFolder', async () => {
   return result.filePaths[0];
 });
 
+ipcMain.handle('dialog:openXmpFile', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [
+      { name: 'XMP Presets', extensions: ['xmp'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    title: 'Import Lightroom XMP Preset'
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  return result.filePaths[0];
+});
+
 ipcMain.handle('file:readDirectory', async (event, dirPath) => {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -181,6 +253,23 @@ ipcMain.handle('preset:findAll', async () => {
   } catch (error) {
     console.error('Error finding presets:', error);
     return [];
+  }
+});
+
+ipcMain.handle('preset:saveImported', async (event, presetName, yamlContent) => {
+  try {
+    const importedDir = path.join(PRESET_DIR, 'imported');
+    await fs.mkdir(importedDir, { recursive: true });
+
+    // Sanitize filename
+    const filename = presetName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.yaml';
+    const filePath = path.join(importedDir, filename);
+
+    await fs.writeFile(filePath, yamlContent, 'utf8');
+    return filePath;
+  } catch (error) {
+    console.error('Error saving imported preset:', error);
+    throw error;
   }
 });
 
@@ -252,8 +341,20 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
         image = image.modulate({ brightness: brightnessMultiplier });
       }
 
+      if (adj.temperature !== undefined && adj.temperature !== 0) {
+        image = applyTemperature(image, adj.temperature);
+      }
+
+      if (adj.tint !== undefined && adj.tint !== 0) {
+        image = applyTint(image, adj.tint);
+      }
+
       if (adj.saturation !== undefined) {
         image = image.modulate({ saturation: adj.saturation });
+      }
+
+      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
+        image = applyVibrance(image, adj.vibrance);
       }
 
       if (adj.contrast !== undefined && adj.contrast !== 1) {
@@ -263,13 +364,29 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
         }
       }
 
+      if (adj.clarity !== undefined && adj.clarity !== 0) {
+        image = applyClarity(image, adj.clarity);
+      }
+
       if (adj.shadows !== undefined || adj.highlights !== undefined) {
         const shadows = (adj.shadows || 0) / 100;
         const highlights = (adj.highlights || 0) / 100;
 
-        image = image.modulate({
-          lightness: shadows > 0 ? 1 + shadows * 0.3 : 1,
-        });
+        if (shadows !== 0) {
+          image = image.modulate({
+            lightness: 1 + shadows * 0.3,
+          });
+        }
+
+        if (highlights !== 0) {
+          if (highlights < 0) {
+            image = image.gamma(1 + Math.abs(highlights) * 0.02);
+          }
+        }
+      }
+
+      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
+        image = applyDehaze(image, adj.dehaze);
       }
     }
 
@@ -310,12 +427,49 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
         image = image.modulate({ brightness: brightnessMultiplier });
       }
 
+      if (adj.temperature !== undefined && adj.temperature !== 0) {
+        image = applyTemperature(image, adj.temperature);
+      }
+
+      if (adj.tint !== undefined && adj.tint !== 0) {
+        image = applyTint(image, adj.tint);
+      }
+
       if (adj.saturation !== undefined) {
         image = image.modulate({ saturation: adj.saturation });
       }
 
+      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
+        image = applyVibrance(image, adj.vibrance);
+      }
+
       if (adj.contrast !== undefined && adj.contrast !== 1) {
         image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
+      }
+
+      if (adj.clarity !== undefined && adj.clarity !== 0) {
+        image = applyClarity(image, adj.clarity);
+      }
+
+      if (adj.shadows !== undefined || adj.highlights !== undefined) {
+        const shadows = (adj.shadows || 0) / 100;
+        const highlights = (adj.highlights || 0) / 100;
+
+        if (shadows !== 0) {
+          image = image.modulate({
+            lightness: 1 + shadows * 0.3,
+          });
+        }
+
+        if (highlights !== 0) {
+          if (highlights < 0) {
+            image = image.gamma(1 + Math.abs(highlights) * 0.02);
+          }
+        }
+      }
+
+      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
+        image = applyDehaze(image, adj.dehaze);
       }
     }
 

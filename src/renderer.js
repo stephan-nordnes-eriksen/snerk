@@ -11,6 +11,7 @@ const state = {
 const elements = {
   openFolderBtn: document.getElementById('openFolder'),
   exportBtn: document.getElementById('exportBtn'),
+  importXmpBtn: document.getElementById('importXmpBtn'),
   mainImage: document.getElementById('mainImage'),
   imageCounter: document.getElementById('imageCounter'),
   imagePath: document.getElementById('imagePath'),
@@ -257,8 +258,41 @@ async function exportImages() {
   }
 }
 
+async function importXmpPreset() {
+  try {
+    updateStatus('Select XMP preset file...');
+    const xmpPath = await window.snerkAPI.selectXmpFile();
+
+    if (!xmpPath) {
+      updateStatus('Import cancelled');
+      return;
+    }
+
+    updateStatus('Reading XMP file...');
+    const buffer = await window.snerkAPI.readFile(xmpPath);
+    const xmpContent = new TextDecoder().decode(buffer);
+
+    updateStatus('Converting preset...');
+    const xmpImporter = new XmpImporter();
+    const preset = xmpImporter.parseXmpToPreset(xmpContent);
+    const yamlContent = xmpImporter.generateYaml(preset);
+
+    updateStatus('Saving preset...');
+    await window.snerkAPI.saveImportedPreset(preset.name, yamlContent);
+
+    updateStatus(`Imported "${preset.name}" successfully`);
+
+    // Reload presets to include the new one
+    await initialize();
+  } catch (error) {
+    console.error('Error importing XMP preset:', error);
+    updateStatus('Error importing XMP preset: ' + error.message);
+  }
+}
+
 elements.openFolderBtn.addEventListener('click', openFolder);
 elements.exportBtn.addEventListener('click', exportImages);
+elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
 
