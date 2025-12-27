@@ -557,6 +557,13 @@ ipcMain.handle('preset:getDirectory', async () => {
   return PRESET_DIR;
 });
 
+ipcMain.handle('folder:openSnerkFolder', async () => {
+  const { shell } = require('electron');
+  const snerkDir = path.join(os.homedir(), '.snerk');
+  await shell.openPath(snerkDir);
+  return snerkDir;
+});
+
 async function findAllYamlFiles(dirPath, results = []) {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });

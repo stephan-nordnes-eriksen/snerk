@@ -26,6 +26,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
   saveExportConfig: (dirPath, filename, content) =>
     ipcRenderer.invoke('exportConfig:save', dirPath, filename, content),
 
+  openSnerkFolder: () => ipcRenderer.invoke('folder:openSnerkFolder'),
+
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),

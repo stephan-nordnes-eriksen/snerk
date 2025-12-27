@@ -58,6 +58,7 @@ const elements = {
   manageExportConfigsBtn: document.getElementById('manageExportConfigsBtn'),
   createPresetBtn: document.getElementById('createPresetBtn'),
   noFilterBtn: document.getElementById('noFilterBtn'),
+  openSnerkFolderBtn: document.getElementById('openSnerkFolderBtn'),
   presetEditorDialog: document.getElementById('presetEditorDialog'),
   closePresetEditor: document.getElementById('closePresetEditor'),
   editorExposure: document.getElementById('editorExposure'),
@@ -752,6 +753,15 @@ elements.exportBtn.addEventListener('click', showExportConfigDialog);
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.createPresetBtn.addEventListener('click', openPresetEditor);
 elements.noFilterBtn.addEventListener('click', () => selectPreset(''));
+elements.openSnerkFolderBtn.addEventListener('click', async () => {
+  try {
+    await window.snerkAPI.openSnerkFolder();
+    updateStatus('Opened Snerk folder');
+  } catch (error) {
+    console.error('Error opening Snerk folder:', error);
+    updateStatus('Error opening folder');
+  }
+});
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
 elements.prevBtn.addEventListener('click', navigatePrevious);
