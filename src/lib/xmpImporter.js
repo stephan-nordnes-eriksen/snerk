@@ -319,16 +319,15 @@ class XmpImporter {
       if (adj.clarity !== undefined) yaml += `  clarity: ${adj.clarity}\n`;
       if (adj.highlights !== undefined) yaml += `  highlights: ${adj.highlights}\n`;
       if (adj.shadows !== undefined) yaml += `  shadows: ${adj.shadows}\n`;
-      if (adj.whites !== undefined) yaml += `  whites: ${adj.whites}  # Not fully implemented\n`;
-      if (adj.blacks !== undefined) yaml += `  blacks: ${adj.blacks}  # Not fully implemented\n`;
+      if (adj.whites !== undefined) yaml += `  whites: ${adj.whites}\n`;
+      if (adj.blacks !== undefined) yaml += `  blacks: ${adj.blacks}\n`;
       if (adj.dehaze !== undefined) yaml += `  dehaze: ${adj.dehaze}\n`;
 
       yaml += '\n';
     }
 
-    // Curves (not implemented, but preserved)
+    // Tone curves
     if (preset.curves) {
-      yaml += '# Tone curves (preserved but not yet implemented)\n';
       yaml += 'curves:\n';
 
       if (preset.curves.rgb) {
@@ -347,9 +346,8 @@ class XmpImporter {
       yaml += '\n';
     }
 
-    // HSL (not implemented, but preserved)
+    // HSL selective color adjustments
     if (preset.hsl && preset.hsl.length > 0) {
-      yaml += '# HSL adjustments (preserved but not yet implemented)\n';
       yaml += 'hsl:\n';
 
       preset.hsl.forEach(adjustment => {
@@ -362,16 +360,14 @@ class XmpImporter {
       yaml += '\n';
     }
 
-    // Grain (not implemented, but preserved)
+    // Film grain
     if (preset.grain !== undefined) {
-      yaml += `# Film grain (preserved but not yet implemented)\n`;
       yaml += `grain: ${preset.grain}\n`;
       yaml += '\n';
     }
 
-    // Vignette (not implemented, but preserved)
+    // Vignette
     if (preset.vignette !== undefined) {
-      yaml += `# Vignette (preserved but not yet implemented)\n`;
       yaml += `vignette: ${preset.vignette}\n`;
     }
 

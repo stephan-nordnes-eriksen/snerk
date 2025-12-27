@@ -89,6 +89,304 @@ function applyDehaze(image, dehaze) {
   return image;
 }
 
+function applyWhites(image, whites) {
+  // Whites: adjust bright tones using gamma
+  // Positive values brighten, negative values darken
+  if (whites > 0) {
+    // Brighten highlights more than midtones
+    return image.gamma(1 - (whites / 100) * 0.15);
+  } else if (whites < 0) {
+    // Darken highlights
+    return image.gamma(1 - (whites / 100) * 0.15);
+  }
+  return image;
+}
+
+function applyBlacks(image, blacks) {
+  // Blacks: adjust dark tones
+  // Positive values lighten, negative values darken
+  const amount = blacks / 100;
+  // Use linear adjustment with offset to primarily affect dark areas
+  return image.linear(1, amount * 20);
+}
+
+async function applyCurves(image, curves) {
+  // Apply tone curves using raw pixel manipulation
+  // This creates a lookup table from the curve points and applies it to each channel
+
+  if (!curves) return image;
+
+  // Build lookup tables for each channel
+  const rgbLut = curves.rgb ? buildLookupTable(curves.rgb) : null;
+  const rLut = curves.r ? buildLookupTable(curves.r) : null;
+  const gLut = curves.g ? buildLookupTable(curves.g) : null;
+  const bLut = curves.b ? buildLookupTable(curves.b) : null;
+
+  // If we have curve data, apply via raw buffer manipulation
+  if (rgbLut || rLut || gLut || bLut) {
+    const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+    const channels = info.channels;
+
+    for (let i = 0; i < data.length; i += channels) {
+      // Apply RGB curve to all channels
+      if (rgbLut) {
+        data[i] = rgbLut[data[i]];         // R
+        data[i + 1] = rgbLut[data[i + 1]]; // G
+        data[i + 2] = rgbLut[data[i + 2]]; // B
+      }
+
+      // Apply individual channel curves
+      if (rLut) data[i] = rLut[data[i]];
+      if (gLut) data[i + 1] = gLut[data[i + 1]];
+      if (bLut) data[i + 2] = bLut[data[i + 2]];
+    }
+
+    return sharp(data, {
+      raw: {
+        width: info.width,
+        height: info.height,
+        channels: channels
+      }
+    });
+  }
+
+  return image;
+}
+
+function buildLookupTable(curvePoints) {
+  // Build a 256-element lookup table from curve points
+  // curvePoints is an array of [x, y] pairs like [[0, 0], [128, 140], [255, 255]]
+
+  const lut = new Uint8Array(256);
+
+  // Sort points by x value
+  const sorted = curvePoints.sort((a, b) => a[0] - b[0]);
+
+  for (let i = 0; i < 256; i++) {
+    // Find the two points that bracket this input value
+    let x1 = 0, y1 = 0, x2 = 255, y2 = 255;
+
+    for (let j = 0; j < sorted.length - 1; j++) {
+      if (sorted[j][0] <= i && sorted[j + 1][0] >= i) {
+        x1 = sorted[j][0];
+        y1 = sorted[j][1];
+        x2 = sorted[j + 1][0];
+        y2 = sorted[j + 1][1];
+        break;
+      }
+    }
+
+    // Linear interpolation between the two points
+    if (x2 - x1 !== 0) {
+      const t = (i - x1) / (x2 - x1);
+      lut[i] = Math.round(y1 + t * (y2 - y1));
+    } else {
+      lut[i] = y1;
+    }
+
+    // Clamp to valid range
+    lut[i] = Math.max(0, Math.min(255, lut[i]));
+  }
+
+  return lut;
+}
+
+async function applyHsl(image, hslAdjustments) {
+  // Apply HSL selective color adjustments
+  // This is a simplified implementation that approximates Lightroom's HSL
+
+  if (!hslAdjustments || hslAdjustments.length === 0) return image;
+
+  // Define hue ranges for each color (in degrees, 0-360)
+  const hueRanges = {
+    red: [0, 30, 330, 360],      // Wraps around
+    orange: [30, 60],
+    yellow: [60, 90],
+    green: [90, 150],
+    aqua: [150, 210],
+    blue: [210, 270],
+    purple: [270, 300],
+    magenta: [300, 330]
+  };
+
+  // Convert to raw buffer for pixel-level manipulation
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+  const channels = info.channels;
+
+  for (let i = 0; i < data.length; i += channels) {
+    const r = data[i] / 255;
+    const g = data[i + 1] / 255;
+    const b = data[i + 2] / 255;
+
+    // Convert RGB to HSL
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+
+    // Convert hue to degrees
+    h = h * 360;
+
+    // Apply HSL adjustments for matching hue ranges
+    for (const adj of hslAdjustments) {
+      const range = hueRanges[adj.color];
+      if (!range) continue;
+
+      let inRange = false;
+      if (range.length === 4) {
+        // Wrapping range (red)
+        inRange = (h >= range[0] && h <= range[1]) || (h >= range[2] && h <= range[3]);
+      } else {
+        inRange = h >= range[0] && h <= range[1];
+      }
+
+      if (inRange) {
+        // Apply hue shift
+        if (adj.hue !== undefined) {
+          h = (h + adj.hue) % 360;
+          if (h < 0) h += 360;
+        }
+
+        // Apply saturation adjustment
+        if (adj.sat !== undefined) {
+          s = Math.max(0, Math.min(1, s * (1 + adj.sat / 100)));
+        }
+
+        // Apply luminance adjustment
+        if (adj.lum !== undefined) {
+          l = Math.max(0, Math.min(1, l + (adj.lum / 100) * 0.5));
+        }
+      }
+    }
+
+    // Convert HSL back to RGB
+    h = h / 360;
+    let r2, g2, b2;
+
+    if (s === 0) {
+      r2 = g2 = b2 = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r2 = hue2rgb(p, q, h + 1/3);
+      g2 = hue2rgb(p, q, h);
+      b2 = hue2rgb(p, q, h - 1/3);
+    }
+
+    // Write back to buffer
+    data[i] = Math.round(r2 * 255);
+    data[i + 1] = Math.round(g2 * 255);
+    data[i + 2] = Math.round(b2 * 255);
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: channels
+    }
+  });
+}
+
+async function applyGrain(image, grainAmount) {
+  // Apply film grain effect
+  if (!grainAmount || grainAmount <= 0) return image;
+
+  const metadata = await image.metadata();
+  const { width, height } = metadata;
+
+  // Create a noise pattern
+  // We'll use a simple approach: create a grayscale noise image and overlay it
+  const noiseIntensity = Math.round((grainAmount / 100) * 30); // 0-30 intensity
+
+  // Generate random noise buffer
+  const noiseSize = width * height * 4; // RGBA
+  const noiseBuffer = Buffer.alloc(noiseSize);
+
+  for (let i = 0; i < noiseSize; i += 4) {
+    // Random grayscale value centered around 128
+    const noise = 128 + (Math.random() - 0.5) * noiseIntensity * 2;
+    const value = Math.max(0, Math.min(255, noise));
+    noiseBuffer[i] = value;     // R
+    noiseBuffer[i + 1] = value; // G
+    noiseBuffer[i + 2] = value; // B
+    noiseBuffer[i + 3] = 255;   // A
+  }
+
+  // Create noise image
+  const noiseImage = sharp(noiseBuffer, {
+    raw: {
+      width: width,
+      height: height,
+      channels: 4
+    }
+  });
+
+  // Composite the noise with overlay blend mode
+  return image.composite([{
+    input: await noiseImage.png().toBuffer(),
+    blend: 'overlay',
+    opacity: grainAmount / 100 * 0.3 // Scale opacity
+  }]);
+}
+
+async function applyVignette(image, vignetteAmount) {
+  // Apply vignette effect
+  if (!vignetteAmount || vignetteAmount === 0) return image;
+
+  const metadata = await image.metadata();
+  const { width, height } = metadata;
+
+  // Create radial gradient for vignette
+  // SVG radial gradient approach
+  const intensity = Math.abs(vignetteAmount) / 100;
+  const brightness = vignetteAmount < 0 ? 0 : 255; // Negative = darken, positive = lighten
+
+  const svgGradient = `
+    <svg width="${width}" height="${height}">
+      <defs>
+        <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" style="stop-color:rgb(128,128,128);stop-opacity:0" />
+          <stop offset="70%" style="stop-color:rgb(128,128,128);stop-opacity:0" />
+          <stop offset="100%" style="stop-color:rgb(${brightness},${brightness},${brightness});stop-opacity:${intensity}" />
+        </radialGradient>
+      </defs>
+      <rect width="${width}" height="${height}" fill="url(#vignette)" />
+    </svg>
+  `;
+
+  const vignetteBuffer = Buffer.from(svgGradient);
+
+  // Composite vignette with multiply blend mode for darkening
+  const blendMode = vignetteAmount < 0 ? 'multiply' : 'screen';
+
+  return image.composite([{
+    input: vignetteBuffer,
+    blend: blendMode
+  }]);
+}
+
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -385,14 +683,37 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
         }
       }
 
+      if (adj.whites !== undefined && adj.whites !== 0) {
+        image = applyWhites(image, adj.whites);
+      }
+
+      if (adj.blacks !== undefined && adj.blacks !== 0) {
+        image = applyBlacks(image, adj.blacks);
+      }
+
       if (adj.dehaze !== undefined && adj.dehaze !== 0) {
         image = applyDehaze(image, adj.dehaze);
       }
     }
 
+    // Apply tone curves
     if (presetConfig.curves) {
-      // Apply curves if needed - simplified version
-      // For full implementation, we'd need to apply custom curves
+      image = await applyCurves(image, presetConfig.curves);
+    }
+
+    // Apply HSL selective color adjustments
+    if (presetConfig.hsl) {
+      image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply grain
+    if (presetConfig.grain) {
+      image = await applyGrain(image, presetConfig.grain);
+    }
+
+    // Apply vignette
+    if (presetConfig.vignette) {
+      image = await applyVignette(image, presetConfig.vignette);
     }
 
     const buffer = await image.jpeg({ quality: 90 }).toBuffer();
@@ -468,9 +789,37 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
         }
       }
 
+      if (adj.whites !== undefined && adj.whites !== 0) {
+        image = applyWhites(image, adj.whites);
+      }
+
+      if (adj.blacks !== undefined && adj.blacks !== 0) {
+        image = applyBlacks(image, adj.blacks);
+      }
+
       if (adj.dehaze !== undefined && adj.dehaze !== 0) {
         image = applyDehaze(image, adj.dehaze);
       }
+    }
+
+    // Apply tone curves
+    if (presetConfig && presetConfig.curves) {
+      image = await applyCurves(image, presetConfig.curves);
+    }
+
+    // Apply HSL selective color adjustments
+    if (presetConfig && presetConfig.hsl) {
+      image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply grain
+    if (presetConfig && presetConfig.grain) {
+      image = await applyGrain(image, presetConfig.grain);
+    }
+
+    // Apply vignette
+    if (presetConfig && presetConfig.vignette) {
+      image = await applyVignette(image, presetConfig.vignette);
     }
 
     const formatOptions = {
