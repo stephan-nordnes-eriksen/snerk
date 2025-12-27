@@ -872,64 +872,91 @@ function endPan() {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+  // Don't handle shortcuts when in input fields or dialogs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
     return;
   }
+
+  // Check if any dialog is open
+  const isDialogOpen =
+    elements.exportConfigDialog.open ||
+    elements.exportProgressDialog.open ||
+    elements.renameDialog.open ||
+    elements.presetEditorDialog.open;
 
   switch (e.key) {
     case ' ':
       e.preventDefault();
-      toggleUI();
+      // Only toggle UI if no dialog is open
+      if (!isDialogOpen) {
+        toggleUI();
+      }
       break;
     case 'r':
     case 'R':
-      e.preventDefault();
-      resetZoom();
+      if (!isDialogOpen) {
+        e.preventDefault();
+        resetZoom();
+      }
       break;
     case '+':
     case '=':
-      e.preventDefault();
-      zoomIn();
+      if (!isDialogOpen) {
+        e.preventDefault();
+        zoomIn();
+      }
       break;
     case '-':
     case '_':
-      e.preventDefault();
-      zoomOut();
+      if (!isDialogOpen) {
+        e.preventDefault();
+        zoomOut();
+      }
       break;
     case 'ArrowLeft':
-      e.preventDefault();
-      navigatePrevious();
-      resetZoom();
+      if (!isDialogOpen) {
+        e.preventDefault();
+        navigatePrevious();
+        resetZoom();
+      }
       break;
     case 'ArrowRight':
-      e.preventDefault();
-      navigateNext();
-      resetZoom();
+      if (!isDialogOpen) {
+        e.preventDefault();
+        navigateNext();
+        resetZoom();
+      }
       break;
     case '0':
-      e.preventDefault();
-      selectPreset('');
+      if (!isDialogOpen) {
+        e.preventDefault();
+        selectPreset('');
+      }
       break;
     default:
       if (e.key >= '1' && e.key <= '9') {
-        e.preventDefault();
-        const index = parseInt(e.key) - 1;
-        const presets = state.presets;
-        if (index < presets.length) {
-          selectPreset(presets[index].name);
+        if (!isDialogOpen) {
+          e.preventDefault();
+          const index = parseInt(e.key) - 1;
+          const presets = state.presets;
+          if (index < presets.length) {
+            selectPreset(presets[index].name);
+          }
         }
       }
   }
 
-  if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
-    e.preventDefault();
-    openFolder();
-  }
+  if (!isDialogOpen) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+      e.preventDefault();
+      openFolder();
+    }
 
-  if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
-    e.preventDefault();
-    if (!elements.exportBtn.disabled) {
-      showExportConfigDialog();
+    if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+      e.preventDefault();
+      if (!elements.exportBtn.disabled) {
+        showExportConfigDialog();
+      }
     }
   }
 });
