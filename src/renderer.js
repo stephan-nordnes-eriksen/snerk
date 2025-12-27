@@ -29,7 +29,6 @@ const elements = {
   imagePath: document.getElementById('imagePath'),
   prevBtn: document.getElementById('prevImage'),
   nextBtn: document.getElementById('nextImage'),
-  presetSelect: document.getElementById('presetSelect'),
   presetCategories: document.getElementById('presetCategories'),
   status: document.getElementById('status'),
   emptyState: document.getElementById('emptyState'),
@@ -58,6 +57,7 @@ const elements = {
   exportProgressDialog: document.getElementById('exportProgressDialog'),
   manageExportConfigsBtn: document.getElementById('manageExportConfigsBtn'),
   createPresetBtn: document.getElementById('createPresetBtn'),
+  noFilterBtn: document.getElementById('noFilterBtn'),
   presetEditorDialog: document.getElementById('presetEditorDialog'),
   closePresetEditor: document.getElementById('closePresetEditor'),
   editorExposure: document.getElementById('editorExposure'),
@@ -101,8 +101,6 @@ async function initialize() {
 function renderPresets() {
   const categories = presetManager.getPresetsByCategory();
 
-  elements.presetSelect.innerHTML = '<option value="">No preset</option>';
-
   elements.presetCategories.innerHTML = '';
 
   for (const [category, presets] of Object.entries(categories)) {
@@ -117,11 +115,6 @@ function renderPresets() {
     buttonContainer.className = 'preset-buttons';
 
     for (const preset of presets) {
-      const option = document.createElement('option');
-      option.value = preset.name;
-      option.textContent = preset.name;
-      elements.presetSelect.appendChild(option);
-
       const presetRow = document.createElement('div');
       presetRow.className = 'preset-row';
 
@@ -251,11 +244,9 @@ async function selectPreset(presetName) {
 
   if (!preset) {
     state.currentPreset = null;
-    elements.presetSelect.value = '';
     clearActivePresetButtons();
   } else {
     state.currentPreset = preset;
-    elements.presetSelect.value = presetName;
     setActivePresetButton(presetName);
   }
 
@@ -760,6 +751,7 @@ elements.openFolderBtn.addEventListener('click', openFolder);
 elements.exportBtn.addEventListener('click', showExportConfigDialog);
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.createPresetBtn.addEventListener('click', openPresetEditor);
+elements.noFilterBtn.addEventListener('click', () => selectPreset(''));
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
 elements.prevBtn.addEventListener('click', navigatePrevious);
@@ -773,10 +765,6 @@ elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
 elements.closePresetEditor.addEventListener('click', () => {
   elements.presetEditorDialog.close();
   loadCurrentImage();
-});
-
-elements.presetSelect.addEventListener('change', (e) => {
-  selectPreset(e.target.value);
 });
 
 elements.exportQuality.addEventListener('input', (e) => {
