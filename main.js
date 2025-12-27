@@ -35,26 +35,56 @@ async function extractRawPreview(rawPath) {
 }
 
 function applyTemperature(image, temperature) {
-  // Convert temperature (-100 to +100) to RGB tint
-  const t = temperature / 100;
-  if (t > 0) {
-    // Warm: increase red/orange, reduce blue
-    return image.tint({ r: 255, g: 235 + Math.floor(20 * (1 - t)), b: 200 });
+  // Temperature adjustment using color balance (rechannel)
+  // Positive = warm (more red/yellow), Negative = cool (more blue)
+  if (temperature === 0) return image;
+
+  const amount = temperature / 100;
+
+  if (amount > 0) {
+    // Warm: boost red, reduce blue
+    const redMultiplier = 1 + (amount * 0.15);
+    const blueMultiplier = 1 - (amount * 0.15);
+    return image.recomb([
+      [redMultiplier, 0, 0],
+      [0, 1, 0],
+      [0, 0, blueMultiplier]
+    ]);
   } else {
-    // Cool: reduce red, increase blue
-    return image.tint({ r: 200, g: 220, b: 255 });
+    // Cool: reduce red, boost blue
+    const redMultiplier = 1 + (amount * 0.15);  // amount is negative, so this reduces
+    const blueMultiplier = 1 - (amount * 0.15);  // amount is negative, so this boosts
+    return image.recomb([
+      [redMultiplier, 0, 0],
+      [0, 1, 0],
+      [0, 0, blueMultiplier]
+    ]);
   }
 }
 
 function applyTint(image, tint) {
-  // Convert tint (-150 to +150) to green/magenta shift
-  const t = tint / 150;
-  if (t > 0) {
-    // Magenta shift
-    return image.tint({ r: 255, g: 200 + Math.floor(55 * (1 - t)), b: 255 });
+  // Tint adjustment: green/magenta balance
+  // Positive = magenta, Negative = green
+  if (tint === 0) return image;
+
+  const amount = tint / 150;
+
+  if (amount > 0) {
+    // Magenta: boost red and blue, reduce green
+    const greenMultiplier = 1 - (amount * 0.1);
+    return image.recomb([
+      [1, 0, 0],
+      [0, greenMultiplier, 0],
+      [0, 0, 1]
+    ]);
   } else {
-    // Green shift
-    return image.tint({ r: 200 + Math.floor(55 * (1 + t)), g: 255, b: 200 });
+    // Green: boost green, reduce red and blue slightly
+    const greenMultiplier = 1 - (amount * 0.1);  // amount is negative, so this boosts
+    return image.recomb([
+      [1, 0, 0],
+      [0, greenMultiplier, 0],
+      [0, 0, 1]
+    ]);
   }
 }
 
