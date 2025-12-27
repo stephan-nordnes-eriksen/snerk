@@ -2,6 +2,7 @@ const fileManager = new FileManager();
 const presetManager = new PresetManager();
 const imageProcessor = new ImageProcessor();
 const exportConfigManager = new ExportConfigManager();
+const settingsManager = new SettingsManager();
 
 const state = {
   currentFolder: null,
@@ -90,18 +91,33 @@ const elements = {
   copyToCustomBtn: document.getElementById('copyToCustomBtn'),
   updatePresetBtn: document.getElementById('updatePresetBtn'),
   savePresetEditorBtn: document.getElementById('savePresetEditorBtn'),
+  settingsBtn: document.getElementById('settingsBtn'),
+  settingsDialog: document.getElementById('settingsDialog'),
+  settingsRenderingMode: document.getElementById('settingsRenderingMode'),
+  settingsFallbackToSharp: document.getElementById('settingsFallbackToSharp'),
+  webgpuStatusText: document.getElementById('webgpuStatusText'),
+  settingsSaveBtn: document.getElementById('settingsSaveBtn'),
+  settingsCancelBtn: document.getElementById('settingsCancelBtn'),
 };
 
 async function initialize() {
   try {
+    updateStatus('Initializing settings...');
+    await settingsManager.initialize();
+
+    updateStatus('Initializing image processor...');
+    await imageProcessor.initialize(settingsManager);
+
     updateStatus('Loading presets...');
     state.presets = await presetManager.loadPresets();
     renderPresets();
     await loadExportConfigs();
-    updateStatus('Ready');
+
+    const mode = settingsManager.getRenderingMode();
+    updateStatus(`Ready (${mode} rendering)`);
   } catch (error) {
     console.error('Error initializing:', error);
-    updateStatus('Error loading presets');
+    updateStatus('Error during initialization');
   }
 }
 
@@ -518,6 +534,49 @@ function showAlert(message) {
 
     elements.renameDialog.showModal();
   });
+}
+
+async function openSettings() {
+  elements.settingsRenderingMode.value = settingsManager.settings.rendering.mode;
+  elements.settingsFallbackToSharp.checked = settingsManager.settings.rendering.fallbackToSharp;
+
+  if (settingsManager.isWebGPUAvailable()) {
+    elements.webgpuStatusText.textContent = 'Available';
+    elements.webgpuStatusText.style.color = 'green';
+  } else {
+    elements.webgpuStatusText.textContent = 'Not Available';
+    elements.webgpuStatusText.style.color = 'red';
+  }
+
+  elements.settingsDialog.showModal();
+}
+
+async function saveSettings() {
+  const oldMode = settingsManager.getRenderingMode();
+
+  settingsManager.settings.rendering.mode = elements.settingsRenderingMode.value;
+  settingsManager.settings.rendering.fallbackToSharp = elements.settingsFallbackToSharp.checked;
+
+  try {
+    await settingsManager.saveSettings();
+    await settingsManager.initialize();
+
+    const newMode = settingsManager.getRenderingMode();
+
+    if (oldMode !== newMode) {
+      await imageProcessor.initialize(settingsManager);
+      updateStatus(`Switched to ${newMode} rendering`);
+
+      if (fileManager.getCurrentImage()) {
+        await loadCurrentImage();
+      }
+    }
+
+    elements.settingsDialog.close();
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    await showAlert('Error saving settings: ' + error.message);
+  }
 }
 
 async function renamePreset(preset) {
@@ -945,6 +1004,11 @@ elements.githubLink.addEventListener('click', async (e) => {
   } catch (error) {
     console.error('Error opening GitHub link:', error);
   }
+});
+elements.settingsBtn.addEventListener('click', openSettings);
+elements.settingsSaveBtn.addEventListener('click', saveSettings);
+elements.settingsCancelBtn.addEventListener('click', () => {
+  elements.settingsDialog.close();
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);

@@ -28,6 +28,7 @@
         <ul>
           <li><button id="openFolder" class="secondary">Open Folder</button></li>
           <li><button id="exportBtn" class="contrast" disabled>Export All</button></li>
+          <li><button id="settingsBtn" class="outline secondary">Settings</button></li>
         </ul>
       </nav>
     </header>
@@ -234,11 +235,41 @@
     </article>
   </dialog>
 
+  <dialog id="settingsDialog">
+    <article>
+      <header>
+        <h3>Settings</h3>
+      </header>
+      <div>
+        <label>
+          Rendering Mode
+          <select id="settingsRenderingMode">
+            <option value="webgpu">WebGPU (GPU Accelerated)</option>
+            <option value="sharp">Sharp (CPU)</option>
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" id="settingsFallbackToSharp">
+          Fallback to Sharp if WebGPU unavailable
+        </label>
+        <div id="webgpuStatus" style="margin-top: 1rem; padding: 0.5rem; background: var(--pico-background-color);">
+          <small><strong>WebGPU Status:</strong> <span id="webgpuStatusText">Checking...</span></small>
+        </div>
+      </div>
+      <footer>
+        <button id="settingsCancelBtn" class="secondary">Cancel</button>
+        <button id="settingsSaveBtn">Save</button>
+      </footer>
+    </article>
+  </dialog>
+
   <script src="lib/fileManager.js"></script>
   <script src="lib/presetManager.js"></script>
   <script src="lib/imageProcessor.js"></script>
   <script src="lib/xmpImporter.js"></script>
   <script src="lib/exportConfigManager.js"></script>
+  <script src="lib/settingsManager.js"></script>
+  <script src="lib/webgpuProcessor.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

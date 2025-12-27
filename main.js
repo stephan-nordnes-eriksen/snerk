@@ -902,6 +902,34 @@ ipcMain.handle('exportConfig:save', async (event, dirPath, filename, content) =>
   }
 });
 
+ipcMain.handle('settings:getPath', async () => {
+  const SETTINGS_FILE = path.join(os.homedir(), '.snerk', 'settings.json');
+  return SETTINGS_FILE;
+});
+
+ipcMain.handle('settings:load', async () => {
+  try {
+    const SETTINGS_FILE = path.join(os.homedir(), '.snerk', 'settings.json');
+    const buffer = await fs.readFile(SETTINGS_FILE);
+    return buffer;
+  } catch (error) {
+    return null;
+  }
+});
+
+ipcMain.handle('settings:save', async (event, settingsJson) => {
+  try {
+    const snerkDir = path.join(os.homedir(), '.snerk');
+    await fs.mkdir(snerkDir, { recursive: true });
+    const SETTINGS_FILE = path.join(snerkDir, 'settings.json');
+    await fs.writeFile(SETTINGS_FILE, settingsJson, 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;

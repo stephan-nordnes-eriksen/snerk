@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld('snerkAPI', {
   saveExportConfig: (dirPath, filename, content) =>
     ipcRenderer.invoke('exportConfig:save', dirPath, filename, content),
 
+  getSettingsPath: () => ipcRenderer.invoke('settings:getPath'),
+
+  loadSettings: () => ipcRenderer.invoke('settings:load'),
+
+  saveSettings: (settingsJson) => ipcRenderer.invoke('settings:save', settingsJson),
+
   openSnerkFolder: () => ipcRenderer.invoke('folder:openSnerkFolder'),
 
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

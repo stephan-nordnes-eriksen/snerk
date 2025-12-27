@@ -1,11 +1,23 @@
 class ImageProcessor {
   constructor() {
     this.cache = new Map();
+    this.settingsManager = null;
+    this.webgpuProcessor = null;
+  }
+
+  async initialize(settingsManager) {
+    this.settingsManager = settingsManager;
+
+    if (settingsManager.getRenderingMode() === 'webgpu') {
+      this.webgpuProcessor = new WebGPUProcessor();
+      await this.webgpuProcessor.initialize();
+    }
   }
 
   async loadImage(imagePath) {
     try {
-      const cacheKey = `preview_${imagePath}`;
+      const mode = this.settingsManager ? this.settingsManager.getRenderingMode() : 'sharp';
+      const cacheKey = `${mode}_preview_${imagePath}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
@@ -13,12 +25,17 @@ class ImageProcessor {
 
       const result = await window.snerkAPI.loadImagePreview(imagePath);
 
-      const imageData = {
-        src: `data:image/jpeg;base64,${result.data}`,
-        width: result.width,
-        height: result.height,
-        format: result.format
-      };
+      let imageData;
+      if (mode === 'webgpu' && this.webgpuProcessor) {
+        imageData = await this.webgpuProcessor.processImage(result.data, null);
+      } else {
+        imageData = {
+          src: `data:image/jpeg;base64,${result.data}`,
+          width: result.width,
+          height: result.height,
+          format: result.format
+        };
+      }
 
       this.cache.set(cacheKey, imageData);
 
@@ -35,19 +52,25 @@ class ImageProcessor {
         return await this.loadImage(imagePath);
       }
 
-      const cacheKey = `preset_${imagePath}_${JSON.stringify(presetConfig)}`;
+      const mode = this.settingsManager ? this.settingsManager.getRenderingMode() : 'sharp';
+      const cacheKey = `${mode}_preset_${imagePath}_${JSON.stringify(presetConfig)}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
-      const result = await window.snerkAPI.applyPreset(imagePath, presetConfig);
-
-      const imageData = {
-        src: `data:image/jpeg;base64,${result.data}`,
-        width: result.width,
-        height: result.height
-      };
+      let imageData;
+      if (mode === 'webgpu' && this.webgpuProcessor) {
+        const result = await window.snerkAPI.loadImagePreview(imagePath);
+        imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
+      } else {
+        const result = await window.snerkAPI.applyPreset(imagePath, presetConfig);
+        imageData = {
+          src: `data:image/jpeg;base64,${result.data}`,
+          width: result.width,
+          height: result.height
+        };
+      }
 
       this.cache.set(cacheKey, imageData);
 
