@@ -43,6 +43,11 @@ const elements = {
   uiOverlay: document.getElementById('uiOverlay'),
   presetPanel: document.getElementById('presetPanel'),
   togglePresetPanel: document.getElementById('togglePresetPanel'),
+  renameDialog: document.getElementById('renameDialog'),
+  renameDialogTitle: document.getElementById('renameDialogTitle'),
+  renameInput: document.getElementById('renameInput'),
+  renameConfirmBtn: document.getElementById('renameConfirmBtn'),
+  renameCancelBtn: document.getElementById('renameCancelBtn'),
 };
 
 async function initialize() {
@@ -299,37 +304,128 @@ function getUniquePresetName(baseName, existingNames) {
   return name;
 }
 
+function showRenameDialog(title, defaultValue = '') {
+  return new Promise((resolve) => {
+    elements.renameDialogTitle.textContent = title;
+    elements.renameInput.value = defaultValue;
+
+    const handleConfirm = () => {
+      const value = elements.renameInput.value.trim();
+      cleanup();
+      resolve(value);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancel();
+      }
+    };
+
+    const cleanup = () => {
+      elements.renameConfirmBtn.removeEventListener('click', handleConfirm);
+      elements.renameCancelBtn.removeEventListener('click', handleCancel);
+      elements.renameInput.removeEventListener('keydown', handleKeydown);
+      elements.renameDialog.close();
+    };
+
+    elements.renameConfirmBtn.addEventListener('click', handleConfirm);
+    elements.renameCancelBtn.addEventListener('click', handleCancel);
+    elements.renameInput.addEventListener('keydown', handleKeydown);
+
+    elements.renameDialog.showModal();
+    elements.renameInput.focus();
+    elements.renameInput.select();
+  });
+}
+
+function showAlert(message) {
+  // Use the rename dialog for alerts too
+  return new Promise((resolve) => {
+    elements.renameDialogTitle.textContent = 'Alert';
+    elements.renameInput.style.display = 'none';
+
+    const messageEl = document.createElement('p');
+    messageEl.textContent = message;
+    messageEl.style.margin = '1rem 0';
+
+    const contentDiv = elements.renameDialog.querySelector('div');
+    const originalContent = contentDiv.innerHTML;
+    contentDiv.innerHTML = '';
+    contentDiv.appendChild(messageEl);
+
+    elements.renameConfirmBtn.textContent = 'OK';
+    elements.renameCancelBtn.style.display = 'none';
+
+    const handleConfirm = () => {
+      cleanup();
+      resolve();
+    };
+
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        e.preventDefault();
+        handleConfirm();
+      }
+    };
+
+    const cleanup = () => {
+      elements.renameConfirmBtn.removeEventListener('click', handleConfirm);
+      document.removeEventListener('keydown', handleKeydown);
+      elements.renameDialog.close();
+
+      // Restore original content
+      contentDiv.innerHTML = originalContent;
+      elements.renameInput.style.display = '';
+      elements.renameConfirmBtn.textContent = 'OK';
+      elements.renameCancelBtn.style.display = '';
+    };
+
+    elements.renameConfirmBtn.addEventListener('click', handleConfirm);
+    document.addEventListener('keydown', handleKeydown);
+
+    elements.renameDialog.showModal();
+  });
+}
+
 async function renamePreset(preset) {
   try {
-    const newName = prompt('Enter new preset name:', preset.name);
-    if (!newName || newName.trim() === '') {
+    const newName = await showRenameDialog('Rename Preset', preset.name);
+    if (!newName || newName === '') {
       return;
     }
 
-    const trimmedName = newName.trim();
-    if (trimmedName === preset.name) {
+    if (newName === preset.name) {
       return; // No change
     }
 
     // Check for conflicts
     const existingNames = state.presets.map(p => p.name).filter(n => n !== preset.name);
-    if (existingNames.includes(trimmedName)) {
-      alert('A preset with this name already exists');
+    if (existingNames.includes(newName)) {
+      await showAlert('A preset with this name already exists');
       return;
     }
 
     updateStatus('Renaming preset...');
 
-    await window.snerkAPI.renamePreset(preset.filePath, trimmedName);
+    await window.snerkAPI.renamePreset(preset.filePath, newName);
 
-    updateStatus(`Renamed to "${trimmedName}" successfully`);
+    updateStatus(`Renamed to "${newName}" successfully`);
 
     // Reload presets
     await initialize();
   } catch (error) {
     console.error('Error renaming preset:', error);
     updateStatus('Error renaming preset: ' + error.message);
-    alert('Error renaming preset: ' + error.message);
+    await showAlert('Error renaming preset: ' + error.message);
   }
 }
 
@@ -355,14 +451,14 @@ async function importXmpPreset() {
     const preset = xmpImporter.parseXmpToPreset(xmpContent, filename);
 
     // Prompt user to customize the name
-    const customName = prompt('Enter preset name:', preset.name);
+    const customName = await showRenameDialog('Import Preset - Enter Name', preset.name);
     if (customName === null) {
       updateStatus('Import cancelled');
       return;
     }
 
     // Use custom name if provided, otherwise use default
-    const desiredName = customName.trim() || preset.name;
+    const desiredName = customName || preset.name;
 
     // Check for conflicts and get unique name
     const existingNames = state.presets.map(p => p.name);

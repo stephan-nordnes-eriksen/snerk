@@ -255,6 +255,20 @@ footer {
   margin-bottom: 1rem;
 }
 
+#renameDialog article {
+  max-width: 400px;
+}
+
+#renameDialog footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+#renameDialog footer button {
+  margin: 0;
+}
+
 .hidden {
   display: none;
 }
