@@ -57,6 +57,32 @@ const elements = {
   confirmExportBtn: document.getElementById('confirmExportBtn'),
   exportProgressDialog: document.getElementById('exportProgressDialog'),
   manageExportConfigsBtn: document.getElementById('manageExportConfigsBtn'),
+  createPresetBtn: document.getElementById('createPresetBtn'),
+  presetEditorDialog: document.getElementById('presetEditorDialog'),
+  closePresetEditor: document.getElementById('closePresetEditor'),
+  editorExposure: document.getElementById('editorExposure'),
+  editorExposureValue: document.getElementById('editorExposureValue'),
+  editorContrast: document.getElementById('editorContrast'),
+  editorContrastValue: document.getElementById('editorContrastValue'),
+  editorSaturation: document.getElementById('editorSaturation'),
+  editorSaturationValue: document.getElementById('editorSaturationValue'),
+  editorShadows: document.getElementById('editorShadows'),
+  editorShadowsValue: document.getElementById('editorShadowsValue'),
+  editorHighlights: document.getElementById('editorHighlights'),
+  editorHighlightsValue: document.getElementById('editorHighlightsValue'),
+  editorTemperature: document.getElementById('editorTemperature'),
+  editorTemperatureValue: document.getElementById('editorTemperatureValue'),
+  editorTint: document.getElementById('editorTint'),
+  editorTintValue: document.getElementById('editorTintValue'),
+  editorVibrance: document.getElementById('editorVibrance'),
+  editorVibranceValue: document.getElementById('editorVibranceValue'),
+  editorClarity: document.getElementById('editorClarity'),
+  editorClarityValue: document.getElementById('editorClarityValue'),
+  editorDehaze: document.getElementById('editorDehaze'),
+  editorDehazeValue: document.getElementById('editorDehazeValue'),
+  resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
+  cancelPresetEditorBtn: document.getElementById('cancelPresetEditorBtn'),
+  savePresetEditorBtn: document.getElementById('savePresetEditorBtn'),
 };
 
 async function initialize() {
@@ -573,13 +599,181 @@ async function importXmpPreset() {
   }
 }
 
+function getEditorPresetConfig() {
+  const config = {
+    name: 'Live Preview',
+    adjustments: {},
+  };
+
+  const exposure = parseFloat(elements.editorExposure.value);
+  const contrast = parseInt(elements.editorContrast.value);
+  const saturation = parseInt(elements.editorSaturation.value);
+  const shadows = parseInt(elements.editorShadows.value);
+  const highlights = parseInt(elements.editorHighlights.value);
+  const temperature = parseInt(elements.editorTemperature.value);
+  const tint = parseInt(elements.editorTint.value);
+  const vibrance = parseInt(elements.editorVibrance.value);
+  const clarity = parseInt(elements.editorClarity.value);
+  const dehaze = parseInt(elements.editorDehaze.value);
+
+  if (exposure !== 0) config.adjustments.exposure = exposure;
+  if (contrast !== 0) config.adjustments.contrast = 1 + (contrast / 100);
+  if (saturation !== 0) config.adjustments.saturation = 1 + (saturation / 100);
+  if (shadows !== 0) config.adjustments.shadows = shadows;
+  if (highlights !== 0) config.adjustments.highlights = highlights;
+  if (temperature !== 0) config.adjustments.temperature = temperature;
+  if (tint !== 0) config.adjustments.tint = tint;
+  if (vibrance !== 0) config.adjustments.vibrance = vibrance;
+  if (clarity !== 0) config.adjustments.clarity = clarity;
+  if (dehaze !== 0) config.adjustments.dehaze = dehaze;
+
+  return config;
+}
+
+async function updateEditorPreview() {
+  if (!fileManager.getCurrentImage()) return;
+
+  const config = getEditorPresetConfig();
+
+  try {
+    const imageData = await imageProcessor.applyPresetToImage(
+      fileManager.getCurrentImage(),
+      config
+    );
+    elements.mainImage.src = imageData.src;
+  } catch (error) {
+    console.error('Error updating editor preview:', error);
+  }
+}
+
+function resetPresetEditor() {
+  elements.editorExposure.value = 0;
+  elements.editorExposureValue.textContent = 0;
+  elements.editorContrast.value = 0;
+  elements.editorContrastValue.textContent = 0;
+  elements.editorSaturation.value = 0;
+  elements.editorSaturationValue.textContent = 0;
+  elements.editorShadows.value = 0;
+  elements.editorShadowsValue.textContent = 0;
+  elements.editorHighlights.value = 0;
+  elements.editorHighlightsValue.textContent = 0;
+  elements.editorTemperature.value = 0;
+  elements.editorTemperatureValue.textContent = 0;
+  elements.editorTint.value = 0;
+  elements.editorTintValue.textContent = 0;
+  elements.editorVibrance.value = 0;
+  elements.editorVibranceValue.textContent = 0;
+  elements.editorClarity.value = 0;
+  elements.editorClarityValue.textContent = 0;
+  elements.editorDehaze.value = 0;
+  elements.editorDehazeValue.textContent = 0;
+
+  updateEditorPreview();
+}
+
+function setupEditorSliders() {
+  const sliders = [
+    { slider: elements.editorExposure, value: elements.editorExposureValue },
+    { slider: elements.editorContrast, value: elements.editorContrastValue },
+    { slider: elements.editorSaturation, value: elements.editorSaturationValue },
+    { slider: elements.editorShadows, value: elements.editorShadowsValue },
+    { slider: elements.editorHighlights, value: elements.editorHighlightsValue },
+    { slider: elements.editorTemperature, value: elements.editorTemperatureValue },
+    { slider: elements.editorTint, value: elements.editorTintValue },
+    { slider: elements.editorVibrance, value: elements.editorVibranceValue },
+    { slider: elements.editorClarity, value: elements.editorClarityValue },
+    { slider: elements.editorDehaze, value: elements.editorDehazeValue },
+  ];
+
+  for (const { slider, value } of sliders) {
+    slider.addEventListener('input', () => {
+      value.textContent = slider.value;
+      updateEditorPreview();
+    });
+  }
+}
+
+async function openPresetEditor() {
+  if (!fileManager.getCurrentImage()) {
+    await showAlert('Please open a folder with images first');
+    return;
+  }
+
+  resetPresetEditor();
+  elements.presetEditorDialog.showModal();
+}
+
+async function savePresetFromEditor() {
+  const presetName = await showRenameDialog('Save Preset', 'My Custom Preset');
+  if (!presetName) return;
+
+  const config = getEditorPresetConfig();
+  config.name = presetName;
+  config.category = 'custom';
+
+  // Build YAML content
+  let yamlContent = `name: ${config.name}\ncategory: ${config.category}\nadjustments:\n`;
+
+  if (config.adjustments.exposure !== undefined) {
+    yamlContent += `  exposure: ${config.adjustments.exposure}\n`;
+  }
+  if (config.adjustments.contrast !== undefined) {
+    yamlContent += `  contrast: ${config.adjustments.contrast}\n`;
+  }
+  if (config.adjustments.saturation !== undefined) {
+    yamlContent += `  saturation: ${config.adjustments.saturation}\n`;
+  }
+  if (config.adjustments.shadows !== undefined) {
+    yamlContent += `  shadows: ${config.adjustments.shadows}\n`;
+  }
+  if (config.adjustments.highlights !== undefined) {
+    yamlContent += `  highlights: ${config.adjustments.highlights}\n`;
+  }
+  if (config.adjustments.temperature !== undefined) {
+    yamlContent += `  temperature: ${config.adjustments.temperature}\n`;
+  }
+  if (config.adjustments.tint !== undefined) {
+    yamlContent += `  tint: ${config.adjustments.tint}\n`;
+  }
+  if (config.adjustments.vibrance !== undefined) {
+    yamlContent += `  vibrance: ${config.adjustments.vibrance}\n`;
+  }
+  if (config.adjustments.clarity !== undefined) {
+    yamlContent += `  clarity: ${config.adjustments.clarity}\n`;
+  }
+  if (config.adjustments.dehaze !== undefined) {
+    yamlContent += `  dehaze: ${config.adjustments.dehaze}\n`;
+  }
+
+  try {
+    await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
+    updateStatus(`Saved preset "${presetName}"`);
+    elements.presetEditorDialog.close();
+    await initialize();
+  } catch (error) {
+    console.error('Error saving preset:', error);
+    await showAlert('Error saving preset: ' + error.message);
+  }
+}
+
 elements.openFolderBtn.addEventListener('click', openFolder);
 elements.exportBtn.addEventListener('click', showExportConfigDialog);
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
+elements.createPresetBtn.addEventListener('click', openPresetEditor);
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
 elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
+elements.resetPresetEditorBtn.addEventListener('click', resetPresetEditor);
+elements.cancelPresetEditorBtn.addEventListener('click', () => {
+  elements.presetEditorDialog.close();
+  loadCurrentImage();
+});
+elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
+elements.closePresetEditor.addEventListener('click', () => {
+  elements.presetEditorDialog.close();
+  loadCurrentImage();
+});
 
 elements.presetSelect.addEventListener('change', (e) => {
   selectPreset(e.target.value);
@@ -736,4 +930,5 @@ elements.mainImage.addEventListener('mouseup', endPan);
 elements.mainImage.addEventListener('mouseleave', endPan);
 elements.mainImage.addEventListener('dblclick', resetZoom);
 
+setupEditorSliders();
 initialize();
