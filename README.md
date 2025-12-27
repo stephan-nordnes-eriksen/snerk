@@ -2,6 +2,11 @@
 
 A minimalistic photo viewer with RAW support and Lightroom-like presets.
 
+## Documentation
+
+- **[SPEC.md](SPEC.md)** - Complete technical specification and requirements
+- **[CLAUDE.md](CLAUDE.md)** - Development context and architecture notes for Claude Code
+
 ## Features
 
 - Support for RAW formats from various vendors (Fuji RAF, Sony ARW, Canon CR3, Nikon NEF, DNG, and more)
