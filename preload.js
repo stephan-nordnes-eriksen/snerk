@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('snerkAPI', {
   saveImportedPreset: (presetName, yamlContent) =>
     ipcRenderer.invoke('preset:saveImported', presetName, yamlContent),
 
+  renamePreset: (oldFilePath, newName) =>
+    ipcRenderer.invoke('preset:rename', oldFilePath, newName),
+
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),

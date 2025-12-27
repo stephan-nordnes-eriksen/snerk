@@ -81,12 +81,27 @@ function renderPresets() {
       option.textContent = preset.name;
       elements.presetSelect.appendChild(option);
 
+      const presetRow = document.createElement('div');
+      presetRow.className = 'preset-row';
+
       const button = document.createElement('button');
       button.className = 'preset-btn secondary';
       button.textContent = preset.name;
       button.dataset.presetName = preset.name;
       button.onclick = () => selectPreset(preset.name);
-      buttonContainer.appendChild(button);
+      presetRow.appendChild(button);
+
+      const renameBtn = document.createElement('button');
+      renameBtn.className = 'rename-btn outline secondary';
+      renameBtn.textContent = '✎';
+      renameBtn.title = 'Rename preset';
+      renameBtn.onclick = (e) => {
+        e.stopPropagation();
+        renamePreset(preset);
+      };
+      presetRow.appendChild(renameBtn);
+
+      buttonContainer.appendChild(presetRow);
     }
 
     categoryDiv.appendChild(buttonContainer);
@@ -272,6 +287,52 @@ async function exportImages() {
   }
 }
 
+function getUniquePresetName(baseName, existingNames) {
+  let name = baseName;
+  let copyNumber = 1;
+
+  while (existingNames.includes(name)) {
+    name = `${baseName} (copy ${copyNumber})`;
+    copyNumber++;
+  }
+
+  return name;
+}
+
+async function renamePreset(preset) {
+  try {
+    const newName = prompt('Enter new preset name:', preset.name);
+    if (!newName || newName.trim() === '') {
+      return;
+    }
+
+    const trimmedName = newName.trim();
+    if (trimmedName === preset.name) {
+      return; // No change
+    }
+
+    // Check for conflicts
+    const existingNames = state.presets.map(p => p.name).filter(n => n !== preset.name);
+    if (existingNames.includes(trimmedName)) {
+      alert('A preset with this name already exists');
+      return;
+    }
+
+    updateStatus('Renaming preset...');
+
+    await window.snerkAPI.renamePreset(preset.filePath, trimmedName);
+
+    updateStatus(`Renamed to "${trimmedName}" successfully`);
+
+    // Reload presets
+    await initialize();
+  } catch (error) {
+    console.error('Error renaming preset:', error);
+    updateStatus('Error renaming preset: ' + error.message);
+    alert('Error renaming preset: ' + error.message);
+  }
+}
+
 async function importXmpPreset() {
   try {
     updateStatus('Select XMP preset file...');
@@ -286,9 +347,27 @@ async function importXmpPreset() {
     const buffer = await window.snerkAPI.readFile(xmpPath);
     const xmpContent = new TextDecoder().decode(buffer);
 
+    // Extract filename from path
+    const filename = xmpPath.split(/[\\/]/).pop();
+
     updateStatus('Converting preset...');
     const xmpImporter = new XmpImporter();
-    const preset = xmpImporter.parseXmpToPreset(xmpContent);
+    const preset = xmpImporter.parseXmpToPreset(xmpContent, filename);
+
+    // Prompt user to customize the name
+    const customName = prompt('Enter preset name:', preset.name);
+    if (customName === null) {
+      updateStatus('Import cancelled');
+      return;
+    }
+
+    // Use custom name if provided, otherwise use default
+    const desiredName = customName.trim() || preset.name;
+
+    // Check for conflicts and get unique name
+    const existingNames = state.presets.map(p => p.name);
+    preset.name = getUniquePresetName(desiredName, existingNames);
+
     const yamlContent = xmpImporter.generateYaml(preset);
 
     updateStatus('Saving preset...');

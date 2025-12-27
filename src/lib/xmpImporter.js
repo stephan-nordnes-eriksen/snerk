@@ -8,9 +8,10 @@ class XmpImporter {
   /**
    * Parse XMP file and convert to Snerk preset format
    * @param {string} xmpContent - Raw XMP file content
+   * @param {string} filename - Original filename (optional)
    * @returns {Object} Snerk preset object with name, category, and adjustments
    */
-  parseXmpToPreset(xmpContent) {
+  parseXmpToPreset(xmpContent, filename = null) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmpContent, 'text/xml');
 
@@ -20,8 +21,8 @@ class XmpImporter {
       throw new Error('Invalid XMP file: XML parsing failed');
     }
 
-    // Extract preset name
-    const name = this.extractPresetName(doc);
+    // Extract preset name from filename or XMP metadata
+    const name = this.extractPresetName(doc, filename);
 
     // Extract all crs parameters
     const crsParams = this.extractCrsParameters(doc);
@@ -63,11 +64,18 @@ class XmpImporter {
   }
 
   /**
-   * Extract preset name from XMP metadata or generate default
+   * Extract preset name from XMP metadata or filename
    * @param {Document} doc - Parsed XML document
+   * @param {string} filename - Original filename (optional)
    * @returns {string} Preset name
    */
-  extractPresetName(doc) {
+  extractPresetName(doc, filename = null) {
+    // If filename provided, use it (without extension)
+    if (filename) {
+      const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+      return nameWithoutExt.replace(/[-_]/g, ' ');
+    }
+
     // Try to find dc:title
     const titleElements = doc.getElementsByTagNameNS(this.dcNamespace, 'title');
     if (titleElements.length > 0) {

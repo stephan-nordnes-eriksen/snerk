@@ -571,6 +571,45 @@ ipcMain.handle('preset:saveImported', async (event, presetName, yamlContent) => 
   }
 });
 
+ipcMain.handle('preset:rename', async (event, oldFilePath, newName) => {
+  try {
+    // Read the existing file
+    const content = await fs.readFile(oldFilePath, 'utf8');
+
+    // Update the name in the YAML content
+    const updatedContent = content.replace(/^name:\s*"?[^"\n]+"?/m, `name: "${newName}"`);
+
+    // Generate new filename
+    const dirPath = path.dirname(oldFilePath);
+    const sanitizedName = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const newFilePath = path.join(dirPath, `${sanitizedName}.yaml`);
+
+    // Check if new path already exists and is different from old path
+    if (newFilePath !== oldFilePath) {
+      try {
+        await fs.access(newFilePath);
+        throw new Error('A preset with this name already exists');
+      } catch (err) {
+        // File doesn't exist, which is good
+        if (err.code !== 'ENOENT') throw err;
+      }
+    }
+
+    // Write new file with updated content
+    await fs.writeFile(newFilePath, updatedContent, 'utf8');
+
+    // Delete old file if path changed
+    if (newFilePath !== oldFilePath) {
+      await fs.unlink(oldFilePath);
+    }
+
+    return newFilePath;
+  } catch (error) {
+    console.error('Error renaming preset:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;
