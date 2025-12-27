@@ -108,6 +108,18 @@ function applyClarity(image, clarity) {
   }
 }
 
+function applyTexture(image, texture) {
+  // Texture: fine detail enhancement (like clarity but smaller radius)
+  const textureAmount = Math.abs(texture) / 100;
+  if (texture > 0) {
+    // Positive: sharpen fine details
+    return image.sharpen({ sigma: 0.3 + (textureAmount * 0.3), m1: 1.0, m2: 2.0 });
+  } else {
+    // Negative: soften fine details while preserving edges
+    return image.blur(textureAmount * 0.5);
+  }
+}
+
 function applyDehaze(image, dehaze) {
   // Dehaze: increase contrast and saturation
   const amount = dehaze / 100;
@@ -763,6 +775,10 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
         image = applyClarity(image, adj.clarity);
       }
 
+      if (adj.texture !== undefined && adj.texture !== 0) {
+        image = applyTexture(image, adj.texture);
+      }
+
       if (adj.shadows !== undefined || adj.highlights !== undefined) {
         const shadows = (adj.shadows || 0) / 100;
         const highlights = (adj.highlights || 0) / 100;
@@ -867,6 +883,10 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
 
       if (adj.clarity !== undefined && adj.clarity !== 0) {
         image = applyClarity(image, adj.clarity);
+      }
+
+      if (adj.texture !== undefined && adj.texture !== 0) {
+        image = applyTexture(image, adj.texture);
       }
 
       if (adj.shadows !== undefined || adj.highlights !== undefined) {

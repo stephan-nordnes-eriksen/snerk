@@ -21,7 +21,7 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 ### Presence
 - [x] **Clarity** (`crs:Clarity2012`) - Mid-tone contrast (-100 to +100)
 - [x] **Dehaze** (`crs:Dehaze`) - Haze removal (-100 to +100)
-- [ ] **Texture** (`crs:Texture`) - Fine detail enhancement (-100 to +100)
+- [x] **Texture** (`crs:Texture`) - Fine detail enhancement (-100 to +100)
 
 ## Tone Curve
 
@@ -170,12 +170,12 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 ### High Priority (Core Features)
 1. ✅ Basic tone adjustments (exposure, contrast, highlights, shadows, whites, blacks)
 2. ✅ Color adjustments (temperature, tint, saturation, vibrance)
-3. ✅ Presence (clarity, dehaze)
+3. ✅ Presence (clarity, texture, dehaze)
 4. ✅ Tone curves (all channels)
 5. ✅ HSL adjustments (all colors)
 
 ### Medium Priority (Common Features)
-1. ❌ Texture (new Lightroom feature)
+1. ✅ Texture (new Lightroom feature)
 2. ❌ Color grading / Split toning
 3. ❌ Sharpening
 4. ❌ Noise reduction

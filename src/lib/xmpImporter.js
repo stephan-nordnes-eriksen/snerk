@@ -197,6 +197,11 @@ class XmpImporter {
       adjustments.clarity = parseFloat(crsParams.Clarity2012 || crsParams.Clarity);
     }
 
+    // Texture (-100 to +100, direct copy)
+    if (crsParams.Texture !== undefined) {
+      adjustments.texture = parseFloat(crsParams.Texture);
+    }
+
     // Dehaze (-100 to +100, direct copy)
     if (crsParams.Dehaze !== undefined) {
       adjustments.dehaze = parseFloat(crsParams.Dehaze);
@@ -325,6 +330,7 @@ class XmpImporter {
       if (adj.tint !== undefined) yaml += `  tint: ${adj.tint}\n`;
       if (adj.vibrance !== undefined) yaml += `  vibrance: ${adj.vibrance}\n`;
       if (adj.clarity !== undefined) yaml += `  clarity: ${adj.clarity}\n`;
+      if (adj.texture !== undefined) yaml += `  texture: ${adj.texture}\n`;
       if (adj.highlights !== undefined) yaml += `  highlights: ${adj.highlights}\n`;
       if (adj.shadows !== undefined) yaml += `  shadows: ${adj.shadows}\n`;
       if (adj.whites !== undefined) yaml += `  whites: ${adj.whites}\n`;

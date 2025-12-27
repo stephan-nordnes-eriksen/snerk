@@ -80,6 +80,8 @@ const elements = {
   editorVibranceValue: document.getElementById('editorVibranceValue'),
   editorClarity: document.getElementById('editorClarity'),
   editorClarityValue: document.getElementById('editorClarityValue'),
+  editorTexture: document.getElementById('editorTexture'),
+  editorTextureValue: document.getElementById('editorTextureValue'),
   editorDehaze: document.getElementById('editorDehaze'),
   editorDehazeValue: document.getElementById('editorDehazeValue'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
@@ -611,6 +613,7 @@ function getEditorPresetConfig() {
   const tint = parseInt(elements.editorTint.value);
   const vibrance = parseInt(elements.editorVibrance.value);
   const clarity = parseInt(elements.editorClarity.value);
+  const texture = parseInt(elements.editorTexture.value);
   const dehaze = parseInt(elements.editorDehaze.value);
 
   if (exposure !== 0) config.adjustments.exposure = exposure;
@@ -622,6 +625,7 @@ function getEditorPresetConfig() {
   if (tint !== 0) config.adjustments.tint = tint;
   if (vibrance !== 0) config.adjustments.vibrance = vibrance;
   if (clarity !== 0) config.adjustments.clarity = clarity;
+  if (texture !== 0) config.adjustments.texture = texture;
   if (dehaze !== 0) config.adjustments.dehaze = dehaze;
 
   return config;
@@ -662,6 +666,8 @@ function resetPresetEditor() {
   elements.editorVibranceValue.textContent = 0;
   elements.editorClarity.value = 0;
   elements.editorClarityValue.textContent = 0;
+  elements.editorTexture.value = 0;
+  elements.editorTextureValue.textContent = 0;
   elements.editorDehaze.value = 0;
   elements.editorDehazeValue.textContent = 0;
 
@@ -679,6 +685,7 @@ function setupEditorSliders() {
     { slider: elements.editorTint, value: elements.editorTintValue },
     { slider: elements.editorVibrance, value: elements.editorVibranceValue },
     { slider: elements.editorClarity, value: elements.editorClarityValue },
+    { slider: elements.editorTexture, value: elements.editorTextureValue },
     { slider: elements.editorDehaze, value: elements.editorDehazeValue },
   ];
 
@@ -737,6 +744,9 @@ async function savePresetFromEditor() {
   }
   if (config.adjustments.clarity !== undefined) {
     yamlContent += `  clarity: ${config.adjustments.clarity}\n`;
+  }
+  if (config.adjustments.texture !== undefined) {
+    yamlContent += `  texture: ${config.adjustments.texture}\n`;
   }
   if (config.adjustments.dehaze !== undefined) {
     yamlContent += `  dehaze: ${config.adjustments.dehaze}\n`;
