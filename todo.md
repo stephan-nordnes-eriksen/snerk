@@ -7,4 +7,4 @@ todo:
 - [x] Make export configs that can be saved, eg. "jpeg quality 10 etc.", similar to how we have configs for style presets
 - [x] editor for preset config, where you can create new custom presets with UI controls
 - [x] Make UI for modifying preset configs with sliders and text-input, etc.
-- [ ] Update the default profiles. they are not correct now
+- [x] Update the default profiles. they are not correct now
