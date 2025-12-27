@@ -72,6 +72,93 @@
       <button id="nextImage" disabled aria-label="Next image">▶</button>
     </div>
 
+    <div id="rightActions">
+      <button id="showConfigBtn" class="outline secondary" disabled title="Show preset configuration">
+        ⚙
+      </button>
+    </div>
+
+    <aside id="presetEditorPanel" class="hidden">
+      <div class="panel-header">
+        <h3>Preset Editor</h3>
+        <button id="closePresetEditor" class="outline secondary" aria-label="Close">×</button>
+      </div>
+      <div id="presetEditorContent">
+        <label>
+          Exposure
+          <input type="range" id="editorExposure" min="-2" max="2" step="0.1" value="0">
+          <small id="editorExposureValue">0</small>
+        </label>
+
+        <label>
+          Contrast
+          <input type="range" id="editorContrast" min="-100" max="100" step="1" value="0">
+          <small id="editorContrastValue">0</small>
+        </label>
+
+        <label>
+          Saturation
+          <input type="range" id="editorSaturation" min="-100" max="100" step="1" value="0">
+          <small id="editorSaturationValue">0</small>
+        </label>
+
+        <label>
+          Shadows
+          <input type="range" id="editorShadows" min="-100" max="100" step="1" value="0">
+          <small id="editorShadowsValue">0</small>
+        </label>
+
+        <label>
+          Highlights
+          <input type="range" id="editorHighlights" min="-100" max="100" step="1" value="0">
+          <small id="editorHighlightsValue">0</small>
+        </label>
+
+        <label>
+          Temperature
+          <input type="range" id="editorTemperature" min="-100" max="100" step="1" value="0">
+          <small id="editorTemperatureValue">0</small>
+        </label>
+
+        <label>
+          Tint
+          <input type="range" id="editorTint" min="-150" max="150" step="1" value="0">
+          <small id="editorTintValue">0</small>
+        </label>
+
+        <label>
+          Vibrance
+          <input type="range" id="editorVibrance" min="-100" max="100" step="1" value="0">
+          <small id="editorVibranceValue">0</small>
+        </label>
+
+        <label>
+          Clarity
+          <input type="range" id="editorClarity" min="-100" max="100" step="1" value="0">
+          <small id="editorClarityValue">0</small>
+        </label>
+
+        <label>
+          Texture
+          <input type="range" id="editorTexture" min="-100" max="100" step="1" value="0">
+          <small id="editorTextureValue">0</small>
+        </label>
+
+        <label>
+          Dehaze
+          <input type="range" id="editorDehaze" min="-100" max="100" step="1" value="0">
+          <small id="editorDehazeValue">0</small>
+        </label>
+      </div>
+      <div class="panel-footer">
+        <button id="resetPresetEditorBtn" class="outline secondary">Reset All</button>
+        <button id="cancelPresetEditorBtn" class="secondary">Cancel</button>
+        <button id="copyToCustomBtn" class="hidden">Copy to Custom</button>
+        <button id="updatePresetBtn" class="hidden">Update Preset</button>
+        <button id="savePresetEditorBtn">Save as Preset</button>
+      </div>
+    </aside>
+
     <footer class="container-fluid">
       <small id="status">Ready</small>
     </footer>
@@ -143,87 +230,6 @@
       <footer>
         <button id="renameCancelBtn" class="secondary">Cancel</button>
         <button id="renameConfirmBtn">OK</button>
-      </footer>
-    </article>
-  </dialog>
-
-  <dialog id="presetEditorDialog">
-    <article style="max-width: 600px;">
-      <header>
-        <button aria-label="Close" rel="prev" id="closePresetEditor"></button>
-        <h3>Preset Editor</h3>
-      </header>
-      <div id="presetEditorContent">
-        <label>
-          Exposure
-          <input type="range" id="editorExposure" min="-2" max="2" step="0.1" value="0">
-          <small id="editorExposureValue">0</small>
-        </label>
-
-        <label>
-          Contrast
-          <input type="range" id="editorContrast" min="-100" max="100" step="1" value="0">
-          <small id="editorContrastValue">0</small>
-        </label>
-
-        <label>
-          Saturation
-          <input type="range" id="editorSaturation" min="-100" max="100" step="1" value="0">
-          <small id="editorSaturationValue">0</small>
-        </label>
-
-        <label>
-          Shadows
-          <input type="range" id="editorShadows" min="-100" max="100" step="1" value="0">
-          <small id="editorShadowsValue">0</small>
-        </label>
-
-        <label>
-          Highlights
-          <input type="range" id="editorHighlights" min="-100" max="100" step="1" value="0">
-          <small id="editorHighlightsValue">0</small>
-        </label>
-
-        <label>
-          Temperature
-          <input type="range" id="editorTemperature" min="-100" max="100" step="1" value="0">
-          <small id="editorTemperatureValue">0</small>
-        </label>
-
-        <label>
-          Tint
-          <input type="range" id="editorTint" min="-150" max="150" step="1" value="0">
-          <small id="editorTintValue">0</small>
-        </label>
-
-        <label>
-          Vibrance
-          <input type="range" id="editorVibrance" min="-100" max="100" step="1" value="0">
-          <small id="editorVibranceValue">0</small>
-        </label>
-
-        <label>
-          Clarity
-          <input type="range" id="editorClarity" min="-100" max="100" step="1" value="0">
-          <small id="editorClarityValue">0</small>
-        </label>
-
-        <label>
-          Texture
-          <input type="range" id="editorTexture" min="-100" max="100" step="1" value="0">
-          <small id="editorTextureValue">0</small>
-        </label>
-
-        <label>
-          Dehaze
-          <input type="range" id="editorDehaze" min="-100" max="100" step="1" value="0">
-          <small id="editorDehazeValue">0</small>
-        </label>
-      </div>
-      <footer>
-        <button id="resetPresetEditorBtn" class="outline secondary">Reset All</button>
-        <button id="cancelPresetEditorBtn" class="secondary">Cancel</button>
-        <button id="savePresetEditorBtn">Save as Preset</button>
       </footer>
     </article>
   </dialog>

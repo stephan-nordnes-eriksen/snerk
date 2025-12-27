@@ -23,8 +23,8 @@ todo:
 - [x] Make sure that whenever you press space, all ui elements dissappear, regardless of context, with the exception of when we renaming or native features are opened (eg. file explorer)
 - [x] Implement texture adjustment (new Lightroom feature)
 - [x] Go through the xmp feature list and implement each missing feature (medium priority items)
-- [ ] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
+- [x] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
 - [ ] Add more export output formats by using ffmpeg as the conversion tool
 - [ ] If applicable, use ffmpeg for applying color profiles
-- [ ] Add a default background image when no folder is selected
-- [ ] Add a "show config" button to the right which will open the custom config modal with the currently selected preset. This modal should have a "copy to custom preset" which copies the current preset, and allows you to change it, unless it is already a custom preset, in which case you can configure it immediately
+- [x] Add a default background image when no folder is selected
+- [x] Add a "show config" button to the right which will open the custom config modal with the currently selected preset. This modal should have a "copy to custom preset" which copies the current preset, and allows you to change it, unless it is already a custom preset, in which case you can configure it immediately

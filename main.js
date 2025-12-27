@@ -11,12 +11,29 @@ let mainWindow;
 const PRESET_DIR = path.join(os.homedir(), '.snerk', 'presets');
 const RAW_EXTENSIONS = ['.raf', '.arw', '.cr3', '.cr2', '.nef', '.dng', '.orf', '.rw2', '.pef', '.srw'];
 
+// Cache for extracted RAW previews to avoid re-extraction
+const rawPreviewCache = new Map();
+const MAX_CACHE_SIZE = 50; // Maximum number of cached RAW previews
+
+function clearRawPreviewCache() {
+  rawPreviewCache.clear();
+}
+
 function isRawFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   return RAW_EXTENSIONS.includes(ext);
 }
 
 async function extractRawPreview(rawPath) {
+  // Check cache first
+  if (rawPreviewCache.has(rawPath)) {
+    // Move to end (LRU)
+    const buffer = rawPreviewCache.get(rawPath);
+    rawPreviewCache.delete(rawPath);
+    rawPreviewCache.set(rawPath, buffer);
+    return buffer;
+  }
+
   try {
     const tempDir = os.tmpdir();
     const tempPreviewPath = path.join(tempDir, `preview_${Date.now()}.jpg`);
@@ -26,6 +43,15 @@ async function extractRawPreview(rawPath) {
     const buffer = await fs.readFile(tempPreviewPath);
 
     await fs.unlink(tempPreviewPath).catch(() => {});
+
+    // Evict oldest entry if cache is full (LRU)
+    if (rawPreviewCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = rawPreviewCache.keys().next().value;
+      rawPreviewCache.delete(firstKey);
+    }
+
+    // Cache the extracted buffer
+    rawPreviewCache.set(rawPath, buffer);
 
     return buffer;
   } catch (error) {

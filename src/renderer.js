@@ -60,7 +60,8 @@ const elements = {
   noFilterBtn: document.getElementById('noFilterBtn'),
   openSnerkFolderBtn: document.getElementById('openSnerkFolderBtn'),
   githubLink: document.getElementById('githubLink'),
-  presetEditorDialog: document.getElementById('presetEditorDialog'),
+  showConfigBtn: document.getElementById('showConfigBtn'),
+  presetEditorPanel: document.getElementById('presetEditorPanel'),
   closePresetEditor: document.getElementById('closePresetEditor'),
   editorExposure: document.getElementById('editorExposure'),
   editorExposureValue: document.getElementById('editorExposureValue'),
@@ -86,6 +87,8 @@ const elements = {
   editorDehazeValue: document.getElementById('editorDehazeValue'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
   cancelPresetEditorBtn: document.getElementById('cancelPresetEditorBtn'),
+  copyToCustomBtn: document.getElementById('copyToCustomBtn'),
+  updatePresetBtn: document.getElementById('updatePresetBtn'),
   savePresetEditorBtn: document.getElementById('savePresetEditorBtn'),
 };
 
@@ -253,9 +256,11 @@ async function selectPreset(presetName) {
   if (!preset) {
     state.currentPreset = null;
     clearActivePresetButtons();
+    elements.showConfigBtn.disabled = true;
   } else {
     state.currentPreset = preset;
     setActivePresetButton(presetName);
+    elements.showConfigBtn.disabled = false;
   }
 
   if (fileManager.getCurrentImage()) {
@@ -704,7 +709,15 @@ async function openPresetEditor() {
   }
 
   resetPresetEditor();
-  elements.presetEditorDialog.showModal();
+
+  // Reset button visibility for new preset creation
+  elements.savePresetEditorBtn.classList.remove('hidden');
+  elements.copyToCustomBtn.classList.add('hidden');
+  elements.updatePresetBtn.classList.add('hidden');
+
+  // Show the panel
+  const panel = document.getElementById('presetEditorPanel');
+  panel.classList.remove('hidden');
 }
 
 async function savePresetFromEditor() {
@@ -755,8 +768,156 @@ async function savePresetFromEditor() {
   try {
     await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
     updateStatus(`Saved preset "${presetName}"`);
-    elements.presetEditorDialog.close();
+    elements.presetEditorPanel.classList.add('hidden');
     await initialize();
+  } catch (error) {
+    console.error('Error saving preset:', error);
+    await showAlert('Error saving preset: ' + error.message);
+  }
+}
+
+function populateEditorWithPreset(preset) {
+  if (!preset || !preset.adjustments) {
+    resetPresetEditor();
+    return;
+  }
+
+  const adj = preset.adjustments;
+
+  // Populate all sliders with preset values or defaults
+  elements.editorExposure.value = adj.exposure || 0;
+  elements.editorExposureValue.textContent = adj.exposure || 0;
+
+  // Contrast needs conversion from multiplier to slider range
+  const contrastValue = adj.contrast !== undefined ? (adj.contrast - 1) * 100 : 0;
+  elements.editorContrast.value = contrastValue;
+  elements.editorContrastValue.textContent = contrastValue;
+
+  // Saturation needs conversion from multiplier to slider range
+  const saturationValue = adj.saturation !== undefined ? (adj.saturation - 1) * 100 : 0;
+  elements.editorSaturation.value = saturationValue;
+  elements.editorSaturationValue.textContent = saturationValue;
+
+  elements.editorShadows.value = adj.shadows || 0;
+  elements.editorShadowsValue.textContent = adj.shadows || 0;
+
+  elements.editorHighlights.value = adj.highlights || 0;
+  elements.editorHighlightsValue.textContent = adj.highlights || 0;
+
+  elements.editorTemperature.value = adj.temperature || 0;
+  elements.editorTemperatureValue.textContent = adj.temperature || 0;
+
+  elements.editorTint.value = adj.tint || 0;
+  elements.editorTintValue.textContent = adj.tint || 0;
+
+  elements.editorVibrance.value = adj.vibrance || 0;
+  elements.editorVibranceValue.textContent = adj.vibrance || 0;
+
+  elements.editorClarity.value = adj.clarity || 0;
+  elements.editorClarityValue.textContent = adj.clarity || 0;
+
+  elements.editorTexture.value = adj.texture || 0;
+  elements.editorTextureValue.textContent = adj.texture || 0;
+
+  elements.editorDehaze.value = adj.dehaze || 0;
+  elements.editorDehazeValue.textContent = adj.dehaze || 0;
+}
+
+async function showCurrentPresetConfig() {
+  if (!state.currentPreset) {
+    await showAlert('No preset selected');
+    return;
+  }
+
+  if (!fileManager.getCurrentImage()) {
+    await showAlert('Please open a folder with images first');
+    return;
+  }
+
+  const preset = state.currentPreset;
+  const isCustom = preset.category === 'custom' || preset.category === 'imported';
+
+  // Populate editor with current preset values
+  populateEditorWithPreset(preset);
+
+  // Show appropriate buttons based on preset type
+  if (isCustom) {
+    // For custom/imported presets, show Update button
+    elements.savePresetEditorBtn.classList.add('hidden');
+    elements.copyToCustomBtn.classList.add('hidden');
+    elements.updatePresetBtn.classList.remove('hidden');
+  } else {
+    // For default presets, show Copy to Custom button
+    elements.savePresetEditorBtn.classList.add('hidden');
+    elements.copyToCustomBtn.classList.remove('hidden');
+    elements.updatePresetBtn.classList.add('hidden');
+  }
+
+  elements.presetEditorPanel.classList.remove('hidden');
+}
+
+async function copyToCustomPreset() {
+  const presetName = await showRenameDialog('Save as Custom Preset', state.currentPreset.name + ' (Copy)');
+  if (!presetName) return;
+
+  await savePresetFromEditorWithName(presetName);
+}
+
+async function updateCurrentPreset() {
+  if (!state.currentPreset) return;
+
+  await savePresetFromEditorWithName(state.currentPreset.name);
+}
+
+async function savePresetFromEditorWithName(presetName) {
+  const config = getEditorPresetConfig();
+  config.name = presetName;
+  config.category = 'custom';
+
+  // Build YAML content (same as savePresetFromEditor)
+  let yamlContent = `name: ${config.name}\ncategory: ${config.category}\nadjustments:\n`;
+
+  if (config.adjustments.exposure !== undefined) {
+    yamlContent += `  exposure: ${config.adjustments.exposure}\n`;
+  }
+  if (config.adjustments.contrast !== undefined) {
+    yamlContent += `  contrast: ${config.adjustments.contrast}\n`;
+  }
+  if (config.adjustments.saturation !== undefined) {
+    yamlContent += `  saturation: ${config.adjustments.saturation}\n`;
+  }
+  if (config.adjustments.shadows !== undefined) {
+    yamlContent += `  shadows: ${config.adjustments.shadows}\n`;
+  }
+  if (config.adjustments.highlights !== undefined) {
+    yamlContent += `  highlights: ${config.adjustments.highlights}\n`;
+  }
+  if (config.adjustments.temperature !== undefined) {
+    yamlContent += `  temperature: ${config.adjustments.temperature}\n`;
+  }
+  if (config.adjustments.tint !== undefined) {
+    yamlContent += `  tint: ${config.adjustments.tint}\n`;
+  }
+  if (config.adjustments.vibrance !== undefined) {
+    yamlContent += `  vibrance: ${config.adjustments.vibrance}\n`;
+  }
+  if (config.adjustments.clarity !== undefined) {
+    yamlContent += `  clarity: ${config.adjustments.clarity}\n`;
+  }
+  if (config.adjustments.texture !== undefined) {
+    yamlContent += `  texture: ${config.adjustments.texture}\n`;
+  }
+  if (config.adjustments.dehaze !== undefined) {
+    yamlContent += `  dehaze: ${config.adjustments.dehaze}\n`;
+  }
+
+  try {
+    await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
+    updateStatus(`Saved preset "${presetName}"`);
+    elements.presetEditorPanel.classList.add('hidden');
+    await initialize();
+    // Select the newly saved/updated preset
+    await selectPreset(presetName);
   } catch (error) {
     console.error('Error saving preset:', error);
     await showAlert('Error saving preset: ' + error.message);
@@ -791,17 +952,86 @@ elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
 elements.resetPresetEditorBtn.addEventListener('click', resetPresetEditor);
 elements.cancelPresetEditorBtn.addEventListener('click', () => {
-  elements.presetEditorDialog.close();
+  elements.presetEditorPanel.classList.add('hidden');
   loadCurrentImage();
 });
 elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
+elements.copyToCustomBtn.addEventListener('click', copyToCustomPreset);
+elements.updatePresetBtn.addEventListener('click', updateCurrentPreset);
+elements.showConfigBtn.addEventListener('click', showCurrentPresetConfig);
 elements.closePresetEditor.addEventListener('click', () => {
-  elements.presetEditorDialog.close();
+  elements.presetEditorPanel.classList.add('hidden');
   loadCurrentImage();
 });
 
 elements.exportQuality.addEventListener('input', (e) => {
   elements.qualityValue.textContent = e.target.value;
+});
+
+// Real-time preview for preset editor sliders with debouncing
+let previewDebounceTimer = null;
+
+async function applyEditorPreview() {
+  if (!fileManager.getCurrentImage() || elements.presetEditorPanel.classList.contains('hidden')) {
+    return;
+  }
+
+  const config = getEditorPresetConfig();
+
+  // Create a temporary preset with current editor values
+  const tempPreset = {
+    name: 'Preview',
+    category: 'temp',
+    adjustments: config.adjustments
+  };
+
+  // Store the current preset temporarily
+  const previousPreset = state.currentPreset;
+  state.currentPreset = tempPreset;
+
+  // Load the image with the preview
+  await loadCurrentImage();
+
+  // Restore the previous preset reference (but keep the temp preview applied)
+  state.currentPreset = previousPreset;
+}
+
+function debouncedPreviewUpdate() {
+  // Cancel any pending preview update
+  if (previewDebounceTimer) {
+    clearTimeout(previewDebounceTimer);
+  }
+
+  // Schedule new preview update after short delay
+  previewDebounceTimer = setTimeout(async () => {
+    await applyEditorPreview();
+    previewDebounceTimer = null;
+  }, 150); // 150ms delay - adjust if needed
+}
+
+// Add real-time preview to all editor sliders
+[
+  elements.editorExposure,
+  elements.editorContrast,
+  elements.editorSaturation,
+  elements.editorShadows,
+  elements.editorHighlights,
+  elements.editorTemperature,
+  elements.editorTint,
+  elements.editorVibrance,
+  elements.editorClarity,
+  elements.editorTexture,
+  elements.editorDehaze
+].forEach(slider => {
+  slider.addEventListener('input', (e) => {
+    // Update the value display immediately
+    const valueElement = document.getElementById(slider.id + 'Value');
+    if (valueElement) {
+      valueElement.textContent = e.target.value;
+    }
+    // Apply preview with debouncing
+    debouncedPreviewUpdate();
+  });
 });
 
 elements.closeExportDialog.addEventListener('click', () => {
