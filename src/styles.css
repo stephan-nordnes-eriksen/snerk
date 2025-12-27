@@ -118,6 +118,8 @@ footer {
   max-height: 100%;
   object-fit: contain;
   display: none;
+  transition: transform 0.2s ease-out;
+  transform-origin: center center;
 }
 
 #mainImage.loaded {

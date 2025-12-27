@@ -6,6 +6,17 @@ const state = {
   currentFolder: null,
   currentPreset: null,
   presets: [],
+  zoom: {
+    level: 1,
+    minLevel: 0.5,
+    maxLevel: 5,
+    step: 0.1,
+    panX: 0,
+    panY: 0,
+    isPanning: false,
+    startX: 0,
+    startY: 0,
+  },
 };
 
 const elements = {
@@ -313,6 +324,70 @@ function toggleUI() {
   elements.uiOverlay.classList.toggle('hidden');
 }
 
+function applyZoom() {
+  const { level, panX, panY } = state.zoom;
+  elements.mainImage.style.transform = `scale(${level}) translate(${panX}px, ${panY}px)`;
+  elements.mainImage.style.cursor = level > 1 ? 'grab' : 'default';
+}
+
+function zoomIn() {
+  state.zoom.level = Math.min(state.zoom.level + state.zoom.step, state.zoom.maxLevel);
+  applyZoom();
+}
+
+function zoomOut() {
+  state.zoom.level = Math.max(state.zoom.level - state.zoom.step, state.zoom.minLevel);
+  if (state.zoom.level === 1) {
+    state.zoom.panX = 0;
+    state.zoom.panY = 0;
+  }
+  applyZoom();
+}
+
+function resetZoom() {
+  state.zoom.level = 1;
+  state.zoom.panX = 0;
+  state.zoom.panY = 0;
+  applyZoom();
+}
+
+function handleWheel(e) {
+  if (!elements.mainImage.classList.contains('loaded')) return;
+
+  e.preventDefault();
+
+  if (e.deltaY < 0) {
+    zoomIn();
+  } else {
+    zoomOut();
+  }
+}
+
+function startPan(e) {
+  if (state.zoom.level <= 1) return;
+
+  state.zoom.isPanning = true;
+  state.zoom.startX = e.clientX - state.zoom.panX;
+  state.zoom.startY = e.clientY - state.zoom.panY;
+  elements.mainImage.style.cursor = 'grabbing';
+}
+
+function doPan(e) {
+  if (!state.zoom.isPanning) return;
+
+  e.preventDefault();
+  state.zoom.panX = e.clientX - state.zoom.startX;
+  state.zoom.panY = e.clientY - state.zoom.startY;
+  applyZoom();
+}
+
+function endPan() {
+  if (state.zoom.isPanning) {
+    state.zoom.isPanning = false;
+    elements.mainImage.style.cursor = 'grab';
+  }
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
     return;
@@ -323,13 +398,30 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       toggleUI();
       break;
+    case 'r':
+    case 'R':
+      e.preventDefault();
+      resetZoom();
+      break;
+    case '+':
+    case '=':
+      e.preventDefault();
+      zoomIn();
+      break;
+    case '-':
+    case '_':
+      e.preventDefault();
+      zoomOut();
+      break;
     case 'ArrowLeft':
       e.preventDefault();
       navigatePrevious();
+      resetZoom();
       break;
     case 'ArrowRight':
       e.preventDefault();
       navigateNext();
+      resetZoom();
       break;
     case '0':
       e.preventDefault();
@@ -358,5 +450,12 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+elements.mainImage.addEventListener('wheel', handleWheel, { passive: false });
+elements.mainImage.addEventListener('mousedown', startPan);
+elements.mainImage.addEventListener('mousemove', doPan);
+elements.mainImage.addEventListener('mouseup', endPan);
+elements.mainImage.addEventListener('mouseleave', endPan);
+elements.mainImage.addEventListener('dblclick', resetZoom);
 
 initialize();
