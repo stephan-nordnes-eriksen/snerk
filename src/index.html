@@ -26,9 +26,6 @@
     <header class="container-fluid">
       <nav>
         <ul>
-          <li><strong>Snerk</strong></li>
-        </ul>
-        <ul>
           <li><button id="openFolder" class="secondary">Open Folder</button></li>
           <li><button id="exportBtn" class="contrast" disabled>Export All</button></li>
         </ul>
@@ -57,13 +54,12 @@
     </aside>
 
     <div id="controls">
-      <button id="prevImage" disabled>← Previous</button>
-      <span id="imageCounter">No images loaded</span>
-      <button id="nextImage" disabled>Next →</button>
-    </div>
-
-    <div id="imageInfo">
-      <small id="imagePath"></small>
+      <button id="prevImage" disabled aria-label="Previous image">◀</button>
+      <div id="imageInfo">
+        <div id="imageCounter">No images loaded</div>
+        <small id="imagePath"></small>
+      </div>
+      <button id="nextImage" disabled aria-label="Next image">▶</button>
     </div>
 
     <footer class="container-fluid">
