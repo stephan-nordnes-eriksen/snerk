@@ -29,6 +29,7 @@ const elements = {
   exportFormat: document.getElementById('exportFormat'),
   exportQuality: document.getElementById('exportQuality'),
   qualityValue: document.getElementById('qualityValue'),
+  uiOverlay: document.getElementById('uiOverlay'),
 };
 
 async function initialize() {
@@ -308,12 +309,20 @@ elements.closeExportDialog.addEventListener('click', () => {
   elements.exportDialog.close();
 });
 
+function toggleUI() {
+  elements.uiOverlay.classList.toggle('hidden');
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
     return;
   }
 
   switch (e.key) {
+    case ' ':
+      e.preventDefault();
+      toggleUI();
+      break;
     case 'ArrowLeft':
       e.preventDefault();
       navigatePrevious();

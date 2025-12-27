@@ -8,81 +8,77 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="container-fluid">
-    <nav>
-      <ul>
-        <li><strong>Snerk</strong></li>
-      </ul>
-      <ul>
-        <li><button id="openFolder" class="secondary">Open Folder</button></li>
-        <li><button id="exportBtn" class="contrast" disabled>Export All</button></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main class="container-fluid">
-    <div class="grid">
-      <aside id="presetPanel">
-        <h3>Presets</h3>
-
-        <button id="importXmpBtn" class="outline secondary">Import XMP Preset</button>
-
-        <select id="presetSelect" aria-label="Select preset">
-          <option value="">No preset</option>
-        </select>
-
-        <div id="presetCategories"></div>
-
-        <details>
-          <summary>Export Settings</summary>
-          <label>
-            Format
-            <select id="exportFormat">
-              <option value="jpeg">JPEG</option>
-              <option value="png">PNG</option>
-              <option value="tiff">TIFF</option>
-              <option value="webp">WebP</option>
-            </select>
-          </label>
-          <label>
-            Quality
-            <input type="range" id="exportQuality" min="1" max="100" value="90">
-            <small id="qualityValue">90</small>
-          </label>
-        </details>
-      </aside>
-
-      <section id="viewer">
-        <div id="imageContainer">
-          <div id="loadingIndicator" class="hidden">
-            <progress></progress>
-            <p>Loading image...</p>
-          </div>
-          <img id="mainImage" alt="Photo preview" />
-          <div id="emptyState">
-            <p>Open a folder to begin viewing photos</p>
-            <button class="secondary" onclick="document.getElementById('openFolder').click()">
-              Open Folder
-            </button>
-          </div>
-        </div>
-
-        <div id="controls">
-          <button id="prevImage" disabled>← Previous</button>
-          <span id="imageCounter">No images loaded</span>
-          <button id="nextImage" disabled>Next →</button>
-        </div>
-
-        <div id="imageInfo">
-          <small id="imagePath"></small>
-        </div>
-      </section>
+  <div id="imageContainer">
+    <div id="loadingIndicator" class="hidden">
+      <progress></progress>
+      <p>Loading image...</p>
     </div>
-  </main>
+    <img id="mainImage" alt="Photo preview" />
+    <div id="emptyState">
+      <p>Open a folder to begin viewing photos</p>
+      <button class="secondary" onclick="document.getElementById('openFolder').click()">
+        Open Folder
+      </button>
+    </div>
+  </div>
 
-  <footer class="container-fluid">
-    <small id="status">Ready</small>
-  </footer>
+  <div id="uiOverlay">
+    <header class="container-fluid">
+      <nav>
+        <ul>
+          <li><strong>Snerk</strong></li>
+        </ul>
+        <ul>
+          <li><button id="openFolder" class="secondary">Open Folder</button></li>
+          <li><button id="exportBtn" class="contrast" disabled>Export All</button></li>
+        </ul>
+      </nav>
+    </header>
+
+    <aside id="presetPanel">
+      <h3>Presets</h3>
+
+      <button id="importXmpBtn" class="outline secondary">Import XMP Preset</button>
+
+      <select id="presetSelect" aria-label="Select preset">
+        <option value="">No preset</option>
+      </select>
+
+      <div id="presetCategories"></div>
+
+      <details>
+        <summary>Export Settings</summary>
+        <label>
+          Format
+          <select id="exportFormat">
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="tiff">TIFF</option>
+            <option value="webp">WebP</option>
+          </select>
+        </label>
+        <label>
+          Quality
+          <input type="range" id="exportQuality" min="1" max="100" value="90">
+          <small id="qualityValue">90</small>
+        </label>
+      </details>
+    </aside>
+
+    <div id="controls">
+      <button id="prevImage" disabled>← Previous</button>
+      <span id="imageCounter">No images loaded</span>
+      <button id="nextImage" disabled>Next →</button>
+    </div>
+
+    <div id="imageInfo">
+      <small id="imagePath"></small>
+    </div>
+
+    <footer class="container-fluid">
+      <small id="status">Ready</small>
+    </footer>
+  </div>
 
   <dialog id="exportDialog">
     <article>
