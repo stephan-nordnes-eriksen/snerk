@@ -1,0 +1,53 @@
+{
+  "name": "snerk",
+  "version": "0.1.0",
+  "description": "Minimalistic photo viewer with RAW support and Lightroom-like presets",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "keywords": [
+    "photo",
+    "viewer",
+    "raw",
+    "presets",
+    "lightroom"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "js-yaml": "^4.1.0",
+    "sharp": "^0.33.1"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.snerk.app",
+    "productName": "Snerk",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "presets/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.photography",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Graphics"
+    }
+  }
+}

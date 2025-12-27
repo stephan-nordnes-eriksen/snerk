@@ -1,0 +1,10 @@
+name: "Moody"
+category: "modern"
+adjustments:
+  exposure: -0.2
+  contrast: 1.25
+  saturation: 0.85
+  temperature: -10
+  highlights: -25
+  shadows: 30
+  vibrance: 10

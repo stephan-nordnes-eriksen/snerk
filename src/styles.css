@@ -1,0 +1,196 @@
+:root {
+  --viewer-bg: var(--pico-background-color);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  flex-shrink: 0;
+}
+
+main {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 1rem;
+}
+
+footer {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+}
+
+.grid {
+  grid-template-columns: 300px 1fr;
+  height: 100%;
+  gap: 1rem;
+  margin: 0;
+}
+
+#presetPanel {
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+#presetCategories {
+  margin-top: 1rem;
+}
+
+.preset-category {
+  margin-bottom: 1.5rem;
+}
+
+.preset-category h4 {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preset-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  margin: 0;
+}
+
+.preset-btn.active {
+  background-color: var(--pico-primary);
+  color: white;
+}
+
+#viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1rem;
+}
+
+#imageContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--viewer-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  min-height: 400px;
+}
+
+#mainImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: none;
+}
+
+#mainImage.loaded {
+  display: block;
+}
+
+#emptyState {
+  text-align: center;
+  opacity: 0.5;
+}
+
+#emptyState.hidden {
+  display: none;
+}
+
+#loadingIndicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+#loadingIndicator.hidden {
+  display: none;
+}
+
+#loadingIndicator progress {
+  margin-bottom: 1rem;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+#controls button {
+  margin: 0;
+}
+
+#imageCounter {
+  min-width: 150px;
+  text-align: center;
+}
+
+#imageInfo {
+  text-align: center;
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+#imagePath {
+  word-break: break-all;
+}
+
+#exportDialog article {
+  max-width: 500px;
+}
+
+#exportProgress {
+  margin-bottom: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+details summary {
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+details[open] {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--pico-card-background-color);
+  border-radius: 0.5rem;
+}
+
+label small {
+  display: block;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+nav ul {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  #presetPanel {
+    max-height: 300px;
+  }
+}

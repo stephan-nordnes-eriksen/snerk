@@ -1,0 +1,10 @@
+name: "Tri-X 400"
+category: "classic-film"
+adjustments:
+  exposure: 0.15
+  contrast: 1.15
+  saturation: 0.0
+  temperature: 0
+  highlights: -20
+  shadows: 15
+  vibrance: 0

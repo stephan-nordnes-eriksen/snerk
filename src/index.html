@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snerk - Photo Viewer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="container-fluid">
+    <nav>
+      <ul>
+        <li><strong>Snerk</strong></li>
+      </ul>
+      <ul>
+        <li><button id="openFolder" class="secondary">Open Folder</button></li>
+        <li><button id="exportBtn" class="contrast" disabled>Export All</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container-fluid">
+    <div class="grid">
+      <aside id="presetPanel">
+        <h3>Presets</h3>
+
+        <select id="presetSelect" aria-label="Select preset">
+          <option value="">No preset</option>
+        </select>
+
+        <div id="presetCategories"></div>
+
+        <details>
+          <summary>Export Settings</summary>
+          <label>
+            Format
+            <select id="exportFormat">
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+              <option value="tiff">TIFF</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+          <label>
+            Quality
+            <input type="range" id="exportQuality" min="1" max="100" value="90">
+            <small id="qualityValue">90</small>
+          </label>
+        </details>
+      </aside>
+
+      <section id="viewer">
+        <div id="imageContainer">
+          <div id="loadingIndicator" class="hidden">
+            <progress></progress>
+            <p>Loading image...</p>
+          </div>
+          <img id="mainImage" alt="Photo preview" />
+          <div id="emptyState">
+            <p>Open a folder to begin viewing photos</p>
+            <button class="secondary" onclick="document.getElementById('openFolder').click()">
+              Open Folder
+            </button>
+          </div>
+        </div>
+
+        <div id="controls">
+          <button id="prevImage" disabled>← Previous</button>
+          <span id="imageCounter">No images loaded</span>
+          <button id="nextImage" disabled>Next →</button>
+        </div>
+
+        <div id="imageInfo">
+          <small id="imagePath"></small>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container-fluid">
+    <small id="status">Ready</small>
+  </footer>
+
+  <dialog id="exportDialog">
+    <article>
+      <header>
+        <button aria-label="Close" rel="prev" id="closeExportDialog"></button>
+        <h3>Exporting Images</h3>
+      </header>
+      <div>
+        <progress id="exportProgress" max="100" value="0"></progress>
+        <p id="exportStatus">Preparing export...</p>
+      </div>
+    </article>
+  </dialog>
+
+  <script src="lib/fileManager.js"></script>
+  <script src="lib/presetManager.js"></script>
+  <script src="lib/imageProcessor.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

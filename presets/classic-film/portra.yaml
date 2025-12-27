@@ -1,0 +1,10 @@
+name: "Portra 400"
+category: "classic-film"
+adjustments:
+  exposure: 0.1
+  contrast: 0.95
+  saturation: 0.9
+  temperature: 15
+  highlights: -10
+  shadows: 10
+  vibrance: -5

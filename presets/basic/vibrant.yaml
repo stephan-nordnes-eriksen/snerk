@@ -1,0 +1,10 @@
+name: "Vibrant"
+category: "basic"
+adjustments:
+  exposure: 0.1
+  contrast: 1.1
+  saturation: 1.3
+  temperature: 5
+  highlights: -10
+  shadows: 15
+  vibrance: 25

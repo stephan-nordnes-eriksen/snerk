@@ -1,0 +1,10 @@
+name: "High Contrast"
+category: "modern"
+adjustments:
+  exposure: 0.05
+  contrast: 1.4
+  saturation: 1.1
+  temperature: 0
+  highlights: -30
+  shadows: 25
+  vibrance: 15

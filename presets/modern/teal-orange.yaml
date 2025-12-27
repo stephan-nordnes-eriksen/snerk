@@ -1,0 +1,11 @@
+name: "Teal & Orange"
+category: "modern"
+adjustments:
+  exposure: 0.1
+  contrast: 1.15
+  saturation: 1.2
+  temperature: 20
+  tint: -5
+  highlights: -10
+  shadows: 20
+  vibrance: 15

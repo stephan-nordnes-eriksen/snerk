@@ -1,0 +1,10 @@
+name: "Bright"
+category: "basic"
+adjustments:
+  exposure: 0.3
+  contrast: 1.0
+  saturation: 1.0
+  temperature: 10
+  highlights: -5
+  shadows: 20
+  vibrance: 10

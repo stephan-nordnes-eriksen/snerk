@@ -1,0 +1,10 @@
+name: "High Contrast B&W"
+category: "bw"
+adjustments:
+  exposure: 0.1
+  contrast: 1.35
+  saturation: 0.0
+  temperature: 0
+  highlights: -25
+  shadows: 20
+  vibrance: 0
