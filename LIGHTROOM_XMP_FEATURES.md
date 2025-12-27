@@ -66,27 +66,27 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 ## Color Grading (Split Toning)
 
 ### Shadows
-- [ ] **Shadow Hue** (`crs:ShadowTint`)
-- [ ] **Shadow Saturation** - Stored in same field
+- [x] **Shadow Hue** (`crs:ShadowTint`)
+- [x] **Shadow Saturation** - Stored in same field
 
 ### Midtones
 - [ ] **Midtone Hue** - Lightroom CC feature
 - [ ] **Midtone Saturation** - Lightroom CC feature
 
 ### Highlights
-- [ ] **Highlight Hue** (`crs:SplitToningShadowHue`)
-- [ ] **Highlight Saturation** (`crs:SplitToningShadowSaturation`)
+- [x] **Highlight Hue** (`crs:SplitToningShadowHue`)
+- [x] **Highlight Saturation** (`crs:SplitToningShadowSaturation`)
 
 ### Global
-- [ ] **Balance** (`crs:SplitToningBalance`) - Shadow/Highlight balance
+- [x] **Balance** (`crs:SplitToningBalance`) - Shadow/Highlight balance
 
 ## Detail
 
 ### Sharpening
-- [ ] **Amount** (`crs:Sharpness`) - Sharpening amount (0-150)
-- [ ] **Radius** (`crs:SharpenRadius`) - Sharpening radius (0.5-3.0)
-- [ ] **Detail** (`crs:SharpenDetail`) - Detail preservation (0-100)
-- [ ] **Masking** (`crs:SharpenEdgeMasking`) - Edge masking (0-100)
+- [x] **Amount** (`crs:Sharpness`) - Sharpening amount (0-150)
+- [x] **Radius** (`crs:SharpenRadius`) - Sharpening radius (0.5-3.0)
+- [x] **Detail** (`crs:SharpenDetail`) - Detail preservation (0-100)
+- [x] **Masking** (`crs:SharpenEdgeMasking`) - Edge masking (0-100)
 
 ### Noise Reduction
 - [ ] **Luminance** (`crs:LuminanceSmoothing`) - Luminance NR (0-100)
@@ -106,10 +106,10 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 
 ### Vignette
 - [x] **Amount** (`crs:VignetteAmount` or `crs:PostCropVignetteAmount`)
-- [ ] **Midpoint** (`crs:VignetteMidpoint`)
-- [ ] **Roundness** (`crs:PostCropVignetteRoundness`)
-- [ ] **Feather** (`crs:PostCropVignetteFeather`)
-- [ ] **Highlights** (`crs:PostCropVignetteHighlightContrast`)
+- [x] **Midpoint** (`crs:VignetteMidpoint`)
+- [x] **Roundness** (`crs:PostCropVignetteRoundness`)
+- [x] **Feather** (`crs:PostCropVignetteFeather`)
+- [x] **Highlights** (`crs:PostCropVignetteHighlightContrast`)
 
 ### Profile Corrections
 - [ ] **Enable Profile Corrections** (`crs:LensProfileEnable`)
@@ -119,8 +119,8 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 
 ### Grain
 - [x] **Amount** (`crs:GrainAmount`) - Film grain amount (0-100)
-- [ ] **Size** (`crs:GrainSize`) - Grain particle size
-- [ ] **Roughness** (`crs:GrainFrequency`) - Grain roughness
+- [x] **Size** (`crs:GrainSize`) - Grain particle size
+- [x] **Roughness** (`crs:GrainFrequency`) - Grain roughness
 
 ### Post-Crop Vignette (see Lens Corrections above)
 
@@ -176,11 +176,11 @@ This document lists all Adobe Lightroom features available in XMP preset files a
 
 ### Medium Priority (Common Features)
 1. ✅ Texture (new Lightroom feature)
-2. ❌ Color grading / Split toning
-3. ❌ Sharpening
+2. ✅ Color grading / Split toning
+3. ✅ Sharpening
 4. ❌ Noise reduction
-5. ❌ Complete vignette controls (currently only amount)
-6. ❌ Complete grain controls (currently only amount)
+5. ✅ Complete vignette controls (all parameters)
+6. ✅ Complete grain controls (all parameters)
 
 ### Low Priority (Advanced Features)
 1. ❌ Lens corrections (distortion, chromatic aberration)

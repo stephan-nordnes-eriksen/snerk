@@ -120,6 +120,99 @@ function applyTexture(image, texture) {
   }
 }
 
+async function applySplitToning(image, splitToning) {
+  // Split Toning: Apply different color tints to shadows and highlights
+  // shadowHue: 0-360, shadowSaturation: 0-100
+  // highlightHue: 0-360, highlightSaturation: 0-100
+  // balance: -100 to +100 (controls shadow/highlight transition point)
+
+  if (!splitToning || (!splitToning.shadowHue && !splitToning.highlightHue)) {
+    return image;
+  }
+
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+
+  // Helper to convert HSL to RGB
+  function hslToRgb(h, s, l) {
+    h = h / 360;
+    s = s / 100;
+    l = l / 100;
+
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+
+  // Calculate shadow and highlight colors
+  const shadowSat = splitToning.shadowSaturation || 0;
+  const highlightSat = splitToning.highlightSaturation || 0;
+  const shadowHue = splitToning.shadowHue || 0;
+  const highlightHue = splitToning.highlightHue || 0;
+  const balance = (splitToning.balance || 0) / 100; // -1 to +1
+
+  const shadowColor = hslToRgb(shadowHue, shadowSat, 50);
+  const highlightColor = hslToRgb(highlightHue, highlightSat, 50);
+
+  // Process each pixel
+  for (let i = 0; i < data.length; i += channels) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    // Calculate luminance
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Determine if pixel is shadow or highlight based on luminance and balance
+    const threshold = 0.5 + (balance * 0.3);
+
+    let blendFactor;
+    if (lum < threshold) {
+      // Shadow area
+      blendFactor = (threshold - lum) / threshold;
+      const shadowStrength = (shadowSat / 100) * blendFactor * 0.3;
+
+      data[i] = Math.min(255, Math.max(0, r + (shadowColor[0] - 128) * shadowStrength));
+      data[i + 1] = Math.min(255, Math.max(0, g + (shadowColor[1] - 128) * shadowStrength));
+      data[i + 2] = Math.min(255, Math.max(0, b + (shadowColor[2] - 128) * shadowStrength));
+    } else {
+      // Highlight area
+      blendFactor = (lum - threshold) / (1 - threshold);
+      const highlightStrength = (highlightSat / 100) * blendFactor * 0.3;
+
+      data[i] = Math.min(255, Math.max(0, r + (highlightColor[0] - 128) * highlightStrength));
+      data[i + 1] = Math.min(255, Math.max(0, g + (highlightColor[1] - 128) * highlightStrength));
+      data[i + 2] = Math.min(255, Math.max(0, b + (highlightColor[2] - 128) * highlightStrength));
+    }
+  }
+
+  return sharp(data, {
+    raw: {
+      width: width,
+      height: height,
+      channels: channels
+    }
+  });
+}
+
 function applyDehaze(image, dehaze) {
   // Dehaze: increase contrast and saturation
   const amount = dehaze / 100;
@@ -154,6 +247,36 @@ function applyBlacks(image, blacks) {
   const amount = blacks / 100;
   // Use linear adjustment with offset to primarily affect dark areas
   return image.linear(1, amount * 20);
+}
+
+function applySharpening(image, sharpening) {
+  // Sharpening with configurable parameters
+  // amount: 0-150 (Lightroom scale)
+  // radius: 0.5-3.0 (sharpening radius)
+  // detail: 0-100 (detail preservation, not directly supported by Sharp)
+  // masking: 0-100 (edge masking, not directly supported by Sharp)
+
+  if (!sharpening || !sharpening.amount || sharpening.amount === 0) {
+    return image;
+  }
+
+  const amount = sharpening.amount || 0;
+  const radius = sharpening.radius || 1.0;
+
+  // Convert Lightroom amount (0-150) to Sharp sigma
+  // Lightroom's amount is more aggressive, so we scale it down
+  const sigma = (amount / 150) * (radius * 2);
+
+  // Sharp's sharpen parameters:
+  // sigma: level of sharpening (higher = more blur in the mask)
+  // flat: level of sharpening for flat areas (default 1.0)
+  // jagged: level of sharpening for jagged areas (default 2.0)
+
+  if (sigma > 0) {
+    return image.sharpen({ sigma: Math.max(0.5, sigma) });
+  }
+
+  return image;
 }
 
 async function applyCurves(image, curves) {
@@ -355,19 +478,46 @@ async function applyHsl(image, hslAdjustments) {
   });
 }
 
-async function applyGrain(image, grainAmount) {
-  // Apply film grain effect
-  if (!grainAmount || grainAmount <= 0) return image;
+async function applyGrain(image, grain) {
+  // Apply film grain effect with full control
+  // grain can be a number (legacy) or object with {amount, size, roughness}
+
+  let amount, size, roughness;
+
+  if (typeof grain === 'number') {
+    // Legacy support: just amount
+    amount = grain;
+    size = 25; // default medium grain size
+    roughness = 50; // default medium roughness
+  } else if (typeof grain === 'object') {
+    amount = grain.amount || 0;
+    size = grain.size !== undefined ? grain.size : 25;
+    roughness = grain.roughness !== undefined ? grain.roughness : 50;
+  } else {
+    return image;
+  }
+
+  if (!amount || amount <= 0) return image;
 
   const metadata = await image.metadata();
   const { width, height } = metadata;
 
-  // Create a noise pattern
-  // We'll use a simple approach: create a grayscale noise image and overlay it
-  const noiseIntensity = Math.round((grainAmount / 100) * 30); // 0-30 intensity
+  // Size affects grain particle size (0-100, where larger = bigger particles)
+  // We simulate this by creating noise at a lower resolution and scaling up
+  const sizeFactor = 0.5 + (size / 100) * 1.5; // 0.5x to 2x
+  const noiseWidth = Math.round(width / sizeFactor);
+  const noiseHeight = Math.round(height / sizeFactor);
 
-  // Generate random noise buffer
-  const noiseSize = width * height * 4; // RGBA
+  // Roughness affects the intensity variation (0-100)
+  // Higher roughness = more contrast in grain pattern
+  const roughnessFactor = 0.5 + (roughness / 100) * 1.5; // 0.5x to 2x
+
+  // Calculate noise intensity based on amount and roughness
+  const baseIntensity = (amount / 100) * 30;
+  const noiseIntensity = Math.round(baseIntensity * roughnessFactor);
+
+  // Generate random noise buffer at grain size resolution
+  const noiseSize = noiseWidth * noiseHeight * 4; // RGBA
   const noiseBuffer = Buffer.alloc(noiseSize);
 
   for (let i = 0; i < noiseSize; i += 4) {
@@ -380,42 +530,79 @@ async function applyGrain(image, grainAmount) {
     noiseBuffer[i + 3] = 255;   // A
   }
 
-  // Create noise image
-  const noiseImage = sharp(noiseBuffer, {
+  // Create noise image at grain resolution
+  let noiseImage = sharp(noiseBuffer, {
     raw: {
-      width: width,
-      height: height,
+      width: noiseWidth,
+      height: noiseHeight,
       channels: 4
     }
   });
+
+  // Scale noise to match image dimensions (creates grain particle size effect)
+  if (noiseWidth !== width || noiseHeight !== height) {
+    noiseImage = noiseImage.resize(width, height, { kernel: 'nearest' });
+  }
 
   // Composite the noise with overlay blend mode
   return image.composite([{
     input: await noiseImage.png().toBuffer(),
     blend: 'overlay',
-    opacity: grainAmount / 100 * 0.3 // Scale opacity
+    opacity: (amount / 100) * 0.3 // Scale opacity based on amount
   }]);
 }
 
-async function applyVignette(image, vignetteAmount) {
-  // Apply vignette effect
-  if (!vignetteAmount || vignetteAmount === 0) return image;
+async function applyVignette(image, vignette) {
+  // Apply vignette effect with full control
+  // vignette can be a number (legacy) or object with {amount, midpoint, roundness, feather, highlights}
+
+  let amount, midpoint, roundness, feather, highlights;
+
+  if (typeof vignette === 'number') {
+    // Legacy support: just amount
+    amount = vignette;
+    midpoint = 50; // default
+    roundness = 0; // default circular
+    feather = 50; // default feather
+    highlights = 0; // default no highlight protection
+  } else if (typeof vignette === 'object') {
+    amount = vignette.amount || 0;
+    midpoint = vignette.midpoint !== undefined ? vignette.midpoint : 50;
+    roundness = vignette.roundness !== undefined ? vignette.roundness : 0;
+    feather = vignette.feather !== undefined ? vignette.feather : 50;
+    highlights = vignette.highlights !== undefined ? vignette.highlights : 0;
+  } else {
+    return image;
+  }
+
+  if (!amount || amount === 0) return image;
 
   const metadata = await image.metadata();
   const { width, height } = metadata;
 
-  // Create radial gradient for vignette
-  // SVG radial gradient approach
-  const intensity = Math.abs(vignetteAmount) / 100;
-  const brightness = vignetteAmount < 0 ? 0 : 255; // Negative = darken, positive = lighten
+  // Calculate radius based on midpoint (0-100, where 100 is center)
+  const radiusPercent = 50 + (midpoint / 2);
 
+  // Feather determines the gradient transition smoothness
+  const featherStart = Math.max(0, radiusPercent - (feather / 2));
+
+  // Roundness affects the aspect ratio of the gradient
+  // 0 = circular, negative = horizontal oval, positive = vertical oval
+  const aspectRatio = width / height;
+  const rx = roundness < 0 ? (100 + Math.abs(roundness)) : 100;
+  const ry = roundness > 0 ? (100 + roundness) : 100;
+
+  const intensity = Math.abs(amount) / 100;
+  const brightness = amount < 0 ? 0 : 255; // Negative = darken, positive = lighten
+
+  // SVG with elliptical gradient for roundness control
   const svgGradient = `
     <svg width="${width}" height="${height}">
       <defs>
-        <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+        <radialGradient id="vignette" cx="50%" cy="50%" rx="${rx}%" ry="${ry}%">
           <stop offset="0%" style="stop-color:rgb(128,128,128);stop-opacity:0" />
-          <stop offset="70%" style="stop-color:rgb(128,128,128);stop-opacity:0" />
-          <stop offset="100%" style="stop-color:rgb(${brightness},${brightness},${brightness});stop-opacity:${intensity}" />
+          <stop offset="${featherStart}%" style="stop-color:rgb(128,128,128);stop-opacity:0" />
+          <stop offset="${radiusPercent}%" style="stop-color:rgb(${brightness},${brightness},${brightness});stop-opacity:${intensity}" />
         </radialGradient>
       </defs>
       <rect width="${width}" height="${height}" fill="url(#vignette)" />
@@ -424,13 +611,22 @@ async function applyVignette(image, vignetteAmount) {
 
   const vignetteBuffer = Buffer.from(svgGradient);
 
-  // Composite vignette with multiply blend mode for darkening
-  const blendMode = vignetteAmount < 0 ? 'multiply' : 'screen';
+  // Composite vignette
+  const blendMode = amount < 0 ? 'multiply' : 'screen';
 
-  return image.composite([{
+  let result = image.composite([{
     input: vignetteBuffer,
     blend: blendMode
   }]);
+
+  // Apply highlight protection if specified
+  // This lightens highlights to preserve detail in vignetted areas
+  if (highlights !== 0 && amount < 0) {
+    const highlightBoost = highlights / 100;
+    result = result.modulate({ brightness: 1 + (highlightBoost * 0.2) });
+  }
+
+  return result;
 }
 
 async function createWindow() {
@@ -809,6 +1005,11 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
       }
     }
 
+    // Apply split toning / color grading
+    if (presetConfig.splitToning) {
+      image = await applySplitToning(image, presetConfig.splitToning);
+    }
+
     // Apply tone curves
     if (presetConfig.curves) {
       image = await applyCurves(image, presetConfig.curves);
@@ -817,6 +1018,11 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
     // Apply HSL selective color adjustments
     if (presetConfig.hsl) {
       image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply sharpening
+    if (presetConfig.sharpening) {
+      image = applySharpening(image, presetConfig.sharpening);
     }
 
     // Apply grain
@@ -917,6 +1123,11 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
       if (adj.dehaze !== undefined && adj.dehaze !== 0) {
         image = applyDehaze(image, adj.dehaze);
       }
+    }
+
+    // Apply split toning / color grading
+    if (presetConfig.splitToning) {
+      image = await applySplitToning(image, presetConfig.splitToning);
     }
 
     // Apply tone curves

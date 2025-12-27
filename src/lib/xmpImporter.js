@@ -50,14 +50,28 @@ class XmpImporter {
       preset.hsl = hsl;
     }
 
+    // Add split toning if present
+    const splitToning = this.convertSplitToning(crsParams);
+    if (splitToning) {
+      preset.splitToning = splitToning;
+    }
+
+    // Add sharpening if present
+    const sharpening = this.convertSharpening(crsParams);
+    if (sharpening) {
+      preset.sharpening = sharpening;
+    }
+
     // Add grain if present
-    if (crsParams.GrainAmount !== undefined) {
-      preset.grain = parseFloat(crsParams.GrainAmount);
+    const grain = this.convertGrain(crsParams);
+    if (grain) {
+      preset.grain = grain;
     }
 
     // Add vignette if present
-    if (crsParams.PostCropVignetteAmount !== undefined) {
-      preset.vignette = parseFloat(crsParams.PostCropVignetteAmount);
+    const vignette = this.convertVignette(crsParams);
+    if (vignette) {
+      preset.vignette = vignette;
     }
 
     return preset;
@@ -305,6 +319,162 @@ class XmpImporter {
   }
 
   /**
+   * Convert split toning parameters
+   * @param {Object} crsParams - Raw crs parameters
+   * @returns {Object} Split toning object or null
+   */
+  convertSplitToning(crsParams) {
+    const splitToning = {};
+
+    // Shadow tint (older format)
+    if (crsParams.ShadowTint !== undefined) {
+      const tintValue = parseFloat(crsParams.ShadowTint);
+      // Shadow tint is usually -100 to +100, convert to hue (0-360) and saturation
+      if (tintValue < 0) {
+        // Green tint
+        splitToning.shadowHue = 120;
+        splitToning.shadowSaturation = Math.abs(tintValue);
+      } else if (tintValue > 0) {
+        // Magenta tint
+        splitToning.shadowHue = 300;
+        splitToning.shadowSaturation = tintValue;
+      }
+    }
+
+    // Split toning (newer format)
+    if (crsParams.SplitToningShadowHue !== undefined) {
+      splitToning.shadowHue = parseFloat(crsParams.SplitToningShadowHue);
+    }
+    if (crsParams.SplitToningShadowSaturation !== undefined) {
+      splitToning.shadowSaturation = parseFloat(crsParams.SplitToningShadowSaturation);
+    }
+    if (crsParams.SplitToningHighlightHue !== undefined) {
+      splitToning.highlightHue = parseFloat(crsParams.SplitToningHighlightHue);
+    }
+    if (crsParams.SplitToningHighlightSaturation !== undefined) {
+      splitToning.highlightSaturation = parseFloat(crsParams.SplitToningHighlightSaturation);
+    }
+    if (crsParams.SplitToningBalance !== undefined) {
+      splitToning.balance = parseFloat(crsParams.SplitToningBalance);
+    }
+
+    // Only return if at least one parameter is present
+    return Object.keys(splitToning).length > 0 ? splitToning : null;
+  }
+
+  /**
+   * Convert sharpening parameters
+   * @param {Object} crsParams - Raw crs parameters
+   * @returns {Object} Sharpening object or null
+   */
+  convertSharpening(crsParams) {
+    const sharpening = {};
+
+    // Amount (0-150)
+    if (crsParams.Sharpness !== undefined) {
+      sharpening.amount = parseFloat(crsParams.Sharpness);
+    }
+
+    // Radius (0.5-3.0)
+    if (crsParams.SharpenRadius !== undefined) {
+      sharpening.radius = parseFloat(crsParams.SharpenRadius);
+    }
+
+    // Detail (0-100)
+    if (crsParams.SharpenDetail !== undefined) {
+      sharpening.detail = parseFloat(crsParams.SharpenDetail);
+    }
+
+    // Masking (0-100)
+    if (crsParams.SharpenEdgeMasking !== undefined) {
+      sharpening.masking = parseFloat(crsParams.SharpenEdgeMasking);
+    }
+
+    // Only return if at least one parameter is present
+    return Object.keys(sharpening).length > 0 ? sharpening : null;
+  }
+
+  /**
+   * Convert vignette parameters
+   * @param {Object} crsParams - Raw crs parameters
+   * @returns {Object|number} Vignette object or simple amount for backward compatibility
+   */
+  convertVignette(crsParams) {
+    const vignette = {};
+
+    // Amount (try PostCrop first, then regular Vignette)
+    if (crsParams.PostCropVignetteAmount !== undefined) {
+      vignette.amount = parseFloat(crsParams.PostCropVignetteAmount);
+    } else if (crsParams.VignetteAmount !== undefined) {
+      vignette.amount = parseFloat(crsParams.VignetteAmount);
+    }
+
+    // Midpoint
+    if (crsParams.VignetteMidpoint !== undefined) {
+      vignette.midpoint = parseFloat(crsParams.VignetteMidpoint);
+    }
+
+    // Roundness
+    if (crsParams.PostCropVignetteRoundness !== undefined) {
+      vignette.roundness = parseFloat(crsParams.PostCropVignetteRoundness);
+    }
+
+    // Feather
+    if (crsParams.PostCropVignetteFeather !== undefined) {
+      vignette.feather = parseFloat(crsParams.PostCropVignetteFeather);
+    }
+
+    // Highlights (highlight contrast protection)
+    if (crsParams.PostCropVignetteHighlightContrast !== undefined) {
+      vignette.highlights = parseFloat(crsParams.PostCropVignetteHighlightContrast);
+    }
+
+    // If only amount is present, return just the number for backward compatibility
+    const keys = Object.keys(vignette);
+    if (keys.length === 0) {
+      return null;
+    } else if (keys.length === 1 && keys[0] === 'amount') {
+      return vignette.amount;
+    } else {
+      return vignette;
+    }
+  }
+
+  /**
+   * Convert grain parameters
+   * @param {Object} crsParams - Raw crs parameters
+   * @returns {Object|number} Grain object or simple amount for backward compatibility
+   */
+  convertGrain(crsParams) {
+    const grain = {};
+
+    // Amount (0-100)
+    if (crsParams.GrainAmount !== undefined) {
+      grain.amount = parseFloat(crsParams.GrainAmount);
+    }
+
+    // Size (0-100) - grain particle size
+    if (crsParams.GrainSize !== undefined) {
+      grain.size = parseFloat(crsParams.GrainSize);
+    }
+
+    // Roughness (0-100) - grain roughness/frequency
+    if (crsParams.GrainFrequency !== undefined) {
+      grain.roughness = parseFloat(crsParams.GrainFrequency);
+    }
+
+    // If only amount is present, return just the number for backward compatibility
+    const keys = Object.keys(grain);
+    if (keys.length === 0) {
+      return null;
+    } else if (keys.length === 1 && keys[0] === 'amount') {
+      return grain.amount;
+    } else {
+      return grain;
+    }
+  }
+
+  /**
    * Generate YAML string from preset object
    * @param {Object} preset - Snerk preset object
    * @returns {string} YAML formatted string
@@ -374,15 +544,92 @@ class XmpImporter {
       yaml += '\n';
     }
 
+    // Split toning
+    if (preset.splitToning) {
+      yaml += 'splitToning:\n';
+      if (preset.splitToning.shadowHue !== undefined) {
+        yaml += `  shadowHue: ${preset.splitToning.shadowHue}\n`;
+      }
+      if (preset.splitToning.shadowSaturation !== undefined) {
+        yaml += `  shadowSaturation: ${preset.splitToning.shadowSaturation}\n`;
+      }
+      if (preset.splitToning.highlightHue !== undefined) {
+        yaml += `  highlightHue: ${preset.splitToning.highlightHue}\n`;
+      }
+      if (preset.splitToning.highlightSaturation !== undefined) {
+        yaml += `  highlightSaturation: ${preset.splitToning.highlightSaturation}\n`;
+      }
+      if (preset.splitToning.balance !== undefined) {
+        yaml += `  balance: ${preset.splitToning.balance}\n`;
+      }
+      yaml += '\n';
+    }
+
+    // Sharpening
+    if (preset.sharpening) {
+      yaml += 'sharpening:\n';
+      if (preset.sharpening.amount !== undefined) {
+        yaml += `  amount: ${preset.sharpening.amount}\n`;
+      }
+      if (preset.sharpening.radius !== undefined) {
+        yaml += `  radius: ${preset.sharpening.radius}\n`;
+      }
+      if (preset.sharpening.detail !== undefined) {
+        yaml += `  detail: ${preset.sharpening.detail}\n`;
+      }
+      if (preset.sharpening.masking !== undefined) {
+        yaml += `  masking: ${preset.sharpening.masking}\n`;
+      }
+      yaml += '\n';
+    }
+
     // Film grain
     if (preset.grain !== undefined) {
-      yaml += `grain: ${preset.grain}\n`;
-      yaml += '\n';
+      if (typeof preset.grain === 'number') {
+        // Legacy format: just amount
+        yaml += `grain: ${preset.grain}\n`;
+        yaml += '\n';
+      } else if (typeof preset.grain === 'object') {
+        // Full grain control
+        yaml += 'grain:\n';
+        if (preset.grain.amount !== undefined) {
+          yaml += `  amount: ${preset.grain.amount}\n`;
+        }
+        if (preset.grain.size !== undefined) {
+          yaml += `  size: ${preset.grain.size}\n`;
+        }
+        if (preset.grain.roughness !== undefined) {
+          yaml += `  roughness: ${preset.grain.roughness}\n`;
+        }
+        yaml += '\n';
+      }
     }
 
     // Vignette
     if (preset.vignette !== undefined) {
-      yaml += `vignette: ${preset.vignette}\n`;
+      if (typeof preset.vignette === 'number') {
+        // Legacy format: just amount
+        yaml += `vignette: ${preset.vignette}\n`;
+      } else if (typeof preset.vignette === 'object') {
+        // Full vignette control
+        yaml += 'vignette:\n';
+        if (preset.vignette.amount !== undefined) {
+          yaml += `  amount: ${preset.vignette.amount}\n`;
+        }
+        if (preset.vignette.midpoint !== undefined) {
+          yaml += `  midpoint: ${preset.vignette.midpoint}\n`;
+        }
+        if (preset.vignette.roundness !== undefined) {
+          yaml += `  roundness: ${preset.vignette.roundness}\n`;
+        }
+        if (preset.vignette.feather !== undefined) {
+          yaml += `  feather: ${preset.vignette.feather}\n`;
+        }
+        if (preset.vignette.highlights !== undefined) {
+          yaml += `  highlights: ${preset.vignette.highlights}\n`;
+        }
+        yaml += '\n';
+      }
     }
 
     return yaml;

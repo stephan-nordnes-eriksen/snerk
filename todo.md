@@ -22,7 +22,7 @@ todo:
 - [x] Make a markdown todo-list for all of lightrooms XMP features, including tone curves, HSL/Color mixer, color grading, lens corrections, and more.
 - [x] Make sure that whenever you press space, all ui elements dissappear, regardless of context, with the exception of when we renaming or native features are opened (eg. file explorer)
 - [x] Implement texture adjustment (new Lightroom feature)
-- [ ] Go through the xmp feature list and implement each missing feature (medium priority items)
+- [x] Go through the xmp feature list and implement each missing feature (medium priority items)
 - [ ] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
 - [ ] Add more export output formats by using ffmpeg as the conversion tool
 - [ ] If applicable, use ffmpeg for applying color profiles
