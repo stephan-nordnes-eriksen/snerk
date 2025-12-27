@@ -92,12 +92,16 @@ function applyDehaze(image, dehaze) {
 function applyWhites(image, whites) {
   // Whites: adjust bright tones using gamma
   // Positive values brighten, negative values darken
+  // Note: gamma must be between 1.0 and 3.0
   if (whites > 0) {
-    // Brighten highlights more than midtones
-    return image.gamma(1 - (whites / 100) * 0.15);
+    // Brighten highlights - use linear instead since gamma can't go below 1.0
+    const amount = whites / 100;
+    return image.linear(1 + amount * 0.15, amount * 10);
   } else if (whites < 0) {
-    // Darken highlights
-    return image.gamma(1 - (whites / 100) * 0.15);
+    // Darken highlights using gamma (values > 1.0 darken)
+    const amount = Math.abs(whites) / 100;
+    const gammaValue = Math.min(1 + amount * 0.5, 3.0);
+    return image.gamma(gammaValue);
   }
   return image;
 }
