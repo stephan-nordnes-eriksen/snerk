@@ -8,22 +8,20 @@ todo:
 - [x] editor for preset config, where you can create new custom presets with UI controls
 - [x] Make UI for modifying preset configs with sliders and text-input, etc.
 - [x] Update the default profiles. they are not correct now
-- [ ] Add a "no filter" button
-- [ ] Remove the dropdown for filters. The buttons are enough
-- [ ] Add a button to open the ~/.snerk folder in default folder program
-- [ ] Remove the dark background of the header and footer. I want it to be minimal overlay over the image
-- [ ] the title of the image is not correctly displayed between the previous / next buttons
-- [ ] Remove the text of the next / previous buttons. Only use icons
-- [ ] make the aside on the left hand side take up the full height of the window
-- [ ] remove the "snerk" logo at the top
-- [ ] Update the name in the toolbar. Now it says "electro"
-- [ ] Use GPL v3 license
-- [ ] Add an "about" page somewhere which says that this is GPL v3, and a link to the github page (https://github.com/stephan-nordnes-eriksen/snerk)
+- [x] Add a "no filter" button
+- [x] Remove the dropdown for filters. The buttons are enough
+- [x] Add a button to open the ~/.snerk folder in default folder program
+- [x] Remove the dark background of the header and footer. I want it to be minimal overlay over the image
+- [x] the title of the image is not correctly displayed between the previous / next buttons
+- [x] Remove the text of the next / previous buttons. Only use icons
+- [x] make the aside on the left hand side take up the full height of the window
+- [x] remove the "snerk" logo at the top
+- [x] Use GPL v3 license
+- [x] Add an "about" page somewhere which says that this is GPL v3, and a link to the github page (https://github.com/stephan-nordnes-eriksen/snerk)
+- [x] Disallow rename of default configs
 - [ ] Add more export output formats by using ffmpeg as the conversion tool
 - [ ] If applicable, use ffmpeg for applying color profiles
 - [ ] Make a markdown todo-list for all of lightrooms XMP features, including tone curves, HSL/Color mixer, color grading, lens corrections, and more.
 - [ ] Go through the xmp feature list and implement each missing feature
-- [ ] Disallow rename of default configs
 - [ ] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
 - [ ] Make sure that whenever you press space, all ui elements dissappear, regardless of context, with the exception of when we renaming or native features are opened (eg. file explorer)
-- [ ] When making new configs, have sliders and settings for all features
