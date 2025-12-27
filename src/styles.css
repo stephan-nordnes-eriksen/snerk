@@ -72,12 +72,50 @@ footer {
   top: 80px;
   width: 300px;
   max-height: calc(100vh - 200px);
-  overflow-y: auto;
   background: var(--ui-bg);
   backdrop-filter: blur(10px);
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+#presetPanel.collapsed {
+  width: auto;
+}
+
+#presetPanel.collapsed #presetPanelContent {
+  display: none;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.panel-header h3 {
+  margin: 0;
+}
+
+.panel-header button {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  min-width: auto;
+}
+
+#presetPanel.collapsed .panel-header h3 {
+  display: none;
+}
+
+#presetPanel.collapsed .panel-header {
+  margin-bottom: 0;
+}
+
+#presetPanelContent {
+  overflow-y: auto;
+  max-height: calc(100vh - 260px);
 }
 
 #presetCategories {

@@ -41,6 +41,8 @@ const elements = {
   exportQuality: document.getElementById('exportQuality'),
   qualityValue: document.getElementById('qualityValue'),
   uiOverlay: document.getElementById('uiOverlay'),
+  presetPanel: document.getElementById('presetPanel'),
+  togglePresetPanel: document.getElementById('togglePresetPanel'),
 };
 
 async function initialize() {
@@ -305,6 +307,7 @@ async function importXmpPreset() {
 elements.openFolderBtn.addEventListener('click', openFolder);
 elements.exportBtn.addEventListener('click', exportImages);
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
+elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
 
@@ -322,6 +325,11 @@ elements.closeExportDialog.addEventListener('click', () => {
 
 function toggleUI() {
   elements.uiOverlay.classList.toggle('hidden');
+}
+
+function togglePresetPanel() {
+  const isCollapsed = elements.presetPanel.classList.toggle('collapsed');
+  elements.togglePresetPanel.textContent = isCollapsed ? '▶' : '◀';
 }
 
 function applyZoom() {
