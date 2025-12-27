@@ -116,14 +116,20 @@ footer {
 #presetPanelContent {
   overflow-y: auto;
   max-height: calc(100vh - 260px);
+  padding-bottom: 1rem;
 }
 
 #presetCategories {
   margin-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .preset-category {
   margin-bottom: 1.5rem;
+}
+
+.preset-category:last-child {
+  margin-bottom: 2rem;
 }
 
 .preset-category h4 {
@@ -273,6 +279,10 @@ footer {
   display: none;
 }
 
+details {
+  margin-bottom: 1rem;
+}
+
 details summary {
   cursor: pointer;
   margin-bottom: 0.5rem;
@@ -280,6 +290,7 @@ details summary {
 
 details[open] {
   margin-top: 1rem;
+  margin-bottom: 2rem;
   padding: 1rem;
   background: var(--pico-card-background-color);
   border-radius: 0.5rem;
