@@ -967,7 +967,9 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
 
       if (adj.exposure !== undefined || adj.brightness !== undefined) {
         const brightnessMultiplier = 1 + (adj.exposure || 0);
-        image = image.modulate({ brightness: brightnessMultiplier });
+        // Ensure brightness is always positive (Sharp requirement)
+        const safeBrightness = Math.max(0.01, brightnessMultiplier);
+        image = image.modulate({ brightness: safeBrightness });
       }
 
       if (adj.temperature !== undefined && adj.temperature !== 0) {
@@ -1090,7 +1092,9 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
 
       if (adj.exposure !== undefined) {
         const brightnessMultiplier = 1 + adj.exposure;
-        image = image.modulate({ brightness: brightnessMultiplier });
+        // Ensure brightness is always positive (Sharp requirement)
+        const safeBrightness = Math.max(0.01, brightnessMultiplier);
+        image = image.modulate({ brightness: safeBrightness });
       }
 
       if (adj.temperature !== undefined && adj.temperature !== 0) {

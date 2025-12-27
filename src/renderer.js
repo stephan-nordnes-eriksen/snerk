@@ -968,45 +968,91 @@ elements.exportQuality.addEventListener('input', (e) => {
   elements.qualityValue.textContent = e.target.value;
 });
 
-// Real-time preview for preset editor sliders with debouncing
-let previewDebounceTimer = null;
+// Real-time preview for preset editor sliders with smart state checking
+let currentEditorState = null;
+let isProcessing = false;
+let needsUpdate = false;
+
+function getEditorState() {
+  // Capture current slider values as a comparable state object
+  return {
+    exposure: parseFloat(elements.editorExposure.value),
+    contrast: parseFloat(elements.editorContrast.value),
+    saturation: parseFloat(elements.editorSaturation.value),
+    shadows: parseFloat(elements.editorShadows.value),
+    highlights: parseFloat(elements.editorHighlights.value),
+    temperature: parseFloat(elements.editorTemperature.value),
+    tint: parseFloat(elements.editorTint.value),
+    vibrance: parseFloat(elements.editorVibrance.value),
+    clarity: parseFloat(elements.editorClarity.value),
+    texture: parseFloat(elements.editorTexture.value),
+    dehaze: parseFloat(elements.editorDehaze.value)
+  };
+}
+
+function statesAreEqual(state1, state2) {
+  if (!state1 || !state2) return false;
+  return Object.keys(state1).every(key => state1[key] === state2[key]);
+}
 
 async function applyEditorPreview() {
   if (!fileManager.getCurrentImage() || elements.presetEditorPanel.classList.contains('hidden')) {
     return;
   }
 
-  const config = getEditorPresetConfig();
-
-  // Create a temporary preset with current editor values
-  const tempPreset = {
-    name: 'Preview',
-    category: 'temp',
-    adjustments: config.adjustments
-  };
-
-  // Store the current preset temporarily
-  const previousPreset = state.currentPreset;
-  state.currentPreset = tempPreset;
-
-  // Load the image with the preview
-  await loadCurrentImage();
-
-  // Restore the previous preset reference (but keep the temp preview applied)
-  state.currentPreset = previousPreset;
-}
-
-function debouncedPreviewUpdate() {
-  // Cancel any pending preview update
-  if (previewDebounceTimer) {
-    clearTimeout(previewDebounceTimer);
+  // If already processing, just flag that we need another update
+  if (isProcessing) {
+    needsUpdate = true;
+    return;
   }
 
-  // Schedule new preview update after short delay
-  previewDebounceTimer = setTimeout(async () => {
-    await applyEditorPreview();
-    previewDebounceTimer = null;
-  }, 150); // 150ms delay - adjust if needed
+  isProcessing = true;
+
+  try {
+    // Keep processing until settings stabilize
+    while (true) {
+      // Snapshot the current settings
+      const settingsSnapshot = getEditorState();
+      currentEditorState = settingsSnapshot;
+      needsUpdate = false;
+
+      const config = getEditorPresetConfig();
+
+      // Create a temporary preset with current editor values
+      const tempPreset = {
+        name: 'Preview',
+        category: 'temp',
+        adjustments: config.adjustments
+      };
+
+      // Store the current preset temporarily
+      const previousPreset = state.currentPreset;
+      state.currentPreset = tempPreset;
+
+      // Load the image with the preview
+      await loadCurrentImage();
+
+      // Restore the previous preset reference
+      state.currentPreset = previousPreset;
+
+      // Check if settings changed during processing
+      const currentSettings = getEditorState();
+
+      // If settings haven't changed and no update was requested, we're done
+      if (statesAreEqual(settingsSnapshot, currentSettings) && !needsUpdate) {
+        break;
+      }
+
+      // Otherwise, loop and process again with new settings
+    }
+  } finally {
+    isProcessing = false;
+  }
+}
+
+function requestPreviewUpdate() {
+  // Simply trigger the preview - it will handle queueing internally
+  applyEditorPreview();
 }
 
 // Add real-time preview to all editor sliders
@@ -1029,8 +1075,8 @@ function debouncedPreviewUpdate() {
     if (valueElement) {
       valueElement.textContent = e.target.value;
     }
-    // Apply preview with debouncing
-    debouncedPreviewUpdate();
+    // Request preview update - it will handle smart queueing
+    requestPreviewUpdate();
   });
 });
 
