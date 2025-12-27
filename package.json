@@ -17,8 +17,13 @@
     "presets",
     "lightroom"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Stephan Nordnes Eriksen",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stephan-nordnes-eriksen/snerk"
+  },
+  "homepage": "https://github.com/stephan-nordnes-eriksen/snerk",
   "dependencies": {
     "chokidar": "^3.5.3",
     "electron-squirrel-startup": "^1.0.0",

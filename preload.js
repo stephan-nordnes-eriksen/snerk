@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   openSnerkFolder: () => ipcRenderer.invoke('folder:openSnerkFolder'),
 
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),

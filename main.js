@@ -564,6 +564,11 @@ ipcMain.handle('folder:openSnerkFolder', async () => {
   return snerkDir;
 });
 
+ipcMain.handle('shell:openExternal', async (event, url) => {
+  const { shell } = require('electron');
+  await shell.openExternal(url);
+});
+
 async function findAllYamlFiles(dirPath, results = []) {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });

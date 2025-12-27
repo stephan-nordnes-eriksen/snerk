@@ -59,6 +59,7 @@ const elements = {
   createPresetBtn: document.getElementById('createPresetBtn'),
   noFilterBtn: document.getElementById('noFilterBtn'),
   openSnerkFolderBtn: document.getElementById('openSnerkFolderBtn'),
+  githubLink: document.getElementById('githubLink'),
   presetEditorDialog: document.getElementById('presetEditorDialog'),
   closePresetEditor: document.getElementById('closePresetEditor'),
   editorExposure: document.getElementById('editorExposure'),
@@ -126,15 +127,19 @@ function renderPresets() {
       button.onclick = () => selectPreset(preset.name);
       presetRow.appendChild(button);
 
-      const renameBtn = document.createElement('button');
-      renameBtn.className = 'rename-btn outline secondary';
-      renameBtn.textContent = '✎';
-      renameBtn.title = 'Rename preset';
-      renameBtn.onclick = (e) => {
-        e.stopPropagation();
-        renamePreset(preset);
-      };
-      presetRow.appendChild(renameBtn);
+      // Only show rename button for imported and custom presets
+      const isDefaultPreset = ['basic', 'bw', 'classic-film', 'modern'].includes(category);
+      if (!isDefaultPreset) {
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'rename-btn outline secondary';
+        renameBtn.textContent = '✎';
+        renameBtn.title = 'Rename preset';
+        renameBtn.onclick = (e) => {
+          e.stopPropagation();
+          renamePreset(preset);
+        };
+        presetRow.appendChild(renameBtn);
+      }
 
       buttonContainer.appendChild(presetRow);
     }
@@ -760,6 +765,14 @@ elements.openSnerkFolderBtn.addEventListener('click', async () => {
   } catch (error) {
     console.error('Error opening Snerk folder:', error);
     updateStatus('Error opening folder');
+  }
+});
+elements.githubLink.addEventListener('click', async (e) => {
+  e.preventDefault();
+  try {
+    await window.snerkAPI.openExternal('https://github.com/stephan-nordnes-eriksen/snerk');
+  } catch (error) {
+    console.error('Error opening GitHub link:', error);
   }
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
