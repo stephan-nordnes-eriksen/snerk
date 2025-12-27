@@ -52,20 +52,7 @@
 
       <details>
         <summary>Export Settings</summary>
-        <label>
-          Format
-          <select id="exportFormat">
-            <option value="jpeg">JPEG</option>
-            <option value="png">PNG</option>
-            <option value="tiff">TIFF</option>
-            <option value="webp">WebP</option>
-          </select>
-        </label>
-        <label>
-          Quality
-          <input type="range" id="exportQuality" min="1" max="100" value="90">
-          <small id="qualityValue">90</small>
-        </label>
+        <button id="manageExportConfigsBtn" class="outline">Manage Export Configs</button>
       </details>
       </div>
     </aside>
@@ -85,7 +72,46 @@
     </footer>
   </div>
 
-  <dialog id="exportDialog">
+  <dialog id="exportConfigDialog">
+    <article>
+      <header>
+        <h3>Export Configuration</h3>
+      </header>
+      <div>
+        <label>
+          Export Config
+          <select id="exportConfigSelect">
+            <option value="">Custom...</option>
+          </select>
+        </label>
+        <label>
+          Format
+          <select id="exportFormat">
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="tiff">TIFF</option>
+            <option value="webp">WebP</option>
+          </select>
+        </label>
+        <label>
+          Quality
+          <input type="range" id="exportQuality" min="1" max="100" value="90">
+          <small id="qualityValue">90</small>
+        </label>
+        <label>
+          <input type="checkbox" id="exportApplyPreset" checked>
+          Apply current preset
+        </label>
+      </div>
+      <footer>
+        <button id="saveExportConfigBtn" class="outline secondary">Save Config</button>
+        <button id="cancelExportConfigBtn" class="secondary">Cancel</button>
+        <button id="confirmExportBtn">Export</button>
+      </footer>
+    </article>
+  </dialog>
+
+  <dialog id="exportProgressDialog">
     <article>
       <header>
         <button aria-label="Close" rel="prev" id="closeExportDialog"></button>
@@ -120,6 +146,7 @@
   <script src="lib/presetManager.js"></script>
   <script src="lib/imageProcessor.js"></script>
   <script src="lib/xmpImporter.js"></script>
+  <script src="lib/exportConfigManager.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

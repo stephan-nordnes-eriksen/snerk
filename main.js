@@ -610,6 +610,18 @@ ipcMain.handle('preset:rename', async (event, oldFilePath, newName) => {
   }
 });
 
+ipcMain.handle('exportConfig:save', async (event, dirPath, filename, content) => {
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+    const filePath = path.join(dirPath, filename);
+    await fs.writeFile(filePath, content, 'utf8');
+    return filePath;
+  } catch (error) {
+    console.error('Error saving export config:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;

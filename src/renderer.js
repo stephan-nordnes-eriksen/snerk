@@ -1,6 +1,7 @@
 const fileManager = new FileManager();
 const presetManager = new PresetManager();
 const imageProcessor = new ImageProcessor();
+const exportConfigManager = new ExportConfigManager();
 
 const state = {
   currentFolder: null,
@@ -48,6 +49,14 @@ const elements = {
   renameInput: document.getElementById('renameInput'),
   renameConfirmBtn: document.getElementById('renameConfirmBtn'),
   renameCancelBtn: document.getElementById('renameCancelBtn'),
+  exportConfigDialog: document.getElementById('exportConfigDialog'),
+  exportConfigSelect: document.getElementById('exportConfigSelect'),
+  exportApplyPreset: document.getElementById('exportApplyPreset'),
+  saveExportConfigBtn: document.getElementById('saveExportConfigBtn'),
+  cancelExportConfigBtn: document.getElementById('cancelExportConfigBtn'),
+  confirmExportBtn: document.getElementById('confirmExportBtn'),
+  exportProgressDialog: document.getElementById('exportProgressDialog'),
+  manageExportConfigsBtn: document.getElementById('manageExportConfigsBtn'),
 };
 
 async function initialize() {
@@ -55,6 +64,7 @@ async function initialize() {
     updateStatus('Loading presets...');
     state.presets = await presetManager.loadPresets();
     renderPresets();
+    await loadExportConfigs();
     updateStatus('Ready');
   } catch (error) {
     console.error('Error initializing:', error);
@@ -243,14 +253,96 @@ function clearActivePresetButtons() {
   });
 }
 
-async function exportImages() {
+async function loadExportConfigs() {
+  try {
+    const configs = await exportConfigManager.loadConfigs();
+
+    elements.exportConfigSelect.innerHTML = '<option value="">Custom...</option>';
+
+    for (const config of configs) {
+      const option = document.createElement('option');
+      option.value = config.name;
+      option.textContent = config.name;
+      elements.exportConfigSelect.appendChild(option);
+    }
+  } catch (error) {
+    console.error('Error loading export configs:', error);
+  }
+}
+
+async function showExportConfigDialog() {
+  const images = fileManager.getAllImages();
+
+  if (images.length === 0) {
+    updateStatus('No images to export');
+    return;
+  }
+
+  return new Promise((resolve) => {
+    const handleConfigSelect = () => {
+      const configName = elements.exportConfigSelect.value;
+      if (configName) {
+        const config = exportConfigManager.findConfig(configName);
+        if (config) {
+          elements.exportFormat.value = config.format;
+          elements.exportQuality.value = config.quality;
+          elements.qualityValue.textContent = config.quality;
+        }
+      }
+    };
+
+    const handleSaveConfig = async () => {
+      const configName = await showRenameDialog('Save Export Config', 'My Export Config');
+      if (!configName) return;
+
+      const config = {
+        name: configName,
+        format: elements.exportFormat.value,
+        quality: parseInt(elements.exportQuality.value),
+      };
+
+      try {
+        await exportConfigManager.saveConfig(config);
+        await loadExportConfigs();
+        updateStatus(`Saved export config "${configName}"`);
+      } catch (error) {
+        console.error('Error saving export config:', error);
+        await showAlert('Error saving export config: ' + error.message);
+      }
+    };
+
+    const handleConfirm = async () => {
+      cleanup();
+      elements.exportConfigDialog.close();
+      await performExport();
+      resolve();
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      elements.exportConfigDialog.close();
+      resolve();
+    };
+
+    const cleanup = () => {
+      elements.exportConfigSelect.removeEventListener('change', handleConfigSelect);
+      elements.saveExportConfigBtn.removeEventListener('click', handleSaveConfig);
+      elements.confirmExportBtn.removeEventListener('click', handleConfirm);
+      elements.cancelExportConfigBtn.removeEventListener('click', handleCancel);
+    };
+
+    elements.exportConfigSelect.addEventListener('change', handleConfigSelect);
+    elements.saveExportConfigBtn.addEventListener('click', handleSaveConfig);
+    elements.confirmExportBtn.addEventListener('click', handleConfirm);
+    elements.cancelExportConfigBtn.addEventListener('click', handleCancel);
+
+    elements.exportConfigDialog.showModal();
+  });
+}
+
+async function performExport() {
   try {
     const images = fileManager.getAllImages();
-
-    if (images.length === 0) {
-      updateStatus('No images to export');
-      return;
-    }
 
     const outputDir = await window.snerkAPI.selectExportFolder();
 
@@ -258,15 +350,17 @@ async function exportImages() {
 
     const format = elements.exportFormat.value;
     const quality = parseInt(elements.exportQuality.value);
+    const applyPreset = elements.exportApplyPreset.checked;
+    const preset = applyPreset ? state.currentPreset : null;
 
-    elements.exportDialog.showModal();
+    elements.exportProgressDialog.showModal();
     elements.exportProgress.max = images.length;
     elements.exportProgress.value = 0;
     elements.exportStatus.textContent = `Exporting 0 / ${images.length}...`;
 
     const results = await imageProcessor.exportBatch(
       images,
-      state.currentPreset,
+      preset,
       outputDir,
       format,
       quality,
@@ -281,14 +375,14 @@ async function exportImages() {
     elements.exportStatus.textContent = `Exported ${successCount} / ${images.length} images successfully`;
 
     setTimeout(() => {
-      elements.exportDialog.close();
+      elements.exportProgressDialog.close();
     }, 2000);
 
     updateStatus(`Export complete: ${successCount} images`);
   } catch (error) {
     console.error('Error exporting images:', error);
     updateStatus('Error exporting images');
-    elements.exportDialog.close();
+    elements.exportProgressDialog.close();
   }
 }
 
@@ -480,9 +574,10 @@ async function importXmpPreset() {
 }
 
 elements.openFolderBtn.addEventListener('click', openFolder);
-elements.exportBtn.addEventListener('click', exportImages);
+elements.exportBtn.addEventListener('click', showExportConfigDialog);
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
+elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
 elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
 
@@ -495,7 +590,7 @@ elements.exportQuality.addEventListener('input', (e) => {
 });
 
 elements.closeExportDialog.addEventListener('click', () => {
-  elements.exportDialog.close();
+  elements.exportProgressDialog.close();
 });
 
 function toggleUI() {
@@ -629,7 +724,7 @@ document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
     e.preventDefault();
     if (!elements.exportBtn.disabled) {
-      exportImages();
+      showExportConfigDialog();
     }
   }
 });

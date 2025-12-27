@@ -7,3 +7,4 @@ todo:
 - [ ] editor for config, where you can create new custom configs
 - [ ] Make UI for modifying configs with sliders and text-input, etc.
 - [ ] Make export configs that can be saved, eg. "jpeg quality 10 etc.", similar to how we have configs for style presets 
+- [ ] Update the default profiles. they are not correct now
