@@ -1,10 +1,11 @@
 name: "Vintage B&W"
 category: "bw"
 adjustments:
-  exposure: 0.2
-  contrast: 0.9
+  exposure: 0.25
+  contrast: 0.88
   saturation: 0.0
-  temperature: 10
-  highlights: -10
-  shadows: 25
+  temperature: 12
+  highlights: -15
+  shadows: 30
   vibrance: 0
+  clarity: -8

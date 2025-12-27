@@ -1,10 +1,11 @@
 name: "Soft B&W"
 category: "bw"
 adjustments:
-  exposure: 0.15
-  contrast: 0.85
+  exposure: 0.18
+  contrast: 0.82
   saturation: 0.0
-  temperature: 5
-  highlights: 10
-  shadows: 15
+  temperature: 8
+  highlights: 5
+  shadows: 18
   vibrance: 0
+  clarity: -15

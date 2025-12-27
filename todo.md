@@ -5,6 +5,6 @@ todo:
 - [x] Make the presets UI collapsible
 - [x] modal pop-up for export configs
 - [x] Make export configs that can be saved, eg. "jpeg quality 10 etc.", similar to how we have configs for style presets
-- [ ] editor for preset config, where you can create new custom presets with UI controls
-- [ ] Make UI for modifying preset configs with sliders and text-input, etc.
+- [x] editor for preset config, where you can create new custom presets with UI controls
+- [x] Make UI for modifying preset configs with sliders and text-input, etc.
 - [ ] Update the default profiles. they are not correct now

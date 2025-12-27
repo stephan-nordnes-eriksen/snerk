@@ -1,10 +1,13 @@
 name: "Velvia 50"
 category: "classic-film"
 adjustments:
-  exposure: 0.05
-  contrast: 1.2
-  saturation: 1.3
-  temperature: 5
-  highlights: -15
-  shadows: -5
-  vibrance: 20
+  exposure: 0.08
+  contrast: 1.25
+  saturation: 1.4
+  temperature: 8
+  tint: 2
+  highlights: -20
+  shadows: -8
+  vibrance: 30
+  clarity: 20
+  dehaze: 15

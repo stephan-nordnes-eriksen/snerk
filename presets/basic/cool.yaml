@@ -1,11 +1,12 @@
 name: "Cool"
 category: "basic"
 adjustments:
-  exposure: 0.05
-  contrast: 1.05
-  saturation: 1.0
-  temperature: -30
-  tint: -5
-  highlights: -10
-  shadows: 5
-  vibrance: 5
+  exposure: 0.1
+  contrast: 1.08
+  saturation: 1.05
+  temperature: -35
+  tint: -8
+  highlights: -15
+  shadows: 8
+  vibrance: 8
+  clarity: 8

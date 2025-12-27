@@ -1,11 +1,13 @@
 name: "Teal & Orange"
 category: "modern"
 adjustments:
-  exposure: 0.1
-  contrast: 1.15
-  saturation: 1.2
-  temperature: 20
-  tint: -5
-  highlights: -10
-  shadows: 20
-  vibrance: 15
+  exposure: 0.12
+  contrast: 1.18
+  saturation: 1.25
+  temperature: 25
+  tint: -8
+  highlights: -18
+  shadows: 25
+  vibrance: 20
+  clarity: 10
+  dehaze: 8

@@ -1,11 +1,12 @@
 name: "Warm"
 category: "basic"
 adjustments:
-  exposure: 0.1
-  contrast: 1.05
-  saturation: 1.05
-  temperature: 40
-  tint: 5
-  highlights: -5
-  shadows: 10
-  vibrance: 10
+  exposure: 0.15
+  contrast: 1.08
+  saturation: 1.1
+  temperature: 35
+  tint: 3
+  highlights: -8
+  shadows: 12
+  vibrance: 15
+  clarity: 5
