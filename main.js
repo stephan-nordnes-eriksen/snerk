@@ -940,103 +940,6 @@ ipcMain.handle('file:delete', async (event, filePath) => {
   }
 });
 
-async function applyPresetToSharpImage(image, presetConfig) {
-  if (!presetConfig || !presetConfig.adjustments) {
-    return image;
-  }
-
-  const adj = presetConfig.adjustments;
-
-  if (adj.exposure !== undefined) {
-    const brightnessMultiplier = 1 + adj.exposure;
-    const safeBrightness = Math.max(0.01, brightnessMultiplier);
-    image = image.modulate({ brightness: safeBrightness });
-  }
-
-  if (adj.temperature !== undefined && adj.temperature !== 0) {
-    image = applyTemperature(image, adj.temperature);
-  }
-
-  if (adj.tint !== undefined && adj.tint !== 0) {
-    image = applyTint(image, adj.tint);
-  }
-
-  if (adj.saturation !== undefined) {
-    image = image.modulate({ saturation: adj.saturation });
-  }
-
-  if (adj.vibrance !== undefined && adj.vibrance !== 0) {
-    image = applyVibrance(image, adj.vibrance);
-  }
-
-  if (adj.contrast !== undefined && adj.contrast !== 1) {
-    image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
-  }
-
-  if (adj.clarity !== undefined && adj.clarity !== 0) {
-    image = applyClarity(image, adj.clarity);
-  }
-
-  if (adj.texture !== undefined && adj.texture !== 0) {
-    image = applyTexture(image, adj.texture);
-  }
-
-  if (adj.shadows !== undefined || adj.highlights !== undefined) {
-    const shadows = (adj.shadows || 0) / 100;
-    const highlights = (adj.highlights || 0) / 100;
-
-    if (shadows !== 0) {
-      image = image.modulate({
-        lightness: 1 + shadows * 0.3,
-      });
-    }
-
-    if (highlights !== 0) {
-      if (highlights < 0) {
-        image = image.gamma(1 + Math.abs(highlights) * 0.02);
-      }
-    }
-  }
-
-  if (adj.whites !== undefined && adj.whites !== 0) {
-    image = applyWhites(image, adj.whites);
-  }
-
-  if (adj.blacks !== undefined && adj.blacks !== 0) {
-    image = applyBlacks(image, adj.blacks);
-  }
-
-  if (adj.dehaze !== undefined && adj.dehaze !== 0) {
-    image = applyDehaze(image, adj.dehaze);
-  }
-
-  if (presetConfig.splitToning) {
-    image = await applySplitToning(image, presetConfig.splitToning);
-  }
-
-  if (presetConfig.curves) {
-    image = await applyCurves(image, presetConfig.curves);
-  }
-
-  if (presetConfig.hsl) {
-    image = await applyHsl(image, presetConfig.hsl);
-  }
-
-  if (presetConfig.sharpening) {
-    image = applySharpening(image, presetConfig.sharpening);
-  }
-
-  if (presetConfig.grain) {
-    image = await applyGrain(image, presetConfig.grain);
-  }
-
-  if (presetConfig.vignette) {
-    image = await applyVignette(image, presetConfig.vignette);
-  }
-
-  return image;
-}
-
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;
@@ -1095,9 +998,106 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
 
     metadata = await image.metadata();
 
-    image = image.resize(2000, 2000, { fit: 'inside', withoutEnlargement: true });
+    if (presetConfig.adjustments) {
+      const adj = presetConfig.adjustments;
 
-    image = await applyPresetToSharpImage(image, presetConfig);
+      if (adj.exposure !== undefined || adj.brightness !== undefined) {
+        const brightnessMultiplier = 1 + (adj.exposure || 0);
+        // Ensure brightness is always positive (Sharp requirement)
+        const safeBrightness = Math.max(0.01, brightnessMultiplier);
+        image = image.modulate({ brightness: safeBrightness });
+      }
+
+      if (adj.temperature !== undefined && adj.temperature !== 0) {
+        image = applyTemperature(image, adj.temperature);
+      }
+
+      if (adj.tint !== undefined && adj.tint !== 0) {
+        image = applyTint(image, adj.tint);
+      }
+
+      if (adj.saturation !== undefined) {
+        image = image.modulate({ saturation: adj.saturation });
+      }
+
+      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
+        image = applyVibrance(image, adj.vibrance);
+      }
+
+      if (adj.contrast !== undefined && adj.contrast !== 1) {
+        const contrastAmount = Math.round((adj.contrast - 1) * 50);
+        if (contrastAmount !== 0) {
+          image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
+        }
+      }
+
+      if (adj.clarity !== undefined && adj.clarity !== 0) {
+        image = applyClarity(image, adj.clarity);
+      }
+
+      if (adj.texture !== undefined && adj.texture !== 0) {
+        image = applyTexture(image, adj.texture);
+      }
+
+      if (adj.shadows !== undefined || adj.highlights !== undefined) {
+        const shadows = (adj.shadows || 0) / 100;
+        const highlights = (adj.highlights || 0) / 100;
+
+        if (shadows !== 0) {
+          image = image.modulate({
+            lightness: 1 + shadows * 0.3,
+          });
+        }
+
+        if (highlights !== 0) {
+          if (highlights < 0) {
+            image = image.gamma(1 + Math.abs(highlights) * 0.02);
+          }
+        }
+      }
+
+      if (adj.whites !== undefined && adj.whites !== 0) {
+        image = applyWhites(image, adj.whites);
+      }
+
+      if (adj.blacks !== undefined && adj.blacks !== 0) {
+        image = applyBlacks(image, adj.blacks);
+      }
+
+      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
+        image = applyDehaze(image, adj.dehaze);
+      }
+    }
+
+    // Apply split toning / color grading
+    if (presetConfig.splitToning) {
+      image = await applySplitToning(image, presetConfig.splitToning);
+    }
+
+    // Apply tone curves
+    if (presetConfig.curves) {
+      image = await applyCurves(image, presetConfig.curves);
+    }
+
+    // Apply HSL selective color adjustments
+    if (presetConfig.hsl) {
+      image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply sharpening
+    if (presetConfig.sharpening) {
+      image = applySharpening(image, presetConfig.sharpening);
+    }
+
+    // Apply grain
+    if (presetConfig.grain) {
+      image = await applyGrain(image, presetConfig.grain);
+    }
+
+    // Apply vignette
+    if (presetConfig.vignette) {
+      image = await applyVignette(image, presetConfig.vignette);
+    }
 
     const buffer = await image.jpeg({ quality: 90 }).toBuffer();
 
@@ -1123,7 +1123,103 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
       image = sharp(imagePath);
     }
 
-    image = await applyPresetToSharpImage(image, presetConfig);
+    if (presetConfig && presetConfig.adjustments) {
+      const adj = presetConfig.adjustments;
+
+      if (adj.exposure !== undefined) {
+        const brightnessMultiplier = 1 + adj.exposure;
+        // Ensure brightness is always positive (Sharp requirement)
+        const safeBrightness = Math.max(0.01, brightnessMultiplier);
+        image = image.modulate({ brightness: safeBrightness });
+      }
+
+      if (adj.temperature !== undefined && adj.temperature !== 0) {
+        image = applyTemperature(image, adj.temperature);
+      }
+
+      if (adj.tint !== undefined && adj.tint !== 0) {
+        image = applyTint(image, adj.tint);
+      }
+
+      if (adj.saturation !== undefined) {
+        image = image.modulate({ saturation: adj.saturation });
+      }
+
+      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
+        image = applyVibrance(image, adj.vibrance);
+      }
+
+      if (adj.contrast !== undefined && adj.contrast !== 1) {
+        image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
+      }
+
+      if (adj.clarity !== undefined && adj.clarity !== 0) {
+        image = applyClarity(image, adj.clarity);
+      }
+
+      if (adj.texture !== undefined && adj.texture !== 0) {
+        image = applyTexture(image, adj.texture);
+      }
+
+      if (adj.shadows !== undefined || adj.highlights !== undefined) {
+        const shadows = (adj.shadows || 0) / 100;
+        const highlights = (adj.highlights || 0) / 100;
+
+        if (shadows !== 0) {
+          image = image.modulate({
+            lightness: 1 + shadows * 0.3,
+          });
+        }
+
+        if (highlights !== 0) {
+          if (highlights < 0) {
+            image = image.gamma(1 + Math.abs(highlights) * 0.02);
+          }
+        }
+      }
+
+      if (adj.whites !== undefined && adj.whites !== 0) {
+        image = applyWhites(image, adj.whites);
+      }
+
+      if (adj.blacks !== undefined && adj.blacks !== 0) {
+        image = applyBlacks(image, adj.blacks);
+      }
+
+      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
+        image = applyDehaze(image, adj.dehaze);
+      }
+    }
+
+    // Apply split toning / color grading
+    if (presetConfig.splitToning) {
+      image = await applySplitToning(image, presetConfig.splitToning);
+    }
+
+    // Apply tone curves
+    if (presetConfig && presetConfig.curves) {
+      image = await applyCurves(image, presetConfig.curves);
+    }
+
+    // Apply HSL selective color adjustments
+    if (presetConfig && presetConfig.hsl) {
+      image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply sharpening
+    if (presetConfig && presetConfig.sharpening) {
+      image = applySharpening(image, presetConfig.sharpening);
+    }
+
+    // Apply grain
+    if (presetConfig && presetConfig.grain) {
+      image = await applyGrain(image, presetConfig.grain);
+    }
+
+    // Apply vignette
+    if (presetConfig && presetConfig.vignette) {
+      image = await applyVignette(image, presetConfig.vignette);
+    }
 
     const formatOptions = {
       jpeg: { quality },
