@@ -38,7 +38,7 @@ class SettingsManager {
     return {
       version: "1.0",
       rendering: {
-        mode: "webgpu",
+        mode: "sharp",
         fallbackToSharp: true
       }
     };
