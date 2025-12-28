@@ -103,6 +103,8 @@ const elements = {
   webgpuStatusText: document.getElementById('webgpuStatusText'),
   settingsSaveBtn: document.getElementById('settingsSaveBtn'),
   settingsCancelBtn: document.getElementById('settingsCancelBtn'),
+  zoomFitBtn: document.getElementById('zoomFitBtn'),
+  zoom100Btn: document.getElementById('zoom100Btn'),
 };
 
 async function initialize() {
@@ -1209,6 +1211,8 @@ elements.closePresetEditor.addEventListener('click', () => {
   elements.presetEditorPanel.classList.add('hidden');
   loadCurrentImage();
 });
+elements.zoomFitBtn.addEventListener('click', zoomFitToWindow);
+elements.zoom100Btn.addEventListener('click', zoom100Percent);
 
 elements.exportQuality.addEventListener('input', (e) => {
   elements.qualityValue.textContent = e.target.value;
@@ -1366,6 +1370,34 @@ function resetZoom() {
   applyZoom();
 }
 
+function zoomFitToWindow() {
+  state.zoom.level = 1;
+  state.zoom.panX = 0;
+  state.zoom.panY = 0;
+  applyZoom();
+}
+
+function zoom100Percent() {
+  if (!elements.mainImage.classList.contains('loaded')) return;
+
+  const img = elements.mainImage;
+  const naturalWidth = img.naturalWidth;
+  const naturalHeight = img.naturalHeight;
+  const displayedWidth = img.clientWidth;
+  const displayedHeight = img.clientHeight;
+
+  if (displayedWidth === 0 || displayedHeight === 0) return;
+
+  const scaleX = naturalWidth / displayedWidth;
+  const scaleY = naturalHeight / displayedHeight;
+  const scale = Math.max(scaleX, scaleY);
+
+  state.zoom.level = scale;
+  state.zoom.panX = 0;
+  state.zoom.panY = 0;
+  applyZoom();
+}
+
 function handleWheel(e) {
   if (!elements.mainImage.classList.contains('loaded')) return;
 
@@ -1414,7 +1446,7 @@ document.addEventListener('keydown', (e) => {
     elements.exportConfigDialog.open ||
     elements.exportProgressDialog.open ||
     elements.renameDialog.open ||
-    elements.presetEditorDialog.open ||
+    !elements.presetEditorPanel.classList.contains('hidden') ||
     elements.settingsDialog.open;
 
   switch (e.key) {
