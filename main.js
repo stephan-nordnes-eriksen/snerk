@@ -1223,7 +1223,9 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
       jpg: { quality },
       png: { quality },
       tiff: { quality },
-      webp: { quality }
+      webp: { quality },
+      avif: { quality },
+      heif: { quality }
     };
 
     const outputFormat = format.toLowerCase();
@@ -1236,6 +1238,10 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
       await image.tiff(formatOptions[outputFormat]).toFile(outputPath);
     } else if (outputFormat === 'webp') {
       await image.webp(formatOptions[outputFormat]).toFile(outputPath);
+    } else if (outputFormat === 'avif') {
+      await image.avif(formatOptions[outputFormat]).toFile(outputPath);
+    } else if (outputFormat === 'heif') {
+      await image.heif(formatOptions[outputFormat]).toFile(outputPath);
     } else {
       await image.jpeg({ quality: 90 }).toFile(outputPath);
     }

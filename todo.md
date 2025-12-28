@@ -33,6 +33,6 @@ todo:
 - [x] Fix problem: In weg gpu mode, the black and white filters is not actually black and white, but has color.
 - [x] When deleting presets, other presets are being duplicated in the UI, and the one being deleted is not properly removed.
 - [x] Remove the edit button next to the name of the presets, and move the rename-functionality into the preset editor section
-- [ ] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
+- [x] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
 - [ ] Add better input methods for curves
 - [ ] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.
