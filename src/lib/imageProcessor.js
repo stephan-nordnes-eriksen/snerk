@@ -9,8 +9,19 @@ class ImageProcessor {
     this.settingsManager = settingsManager;
 
     if (settingsManager.getRenderingMode() === 'webgpu') {
-      this.webgpuProcessor = new WebGPUProcessor();
-      await this.webgpuProcessor.initialize();
+      try {
+        this.webgpuProcessor = new WebGPUProcessor();
+        await this.webgpuProcessor.initialize();
+        console.log('WebGPU processor initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize WebGPU processor:', error);
+        console.log('Falling back to Sharp mode');
+        this.webgpuProcessor = null;
+        // Update settings to reflect the fallback
+        if (settingsManager.settings.rendering.fallbackToSharp) {
+          settingsManager.effectiveMode = 'sharp';
+        }
+      }
     }
   }
 
