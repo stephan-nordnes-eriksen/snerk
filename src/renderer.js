@@ -88,6 +88,7 @@ const elements = {
   editorDehaze: document.getElementById('editorDehaze'),
   editorDehazeValue: document.getElementById('editorDehazeValue'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
+  renamePresetBtn: document.getElementById('renamePresetBtn'),
   deletePresetBtn: document.getElementById('deletePresetBtn'),
   cancelPresetEditorBtn: document.getElementById('cancelPresetEditorBtn'),
   copyToCustomBtn: document.getElementById('copyToCustomBtn'),
@@ -140,31 +141,12 @@ function renderPresets() {
     buttonContainer.className = 'preset-buttons';
 
     for (const preset of presets) {
-      const presetRow = document.createElement('div');
-      presetRow.className = 'preset-row';
-
       const button = document.createElement('button');
       button.className = 'preset-btn secondary';
       button.textContent = preset.name;
       button.dataset.presetName = preset.name;
       button.onclick = () => selectPreset(preset.name);
-      presetRow.appendChild(button);
-
-      // Only show rename button for imported and custom presets
-      const isDefaultPreset = ['basic', 'bw', 'classic-film', 'modern'].includes(category);
-      if (!isDefaultPreset) {
-        const renameBtn = document.createElement('button');
-        renameBtn.className = 'rename-btn outline secondary';
-        renameBtn.textContent = '✎';
-        renameBtn.title = 'Rename preset';
-        renameBtn.onclick = (e) => {
-          e.stopPropagation();
-          renamePreset(preset);
-        };
-        presetRow.appendChild(renameBtn);
-      }
-
-      buttonContainer.appendChild(presetRow);
+      buttonContainer.appendChild(button);
     }
 
     categoryDiv.appendChild(buttonContainer);
@@ -902,6 +884,7 @@ async function openPresetEditor() {
   elements.savePresetEditorBtn.classList.remove('hidden');
   elements.copyToCustomBtn.classList.add('hidden');
   elements.updatePresetBtn.classList.add('hidden');
+  elements.renamePresetBtn.classList.add('hidden');
   elements.deletePresetBtn.classList.add('hidden');
 
   // Show the panel
@@ -1031,16 +1014,18 @@ async function showCurrentPresetConfig() {
 
   // Show appropriate buttons based on preset type
   if (isCustom) {
-    // For custom/imported presets, show Update and Delete buttons
+    // For custom/imported presets, show Update, Rename and Delete buttons
     elements.savePresetEditorBtn.classList.add('hidden');
     elements.copyToCustomBtn.classList.add('hidden');
     elements.updatePresetBtn.classList.remove('hidden');
+    elements.renamePresetBtn.classList.remove('hidden');
     elements.deletePresetBtn.classList.remove('hidden');
   } else {
-    // For default presets, show Copy to Custom button, hide Delete
+    // For default presets, show Copy to Custom button, hide Delete and Rename
     elements.savePresetEditorBtn.classList.add('hidden');
     elements.copyToCustomBtn.classList.remove('hidden');
     elements.updatePresetBtn.classList.add('hidden');
+    elements.renamePresetBtn.classList.add('hidden');
     elements.deletePresetBtn.classList.add('hidden');
   }
 
@@ -1182,6 +1167,11 @@ elements.cancelPresetEditorBtn.addEventListener('click', () => {
 elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
 elements.copyToCustomBtn.addEventListener('click', copyToCustomPreset);
 elements.updatePresetBtn.addEventListener('click', updateCurrentPreset);
+elements.renamePresetBtn.addEventListener('click', () => {
+  if (state.currentPreset) {
+    renamePreset(state.currentPreset);
+  }
+});
 elements.deletePresetBtn.addEventListener('click', deleteCurrentPreset);
 elements.showConfigBtn.addEventListener('click', showCurrentPresetConfig);
 elements.closePresetEditor.addEventListener('click', () => {
