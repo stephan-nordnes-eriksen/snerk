@@ -260,6 +260,10 @@ async function selectPreset(presetName) {
     state.currentPreset = null;
     clearActivePresetButtons();
     elements.showConfigBtn.disabled = true;
+  } else if (state.currentPreset && state.currentPreset.name === presetName) {
+    state.currentPreset = null;
+    clearActivePresetButtons();
+    elements.showConfigBtn.disabled = true;
   } else {
     state.currentPreset = preset;
     setActivePresetButton(presetName);
