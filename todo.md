@@ -30,4 +30,6 @@ todo:
 - [x] Add a "show config" button to the right which will open the custom config modal with the currently selected preset. This modal should have a "copy to custom preset" which copies the current preset, and allows you to change it, unless it is already a custom preset, in which case you can configure it immediately
 - [ ] Add the ability to delete custom configs, including imported ones.
 - [ ] There are some problem when importing XMP. 1. The name of the xmp file is not fully set to the imported setting. It imports duplicates.
-- [ ] Arrow keys does not go to next / previous image
+- [ ] Fix problem: Arrow keys does not go to next / previous image
+- [ ] Make a way to run a preset config from the command line on a list of files, with a target output folder. This will be used for comparing the filters with a know good state
+- [ ] Fix problem: In weg gpu mode, the black and white filters is not actually black and white, but has color.

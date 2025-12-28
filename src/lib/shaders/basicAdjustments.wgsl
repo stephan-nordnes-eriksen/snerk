@@ -55,73 +55,69 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         }
     }
 
-    // 4. Contrast
+    // 4. Contrast (matches Sharp's linear formula)
     if (abs(uniforms.contrast - 1.0) > 0.001) {
-        rgb = (rgb - 0.5) * uniforms.contrast + 0.5;
+        let midpoint = 128.0 / 255.0;
+        rgb = (rgb - midpoint) * uniforms.contrast + midpoint;
     }
 
     // 5. Saturation
     if (abs(uniforms.saturation - 1.0) > 0.001) {
         let lum = luminance(rgb);
-        rgb = mix(vec3<f32>(lum), rgb, uniforms.saturation);
+        let lumVec = vec3<f32>(lum);
+        rgb = lumVec + (rgb - lumVec) * uniforms.saturation;
     }
 
-    // 6. Vibrance (smart saturation)
+    // 6. Vibrance (matches Sharp's modulate with half saturation effect)
     if (abs(uniforms.vibrance) > 0.001) {
         let lum = luminance(rgb);
-        let maxChannel = max(max(rgb.r, rgb.g), rgb.b);
-        let minChannel = min(min(rgb.r, rgb.g), rgb.b);
-        let sat = select(0.0, (maxChannel - minChannel) / maxChannel, maxChannel > 0.0);
-
-        let vibranceAmount = uniforms.vibrance / 100.0;
-        let adjustment = (1.0 - sat) * vibranceAmount;
-        rgb = mix(vec3<f32>(lum), rgb, 1.0 + adjustment);
+        let lumVec = vec3<f32>(lum);
+        let vibranceFactor = 1.0 + (uniforms.vibrance / 200.0);
+        rgb = lumVec + (rgb - lumVec) * vibranceFactor;
     }
 
-    // 7. Shadows (tone-selective brightness for dark areas)
+    // 7. Shadows (lightness modulation - matches Sharp)
     if (abs(uniforms.shadows) > 0.001) {
-        let lum = luminance(rgb);
-        let shadowMask = 1.0 - smoothstep(0.0, 0.5, lum);
-        rgb = rgb + shadowMask * (uniforms.shadows / 100.0) * 0.3;
+        let shadows = uniforms.shadows / 100.0;
+        rgb = rgb * (1.0 + shadows * 0.3);
     }
 
-    // 8. Highlights (tone-selective brightness for bright areas)
-    if (abs(uniforms.highlights) > 0.001) {
-        let lum = luminance(rgb);
-        let highlightMask = smoothstep(0.5, 1.0, lum);
-        rgb = rgb + highlightMask * (uniforms.highlights / 100.0) * 0.3;
+    // 8. Highlights (matches Sharp - only process negative values with gamma)
+    if (uniforms.highlights < -0.001) {
+        let highlights = uniforms.highlights / 100.0;
+        let gammaValue = 1.0 + abs(highlights) * 0.02;
+        rgb = pow(rgb, vec3<f32>(1.0 / gammaValue));
     }
 
-    // 9. Whites (bright tone adjustment)
+    // 9. Whites (matches Sharp's implementation)
     if (abs(uniforms.whites) > 0.001) {
         let amount = uniforms.whites / 100.0;
-        let adjusted = pow(rgb, vec3<f32>(1.0 / (1.0 + amount * 0.5)));
-        let mask = vec3<f32>(
-            smoothstep(0.5, 1.0, rgb.r),
-            smoothstep(0.5, 1.0, rgb.g),
-            smoothstep(0.5, 1.0, rgb.b)
-        );
-        rgb = mix(rgb, adjusted, mask);
+        if (uniforms.whites > 0.0) {
+            // Positive: linear(1 + amount * 0.15, amount * 10)
+            rgb = rgb * (1.0 + amount * 0.15) + amount * 10.0 / 255.0;
+        } else {
+            // Negative: gamma(1 + abs(amount) * 0.5)
+            let gammaValue = 1.0 + abs(amount) * 0.5;
+            rgb = pow(rgb, vec3<f32>(gammaValue));
+        }
     }
 
-    // 10. Blacks (dark tone adjustment)
+    // 10. Blacks (matches Sharp's linear(1, amount * 20))
     if (abs(uniforms.blacks) > 0.001) {
         let amount = uniforms.blacks / 100.0;
-        let adjusted = pow(rgb, vec3<f32>(1.0 + amount * 0.5));
-        let mask = vec3<f32>(
-            smoothstep(0.0, 0.5, rgb.r),
-            smoothstep(0.0, 0.5, rgb.g),
-            smoothstep(0.0, 0.5, rgb.b)
-        );
-        rgb = mix(adjusted, rgb, mask);
+        rgb = rgb + amount * 20.0 / 255.0;
     }
 
-    // 11. Dehaze (contrast + saturation boost)
-    if (abs(uniforms.dehaze) > 0.001) {
+    // 11. Dehaze (matches Sharp's linear + saturation)
+    if (uniforms.dehaze > 0.001) {
         let amount = uniforms.dehaze / 100.0;
-        rgb = (rgb - 0.5) * (1.0 + amount * 0.3) + 0.5;
+        // Linear: multiply by (1 + amount * 0.5), subtract (amount * 20 / 255)
+        rgb = rgb * (1.0 + amount * 0.5) - amount * 20.0 / 255.0;
+        // Saturation boost
         let lum = luminance(rgb);
-        rgb = mix(vec3<f32>(lum), rgb, 1.0 + amount * 0.2);
+        let lumVec = vec3<f32>(lum);
+        let saturationFactor = 1.0 + amount * 0.3;
+        rgb = lumVec + (rgb - lumVec) * saturationFactor;
     }
 
     // Clamp to valid range

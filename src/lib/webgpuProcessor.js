@@ -207,17 +207,17 @@ class WebGPUProcessor {
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
     const uniformData = new Float32Array([
-      adj.exposure || 0,
-      adj.temperature || 0,
-      adj.tint || 0,
-      adj.contrast || 1,
-      adj.saturation || 1,
-      adj.vibrance || 0,
-      adj.shadows || 0,
-      adj.highlights || 0,
-      adj.whites || 0,
-      adj.blacks || 0,
-      adj.dehaze || 0,
+      adj.exposure !== undefined ? adj.exposure : 0,
+      adj.temperature !== undefined ? adj.temperature : 0,
+      adj.tint !== undefined ? adj.tint : 0,
+      adj.contrast !== undefined ? adj.contrast : 1,
+      adj.saturation !== undefined ? adj.saturation : 1,
+      adj.vibrance !== undefined ? adj.vibrance : 0,
+      adj.shadows !== undefined ? adj.shadows : 0,
+      adj.highlights !== undefined ? adj.highlights : 0,
+      adj.whites !== undefined ? adj.whites : 0,
+      adj.blacks !== undefined ? adj.blacks : 0,
+      adj.dehaze !== undefined ? adj.dehaze : 0,
       0 // padding
     ]);
 
@@ -254,9 +254,9 @@ class WebGPUProcessor {
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
     const uniformData = new Float32Array([
-      grainConfig.amount || 0,
-      grainConfig.size || 50,
-      grainConfig.roughness || 50,
+      grainConfig.amount !== undefined ? grainConfig.amount : 0,
+      grainConfig.size !== undefined ? grainConfig.size : 50,
+      grainConfig.roughness !== undefined ? grainConfig.roughness : 50,
       0 // padding
     ]);
 
@@ -293,10 +293,10 @@ class WebGPUProcessor {
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
     const uniformData = new Float32Array([
-      vignetteConfig.amount || 0,
-      vignetteConfig.midpoint || 0,
-      vignetteConfig.roundness || 0,
-      vignetteConfig.feather || 50
+      vignetteConfig.amount !== undefined ? vignetteConfig.amount : 0,
+      vignetteConfig.midpoint !== undefined ? vignetteConfig.midpoint : 0,
+      vignetteConfig.roundness !== undefined ? vignetteConfig.roundness : 0,
+      vignetteConfig.feather !== undefined ? vignetteConfig.feather : 50
     ]);
 
     const uniformBuffer = this.device.createBuffer({
@@ -332,11 +332,11 @@ class WebGPUProcessor {
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
     const uniformData = new Float32Array([
-      splitConfig.shadowHue || 0,
-      splitConfig.shadowSat || 0,
-      splitConfig.highlightHue || 0,
-      splitConfig.highlightSat || 0,
-      splitConfig.balance || 0,
+      splitConfig.shadowHue !== undefined ? splitConfig.shadowHue : 0,
+      splitConfig.shadowSat !== undefined ? splitConfig.shadowSat : 0,
+      splitConfig.highlightHue !== undefined ? splitConfig.highlightHue : 0,
+      splitConfig.highlightSat !== undefined ? splitConfig.highlightSat : 0,
+      splitConfig.balance !== undefined ? splitConfig.balance : 0,
       0, 0, 0 // padding
     ]);
 
