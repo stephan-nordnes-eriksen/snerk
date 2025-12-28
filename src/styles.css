@@ -431,3 +431,68 @@ header nav {
     font-size: 0.65rem;
   }
 }
+
+.curve-editor-container {
+  margin: 1rem 0;
+}
+
+.curve-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.curve-tab {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--pico-secondary-background);
+  border: 1px solid var(--pico-secondary-border);
+  color: var(--pico-secondary-color);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.curve-tab:hover {
+  background: var(--pico-secondary-hover-background);
+}
+
+.curve-tab.active {
+  background: var(--pico-primary-background);
+  border-color: var(--pico-primary-border);
+  color: var(--pico-primary-inverse);
+}
+
+.curve-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 256px;
+  background: #1a1a1a;
+  border: 1px solid var(--pico-secondary-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.curve-canvas {
+  display: none;
+  cursor: crosshair;
+}
+
+.curve-canvas.active {
+  display: block;
+}
+
+.curve-controls {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.curve-controls button {
+  margin: 0;
+}
+
+.curve-controls small {
+  color: var(--pico-muted-color);
+  text-align: center;
+}

@@ -86,9 +86,6 @@ const elements = {
   editorTextureValue: document.getElementById('editorTextureValue'),
   editorDehaze: document.getElementById('editorDehaze'),
   editorDehazeValue: document.getElementById('editorDehazeValue'),
-  editorCurveR: document.getElementById('editorCurveR'),
-  editorCurveG: document.getElementById('editorCurveG'),
-  editorCurveB: document.getElementById('editorCurveB'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
   renamePresetBtn: document.getElementById('renamePresetBtn'),
   deletePresetBtn: document.getElementById('deletePresetBtn'),
@@ -773,21 +770,34 @@ function getEditorPresetConfig() {
   if (dehaze !== 0) config.adjustments.dehaze = dehaze;
 
   const curves = {};
-  try {
-    if (elements.editorCurveR.value.trim()) {
-      curves.r = JSON.parse(elements.editorCurveR.value);
+
+  if (curveEditors.rgb) {
+    const rgbPoints = curveEditors.rgb.getPoints();
+    if (rgbPoints.length > 2 || (rgbPoints.length === 2 && (rgbPoints[0][1] !== 0 || rgbPoints[1][1] !== 255))) {
+      curves.rgb = rgbPoints;
     }
-  } catch (e) {}
-  try {
-    if (elements.editorCurveG.value.trim()) {
-      curves.g = JSON.parse(elements.editorCurveG.value);
+  }
+
+  if (curveEditors.r) {
+    const rPoints = curveEditors.r.getPoints();
+    if (rPoints.length > 2 || (rPoints.length === 2 && (rPoints[0][1] !== 0 || rPoints[1][1] !== 255))) {
+      curves.r = rPoints;
     }
-  } catch (e) {}
-  try {
-    if (elements.editorCurveB.value.trim()) {
-      curves.b = JSON.parse(elements.editorCurveB.value);
+  }
+
+  if (curveEditors.g) {
+    const gPoints = curveEditors.g.getPoints();
+    if (gPoints.length > 2 || (gPoints.length === 2 && (gPoints[0][1] !== 0 || gPoints[1][1] !== 255))) {
+      curves.g = gPoints;
     }
-  } catch (e) {}
+  }
+
+  if (curveEditors.b) {
+    const bPoints = curveEditors.b.getPoints();
+    if (bPoints.length > 2 || (bPoints.length === 2 && (bPoints[0][1] !== 0 || bPoints[1][1] !== 255))) {
+      curves.b = bPoints;
+    }
+  }
 
   if (Object.keys(curves).length > 0) {
     config.curves = curves;
@@ -835,9 +845,11 @@ function resetPresetEditor() {
   elements.editorTextureValue.textContent = 0;
   elements.editorDehaze.value = 0;
   elements.editorDehazeValue.textContent = 0;
-  elements.editorCurveR.value = '';
-  elements.editorCurveG.value = '';
-  elements.editorCurveB.value = '';
+
+  if (curveEditors.rgb) curveEditors.rgb.reset();
+  if (curveEditors.r) curveEditors.r.reset();
+  if (curveEditors.g) curveEditors.g.reset();
+  if (curveEditors.b) curveEditors.b.reset();
 
   updateEditorPreview();
 }
@@ -864,9 +876,52 @@ function setupEditorSliders() {
     });
   }
 
-  elements.editorCurveR.addEventListener('input', () => updateEditorPreview());
-  elements.editorCurveG.addEventListener('input', () => updateEditorPreview());
-  elements.editorCurveB.addEventListener('input', () => updateEditorPreview());
+}
+
+const curveEditors = {
+  rgb: null,
+  r: null,
+  g: null,
+  b: null
+};
+
+let activeCurve = 'rgb';
+
+function setupCurveEditors() {
+  curveEditors.rgb = new CurveEditor('curveEditorRGB');
+  curveEditors.r = new CurveEditor('curveEditorR');
+  curveEditors.g = new CurveEditor('curveEditorG');
+  curveEditors.b = new CurveEditor('curveEditorB');
+
+  Object.values(curveEditors).forEach(editor => {
+    editor.onChange = () => updateEditorPreview();
+  });
+
+  document.querySelectorAll('.curve-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const curveType = tab.dataset.curve;
+      switchCurveTab(curveType);
+    });
+  });
+
+  const resetCurveBtn = document.getElementById('resetCurrentCurve');
+  if (resetCurveBtn) {
+    resetCurveBtn.addEventListener('click', () => {
+      curveEditors[activeCurve].reset();
+    });
+  }
+}
+
+function switchCurveTab(curveType) {
+  activeCurve = curveType;
+
+  document.querySelectorAll('.curve-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.curve === curveType);
+  });
+
+  document.querySelectorAll('.curve-canvas').forEach(canvas => {
+    canvas.classList.toggle('active', canvas.id === `curveEditor${curveType.toUpperCase()}`);
+  });
 }
 
 async function openPresetEditor() {
@@ -1005,13 +1060,15 @@ function populateEditorWithPreset(preset) {
   elements.editorDehazeValue.textContent = adj.dehaze || 0;
 
   if (preset.curves) {
-    elements.editorCurveR.value = preset.curves.r ? JSON.stringify(preset.curves.r) : '';
-    elements.editorCurveG.value = preset.curves.g ? JSON.stringify(preset.curves.g) : '';
-    elements.editorCurveB.value = preset.curves.b ? JSON.stringify(preset.curves.b) : '';
+    if (curveEditors.rgb && preset.curves.rgb) curveEditors.rgb.setPoints(preset.curves.rgb);
+    if (curveEditors.r && preset.curves.r) curveEditors.r.setPoints(preset.curves.r);
+    if (curveEditors.g && preset.curves.g) curveEditors.g.setPoints(preset.curves.g);
+    if (curveEditors.b && preset.curves.b) curveEditors.b.setPoints(preset.curves.b);
   } else {
-    elements.editorCurveR.value = '';
-    elements.editorCurveG.value = '';
-    elements.editorCurveB.value = '';
+    if (curveEditors.rgb) curveEditors.rgb.reset();
+    if (curveEditors.r) curveEditors.r.reset();
+    if (curveEditors.g) curveEditors.g.reset();
+    if (curveEditors.b) curveEditors.b.reset();
   }
 }
 
@@ -1534,4 +1591,5 @@ elements.mainImage.addEventListener('mouseleave', endPan);
 elements.mainImage.addEventListener('dblclick', resetZoom);
 
 setupEditorSliders();
+setupCurveEditors();
 initialize();

@@ -155,21 +155,24 @@
 
         <details>
           <summary>Tone Curves (Advanced)</summary>
-          <label>
-            Red Curve
-            <input type="text" id="editorCurveR" placeholder="[[0,0],[128,128],[255,255]]">
-            <small>Points as [[x,y],[x,y],...]</small>
-          </label>
-          <label>
-            Green Curve
-            <input type="text" id="editorCurveG" placeholder="[[0,0],[128,128],[255,255]]">
-            <small>Points as [[x,y],[x,y],...]</small>
-          </label>
-          <label>
-            Blue Curve
-            <input type="text" id="editorCurveB" placeholder="[[0,0],[128,128],[255,255]]">
-            <small>Points as [[x,y],[x,y],...]</small>
-          </label>
+          <div class="curve-editor-container">
+            <div class="curve-tabs">
+              <button type="button" class="curve-tab active" data-curve="rgb">RGB</button>
+              <button type="button" class="curve-tab" data-curve="r">Red</button>
+              <button type="button" class="curve-tab" data-curve="g">Green</button>
+              <button type="button" class="curve-tab" data-curve="b">Blue</button>
+            </div>
+            <div class="curve-canvas-wrapper">
+              <canvas id="curveEditorRGB" class="curve-canvas active"></canvas>
+              <canvas id="curveEditorR" class="curve-canvas"></canvas>
+              <canvas id="curveEditorG" class="curve-canvas"></canvas>
+              <canvas id="curveEditorB" class="curve-canvas"></canvas>
+            </div>
+            <div class="curve-controls">
+              <button type="button" id="resetCurrentCurve" class="secondary">Reset Curve</button>
+              <small>Double-click to add/remove points. Drag to move points.</small>
+            </div>
+          </div>
         </details>
       </div>
       <div class="panel-footer">
@@ -296,6 +299,7 @@
   <script src="lib/exportConfigManager.js"></script>
   <script src="lib/settingsManager.js"></script>
   <script src="lib/webgpuProcessor.js"></script>
+  <script src="lib/curveEditor.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
