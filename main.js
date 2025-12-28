@@ -967,6 +967,7 @@ ipcMain.handle('file:delete', async (event, filePath) => {
 ipcMain.handle('image:getExifData', async (event, imagePath) => {
   try {
     const metadata = await exiftool.read(imagePath);
+    const dateTime = metadata.DateTimeOriginal || metadata.CreateDate;
     return {
       make: metadata.Make,
       model: metadata.Model,
@@ -975,7 +976,7 @@ ipcMain.handle('image:getExifData', async (event, imagePath) => {
       fNumber: metadata.FNumber,
       exposureTime: metadata.ExposureTime,
       focalLength: metadata.FocalLength,
-      dateTime: metadata.DateTimeOriginal || metadata.CreateDate,
+      dateTime: dateTime ? String(dateTime) : undefined,
       width: metadata.ImageWidth,
       height: metadata.ImageHeight,
     };
