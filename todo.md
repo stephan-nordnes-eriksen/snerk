@@ -4,8 +4,8 @@ todo:
 - [x] The scroll zoom level is too sensitive, zooming in and out too quickly
 - [x] Ability to "pin" preset style to one photo, so that that particular photo will use that preset when it is exported
 - [x] Make a histogram graph that can be shown if pressing "i" on the keyboard. It should also show more info, like path to the file, and some exifdata
-- [ ] pressing, and holding, "p" should temporarily disable the style, so you can "preview" how it used to look quickly
-- [ ] When zooming, panning, and zooming out, the image snaps to the center. Don't do this, only do so if pressing the "fit" button
-- [ ] The histogram and Image Information must update if next/previous image is chosen by pressing left/right key
-- [ ] Date Taken in "Image Information" says "[object Object]"
-- [ ] When collapsing the preset pane, the element containing the expand button takes up the full height of the view
+- [x] pressing, and holding, "p" should temporarily disable the style, so you can "preview" how it used to look quickly
+- [x] When zooming, panning, and zooming out, the image snaps to the center. Don't do this, only do so if pressing the "fit" button
+- [x] The histogram and Image Information must update if next/previous image is chosen by pressing left/right key
+- [x] Date Taken in "Image Information" says "[object Object]"
+- [x] When collapsing the preset pane, the element containing the expand button takes up the full height of the view
