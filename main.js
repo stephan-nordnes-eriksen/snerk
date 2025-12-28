@@ -951,7 +951,6 @@ ipcMain.handle('image:loadPreview', async (event, imagePath) => {
       metadata = await image.metadata();
 
       const processedBuffer = await image
-        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 90 })
         .toBuffer();
 
@@ -966,7 +965,6 @@ ipcMain.handle('image:loadPreview', async (event, imagePath) => {
       metadata = await image.metadata();
 
       const buffer = await image
-        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 90 })
         .toBuffer();
 
@@ -1074,7 +1072,6 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
       metadata = await image.metadata();
 
       const processedBuffer = await image
-        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 90 })
         .toBuffer();
 
@@ -1089,7 +1086,6 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
       metadata = await image.metadata();
 
       const buffer = await image
-        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 90 })
         .toBuffer();
 

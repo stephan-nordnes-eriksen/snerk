@@ -162,28 +162,27 @@ User loads image with preset
     ↓
 [Main Process]
     1. Detect RAW → Extract preview with ExifTool
-    2. Resize to 2000x2000 with Sharp
-    3. Encode as base64 JPEG
-    4. Send to renderer via IPC
+    2. Encode as base64 JPEG
+    3. Send to renderer via IPC
     ↓
 [Renderer Process]
-    5. Check rendering mode (settingsManager.getRenderingMode())
+    4. Check rendering mode (settingsManager.getRenderingMode())
     ↓
 [If WebGPU mode]
-    6. Decode base64 → ImageBitmap
-    7. Upload to GPU texture
-    8. Run multi-pass shader pipeline:
+    5. Decode base64 → ImageBitmap
+    6. Upload to GPU texture
+    7. Run multi-pass shader pipeline:
        - basicAdjustments (11 adjustments)
        - splitToning (shadow/highlight colors)
        - grain (film grain effect)
        - vignette (edge darkening/lightening)
-    9. Download from GPU → Canvas
-    10. Encode Canvas → Data URL
-    11. Display in <img> element
+    8. Download from GPU → Canvas
+    9. Encode Canvas → Data URL
+    10. Display in <img> element
     ↓
 [If Sharp mode]
-    6. Use base64 directly as data:image URL
-    7. Display in <img> element
+    5. Use base64 directly as data:image URL
+    6. Display in <img> element
 ```
 
 **Critical Implementation Details:**
@@ -239,9 +238,9 @@ User loads image with preset
 
 **Export Always Uses Sharp:**
 
-- WebGPU only processes preview-sized images (2000x2000 max)
-- Export needs full-resolution processing
-- Sharp in main process handles full RAW resolution without IPC overhead
+- WebGPU processes images at full resolution for previews
+- Export uses Sharp in main process for full-resolution processing
+- Sharp handles full RAW resolution without IPC overhead
 - No changes to export workflow when using WebGPU for previews
 
 **Known Limitations:**
