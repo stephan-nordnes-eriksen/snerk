@@ -19,6 +19,10 @@ const state = {
     startX: 0,
     startY: 0,
   },
+  previewMode: {
+    isActive: false,
+    savedPreset: null,
+  },
 };
 
 const elements = {
@@ -1749,6 +1753,16 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       toggleInfoOverlay();
       break;
+    case 'p':
+    case 'P':
+      if (!isDialogOpen && !state.previewMode.isActive) {
+        e.preventDefault();
+        state.previewMode.isActive = true;
+        state.previewMode.savedPreset = state.currentPreset;
+        state.currentPreset = null;
+        loadCurrentImage();
+      }
+      break;
     default:
       if (e.key >= '1' && e.key <= '9') {
         if (!isDialogOpen) {
@@ -1773,6 +1787,18 @@ document.addEventListener('keydown', (e) => {
       if (!elements.exportBtn.disabled) {
         showExportConfigDialog();
       }
+    }
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'p' || e.key === 'P') {
+    if (state.previewMode.isActive) {
+      e.preventDefault();
+      state.currentPreset = state.previewMode.savedPreset;
+      state.previewMode.isActive = false;
+      state.previewMode.savedPreset = null;
+      loadCurrentImage();
     }
   }
 });
