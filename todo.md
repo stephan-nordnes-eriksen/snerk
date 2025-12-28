@@ -1,43 +1,6 @@
 todo:
-- [x] add support for xmp features like curves etc.
-- [x] Make the photo the whole background, and pressing "space" temporarily hides all ui. UI floats over the image
-- [x] Zoom in feature to see image closer
-- [x] Make the presets UI collapsible
-- [x] modal pop-up for export configs
-- [x] Make export configs that can be saved, eg. "jpeg quality 10 etc.", similar to how we have configs for style presets
-- [x] editor for preset config, where you can create new custom presets with UI controls
-- [x] Make UI for modifying preset configs with sliders and text-input, etc.
-- [x] Update the default profiles. they are not correct now
-- [x] Add a "no filter" button
-- [x] Remove the dropdown for filters. The buttons are enough
-- [x] Add a button to open the ~/.snerk folder in default folder program
-- [x] Remove the dark background of the header and footer. I want it to be minimal overlay over the image
-- [x] the title of the image is not correctly displayed between the previous / next buttons
-- [x] Remove the text of the next / previous buttons. Only use icons
-- [x] make the aside on the left hand side take up the full height of the window
-- [x] remove the "snerk" logo at the top
-- [x] Use GPL v3 license
-- [x] Add an "about" page somewhere which says that this is GPL v3, and a link to the github page (https://github.com/stephan-nordnes-eriksen/snerk)
-- [x] Disallow rename of default configs
-- [x] Make a markdown todo-list for all of lightrooms XMP features, including tone curves, HSL/Color mixer, color grading, lens corrections, and more.
-- [x] Make sure that whenever you press space, all ui elements dissappear, regardless of context, with the exception of when we renaming or native features are opened (eg. file explorer)
-- [x] Implement texture adjustment (new Lightroom feature)
-- [x] Go through the xmp feature list and implement each missing feature (medium priority items)
-- [x] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
-- [x] Add a default background image when no folder is selected
-- [x] Add a "show config" button to the right which will open the custom config modal with the currently selected preset. This modal should have a "copy to custom preset" which copies the current preset, and allows you to change it, unless it is already a custom preset, in which case you can configure it immediately
-- [x] Add the ability to delete custom configs, including imported ones.
-- [x] There are some problem when importing XMP. 1. The name of the xmp file is not fully set to the imported setting. It imports duplicates.
-- [x] Fix problem: Arrow keys does not go to next / previous image
-- [x] Make a way to run a preset config from the command line on a list of files, with a target output folder. This will be used for comparing the filters with a know good state
-- [x] Fix problem: In weg gpu mode, the black and white filters is not actually black and white, but has color.
-- [x] When deleting presets, other presets are being duplicated in the UI, and the one being deleted is not properly removed.
-- [x] Remove the edit button next to the name of the presets, and move the rename-functionality into the preset editor section
-- [x] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
-- [x] Add better input methods for curves
-- [x] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.
-- [x] If clicking the active preset, it should disable, and effectively set "no preset"
-- [x] The exported image does not look like the one in the preview. Use the same exact processing for both preview and export.
-- [x] Allow the user to zoom in to something like 30x resolution, and zoom out to something like 0.05x
-- [x] The applied xmp does not look exactly like the one in lightroom
-- [x] The curve controls must be an actual gui curve similar to how it is done in lightroom, eg. a 2d plot with a curve that starts in the bottom left, and goes to the top right, and where you can add points and control the curve.
+- [ ] Mouse drag-to-pan is not linked to zoom level, so it pans really fast in high zoom levels
+- [ ] The drag-to-pan does not work if zoomed out
+- [ ] The scroll zoom level is too sensitive, zooming in and out too quickly
+- [ ] Ability to "pin" preset style to one photo, so that that particular photo will use that preset when it is exported
+- [ ] Make a histogram graph that can be shown if pressing "i" on the keyboard. It should also show more info, like path to the file, and some exifdata
