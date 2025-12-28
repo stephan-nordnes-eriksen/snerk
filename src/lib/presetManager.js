@@ -80,6 +80,18 @@ class PresetManager {
         currentSection = 'curves';
       } else if (key === 'hsl') {
         currentSection = 'hsl';
+      } else if (key === 'splitToning') {
+        currentSection = 'splitToning';
+        preset.splitToning = {};
+      } else if (key === 'sharpening') {
+        currentSection = 'sharpening';
+        preset.sharpening = {};
+      } else if (key === 'grain') {
+        currentSection = 'grain';
+        preset.grain = {};
+      } else if (key === 'vignette') {
+        currentSection = 'vignette';
+        preset.vignette = {};
       } else if (currentSection === 'adjustments') {
         preset.adjustments[key] = parseFloat(value) || 0;
       } else if (currentSection === 'curves' && (key === 'r' || key === 'g' || key === 'b')) {
@@ -88,6 +100,14 @@ class PresetManager {
         } catch (e) {
           console.error('Error parsing curve:', e);
         }
+      } else if (currentSection === 'splitToning') {
+        preset.splitToning[key] = parseFloat(value) || 0;
+      } else if (currentSection === 'sharpening') {
+        preset.sharpening[key] = parseFloat(value) || 0;
+      } else if (currentSection === 'grain') {
+        preset.grain[key] = parseFloat(value) || 0;
+      } else if (currentSection === 'vignette') {
+        preset.vignette[key] = parseFloat(value) || 0;
       }
     }
 
