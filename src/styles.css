@@ -89,6 +89,8 @@ footer {
 
 #presetPanel.collapsed {
   width: auto;
+  height: auto;
+  bottom: auto;
 }
 
 #presetPanel.collapsed #presetPanelContent {
