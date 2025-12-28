@@ -35,4 +35,4 @@ todo:
 - [x] Remove the edit button next to the name of the presets, and move the rename-functionality into the preset editor section
 - [x] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
 - [x] Add better input methods for curves
-- [ ] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.
+- [x] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.

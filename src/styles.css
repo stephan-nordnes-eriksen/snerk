@@ -25,6 +25,11 @@ body {
   z-index: 0;
 }
 
+#imageContainer * {
+  transition: none !important;
+  animation: none !important;
+}
+
 #uiOverlay {
   position: fixed;
   top: 0;
@@ -184,10 +189,14 @@ footer {
   object-fit: contain;
   display: none;
   transform-origin: center center;
+  transition: none;
+  animation: none;
 }
 
 #mainImage.loaded {
   display: block;
+  transition: none;
+  animation: none;
 }
 
 #emptyState {
