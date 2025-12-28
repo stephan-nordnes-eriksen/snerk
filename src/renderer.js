@@ -209,6 +209,10 @@ async function loadCurrentImage() {
     elements.mainImage.classList.add('loaded');
 
     updateNavigationButtons();
+
+    if (!elements.infoOverlay.classList.contains('hidden')) {
+      await showImageInfo(currentImage);
+    }
   } catch (error) {
     console.error('Error loading image:', error);
     updateStatus('Error loading image');
