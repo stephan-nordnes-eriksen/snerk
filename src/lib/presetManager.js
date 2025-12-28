@@ -6,6 +6,7 @@ class PresetManager {
 
   async loadPresets() {
     try {
+      this.presets = [];
       const presetFiles = await window.snerkAPI.findAllPresets();
 
       for (const filePath of presetFiles) {
