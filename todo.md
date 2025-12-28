@@ -37,6 +37,6 @@ todo:
 - [x] Add better input methods for curves
 - [x] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.
 - [x] If clicking the active preset, it should disable, and effectively set "no preset"
-- [ ] The exported image does not look like the one in the preview. Use the same exact processing for both preview and export.
+- [x] The exported image does not look like the one in the preview. Use the same exact processing for both preview and export.
 - [ ] The applied xmp does not look exactly like the one in lightroom
 - [ ] The curve controls must be an actual gui curve similar to how it is done in lightroom, eg. a 2d plot with a curve that starts in the bottom left, and goes to the top right, and where you can add points and control the curve.

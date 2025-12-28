@@ -998,8 +998,6 @@ ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
 
     metadata = await image.metadata();
 
-    image = image.resize(2000, 2000, { fit: 'inside', withoutEnlargement: true });
-
     if (presetConfig.adjustments) {
       const adj = presetConfig.adjustments;
 
@@ -1206,6 +1204,11 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
     // Apply HSL selective color adjustments
     if (presetConfig && presetConfig.hsl) {
       image = await applyHsl(image, presetConfig.hsl);
+    }
+
+    // Apply sharpening
+    if (presetConfig && presetConfig.sharpening) {
+      image = applySharpening(image, presetConfig.sharpening);
     }
 
     // Apply grain
