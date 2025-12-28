@@ -983,243 +983,50 @@ ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   }
 });
 
-ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
+ipcMain.handle('image:loadFullResolution', async (event, imagePath) => {
   try {
     let imageBuffer;
-    let image;
     let metadata;
 
     if (isRawFile(imagePath)) {
       imageBuffer = await extractRawPreview(imagePath);
-      image = sharp(imageBuffer);
+      const image = sharp(imageBuffer);
+      metadata = await image.metadata();
+
+      const processedBuffer = await image
+        .jpeg({ quality: 100 })
+        .toBuffer();
+
+      return {
+        data: processedBuffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: 'raw'
+      };
     } else {
-      image = sharp(imagePath);
+      const image = sharp(imagePath);
+      metadata = await image.metadata();
+
+      const buffer = await image
+        .jpeg({ quality: 100 })
+        .toBuffer();
+
+      return {
+        data: buffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: metadata.format
+      };
     }
-
-    metadata = await image.metadata();
-
-    if (presetConfig.adjustments) {
-      const adj = presetConfig.adjustments;
-
-      if (adj.exposure !== undefined || adj.brightness !== undefined) {
-        const brightnessMultiplier = 1 + (adj.exposure || 0);
-        // Ensure brightness is always positive (Sharp requirement)
-        const safeBrightness = Math.max(0.01, brightnessMultiplier);
-        image = image.modulate({ brightness: safeBrightness });
-      }
-
-      if (adj.temperature !== undefined && adj.temperature !== 0) {
-        image = applyTemperature(image, adj.temperature);
-      }
-
-      if (adj.tint !== undefined && adj.tint !== 0) {
-        image = applyTint(image, adj.tint);
-      }
-
-      if (adj.saturation !== undefined) {
-        image = image.modulate({ saturation: adj.saturation });
-      }
-
-      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
-        image = applyVibrance(image, adj.vibrance);
-      }
-
-      if (adj.contrast !== undefined && adj.contrast !== 1) {
-        const contrastAmount = Math.round((adj.contrast - 1) * 50);
-        if (contrastAmount !== 0) {
-          image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
-        }
-      }
-
-      if (adj.clarity !== undefined && adj.clarity !== 0) {
-        image = applyClarity(image, adj.clarity);
-      }
-
-      if (adj.texture !== undefined && adj.texture !== 0) {
-        image = applyTexture(image, adj.texture);
-      }
-
-      if (adj.shadows !== undefined || adj.highlights !== undefined) {
-        const shadows = (adj.shadows || 0) / 100;
-        const highlights = (adj.highlights || 0) / 100;
-
-        if (shadows !== 0) {
-          image = image.modulate({
-            lightness: 1 + shadows * 0.3,
-          });
-        }
-
-        if (highlights !== 0) {
-          if (highlights < 0) {
-            image = image.gamma(1 + Math.abs(highlights) * 0.02);
-          }
-        }
-      }
-
-      if (adj.whites !== undefined && adj.whites !== 0) {
-        image = applyWhites(image, adj.whites);
-      }
-
-      if (adj.blacks !== undefined && adj.blacks !== 0) {
-        image = applyBlacks(image, adj.blacks);
-      }
-
-      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
-        image = applyDehaze(image, adj.dehaze);
-      }
-    }
-
-    // Apply split toning / color grading
-    if (presetConfig.splitToning) {
-      image = await applySplitToning(image, presetConfig.splitToning);
-    }
-
-    // Apply tone curves
-    if (presetConfig.curves) {
-      image = await applyCurves(image, presetConfig.curves);
-    }
-
-    // Apply HSL selective color adjustments
-    if (presetConfig.hsl) {
-      image = await applyHsl(image, presetConfig.hsl);
-    }
-
-    // Apply sharpening
-    if (presetConfig.sharpening) {
-      image = applySharpening(image, presetConfig.sharpening);
-    }
-
-    // Apply grain
-    if (presetConfig.grain) {
-      image = await applyGrain(image, presetConfig.grain);
-    }
-
-    // Apply vignette
-    if (presetConfig.vignette) {
-      image = await applyVignette(image, presetConfig.vignette);
-    }
-
-    const buffer = await image.jpeg({ quality: 90 }).toBuffer();
-
-    return {
-      data: buffer.toString('base64'),
-      width: metadata.width,
-      height: metadata.height
-    };
   } catch (error) {
-    console.error('Error applying preset:', error);
+    console.error('Error loading full resolution image:', error);
     throw error;
   }
 });
 
-ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90) => {
+ipcMain.handle('image:saveBlob', async (event, blobBuffer, outputPath, format, quality) => {
   try {
-    let image;
-
-    if (isRawFile(imagePath)) {
-      const imageBuffer = await extractRawPreview(imagePath);
-      image = sharp(imageBuffer);
-    } else {
-      image = sharp(imagePath);
-    }
-
-    if (presetConfig && presetConfig.adjustments) {
-      const adj = presetConfig.adjustments;
-
-      if (adj.exposure !== undefined) {
-        const brightnessMultiplier = 1 + adj.exposure;
-        // Ensure brightness is always positive (Sharp requirement)
-        const safeBrightness = Math.max(0.01, brightnessMultiplier);
-        image = image.modulate({ brightness: safeBrightness });
-      }
-
-      if (adj.temperature !== undefined && adj.temperature !== 0) {
-        image = applyTemperature(image, adj.temperature);
-      }
-
-      if (adj.tint !== undefined && adj.tint !== 0) {
-        image = applyTint(image, adj.tint);
-      }
-
-      if (adj.saturation !== undefined) {
-        image = image.modulate({ saturation: adj.saturation });
-      }
-
-      if (adj.vibrance !== undefined && adj.vibrance !== 0) {
-        image = applyVibrance(image, adj.vibrance);
-      }
-
-      if (adj.contrast !== undefined && adj.contrast !== 1) {
-        image = image.linear(adj.contrast, -(128 * adj.contrast) + 128);
-      }
-
-      if (adj.clarity !== undefined && adj.clarity !== 0) {
-        image = applyClarity(image, adj.clarity);
-      }
-
-      if (adj.texture !== undefined && adj.texture !== 0) {
-        image = applyTexture(image, adj.texture);
-      }
-
-      if (adj.shadows !== undefined || adj.highlights !== undefined) {
-        const shadows = (adj.shadows || 0) / 100;
-        const highlights = (adj.highlights || 0) / 100;
-
-        if (shadows !== 0) {
-          image = image.modulate({
-            lightness: 1 + shadows * 0.3,
-          });
-        }
-
-        if (highlights !== 0) {
-          if (highlights < 0) {
-            image = image.gamma(1 + Math.abs(highlights) * 0.02);
-          }
-        }
-      }
-
-      if (adj.whites !== undefined && adj.whites !== 0) {
-        image = applyWhites(image, adj.whites);
-      }
-
-      if (adj.blacks !== undefined && adj.blacks !== 0) {
-        image = applyBlacks(image, adj.blacks);
-      }
-
-      if (adj.dehaze !== undefined && adj.dehaze !== 0) {
-        image = applyDehaze(image, adj.dehaze);
-      }
-    }
-
-    // Apply split toning / color grading
-    if (presetConfig.splitToning) {
-      image = await applySplitToning(image, presetConfig.splitToning);
-    }
-
-    // Apply tone curves
-    if (presetConfig && presetConfig.curves) {
-      image = await applyCurves(image, presetConfig.curves);
-    }
-
-    // Apply HSL selective color adjustments
-    if (presetConfig && presetConfig.hsl) {
-      image = await applyHsl(image, presetConfig.hsl);
-    }
-
-    // Apply sharpening
-    if (presetConfig && presetConfig.sharpening) {
-      image = applySharpening(image, presetConfig.sharpening);
-    }
-
-    // Apply grain
-    if (presetConfig && presetConfig.grain) {
-      image = await applyGrain(image, presetConfig.grain);
-    }
-
-    // Apply vignette
-    if (presetConfig && presetConfig.vignette) {
-      image = await applyVignette(image, presetConfig.vignette);
-    }
+    const image = sharp(Buffer.from(blobBuffer));
 
     const formatOptions = {
       jpeg: { quality },
@@ -1251,10 +1058,54 @@ ipcMain.handle('image:export', async (event, imagePath, presetConfig, outputPath
 
     return true;
   } catch (error) {
-    console.error('Error exporting image:', error);
+    console.error('Error saving blob as image:', error);
     throw error;
   }
 });
+
+ipcMain.handle('image:applyPreset', async (event, imagePath, presetConfig) => {
+  try {
+    let imageBuffer;
+    let metadata;
+
+    if (isRawFile(imagePath)) {
+      imageBuffer = await extractRawPreview(imagePath);
+      const image = sharp(imageBuffer);
+      metadata = await image.metadata();
+
+      const processedBuffer = await image
+        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      return {
+        data: processedBuffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: 'raw'
+      };
+    } else {
+      const image = sharp(imagePath);
+      metadata = await image.metadata();
+
+      const buffer = await image
+        .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      return {
+        data: buffer.toString('base64'),
+        width: metadata.width,
+        height: metadata.height,
+        format: metadata.format
+      };
+    }
+  } catch (error) {
+    console.error('Error applying preset:', error);
+    throw error;
+  }
+});
+
 
 app.whenReady().then(async () => {
   await initializePresetDirectory();

@@ -40,8 +40,12 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
+  loadFullResolutionImage: (imagePath) => ipcRenderer.invoke('image:loadFullResolution', imagePath),
+
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),
 
-  exportImage: (imagePath, presetConfig, outputPath, format, quality) =>
-    ipcRenderer.invoke('image:export', imagePath, presetConfig, outputPath, format, quality),
+  saveBlobAsImage: async (blob, outputPath, format, quality) => {
+    const arrayBuffer = await blob.arrayBuffer();
+    return ipcRenderer.invoke('image:saveBlob', arrayBuffer, outputPath, format, quality);
+  },
 });

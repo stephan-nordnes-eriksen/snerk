@@ -1,52 +1,30 @@
 class ImageProcessor {
   constructor() {
     this.cache = new Map();
-    this.settingsManager = null;
     this.webgpuProcessor = null;
   }
 
-  async initialize(settingsManager) {
-    this.settingsManager = settingsManager;
-
-    if (settingsManager.getRenderingMode() === 'webgpu') {
-      try {
-        this.webgpuProcessor = new WebGPUProcessor();
-        await this.webgpuProcessor.initialize();
-        console.log('WebGPU processor initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize WebGPU processor:', error);
-        console.log('Falling back to Sharp mode');
-        this.webgpuProcessor = null;
-        // Update settings to reflect the fallback
-        if (settingsManager.settings.rendering.fallbackToSharp) {
-          settingsManager.effectiveMode = 'sharp';
-        }
-      }
+  async initialize() {
+    try {
+      this.webgpuProcessor = new WebGPUProcessor();
+      await this.webgpuProcessor.initialize();
+      console.log('WebGPU processor initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize WebGPU processor:', error);
+      throw new Error('WebGPU is required but not available. Please use a browser that supports WebGPU.');
     }
   }
 
   async loadImage(imagePath) {
     try {
-      const mode = this.settingsManager ? this.settingsManager.getRenderingMode() : 'sharp';
-      const cacheKey = `${mode}_preview_${imagePath}`;
+      const cacheKey = `preview_${imagePath}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
       const result = await window.snerkAPI.loadImagePreview(imagePath);
-
-      let imageData;
-      if (mode === 'webgpu' && this.webgpuProcessor) {
-        imageData = await this.webgpuProcessor.processImage(result.data, null);
-      } else {
-        imageData = {
-          src: `data:image/jpeg;base64,${result.data}`,
-          width: result.width,
-          height: result.height,
-          format: result.format
-        };
-      }
+      const imageData = await this.webgpuProcessor.processImage(result.data, null);
 
       this.cache.set(cacheKey, imageData);
 
@@ -63,25 +41,14 @@ class ImageProcessor {
         return await this.loadImage(imagePath);
       }
 
-      const mode = this.settingsManager ? this.settingsManager.getRenderingMode() : 'sharp';
-      const cacheKey = `${mode}_preset_${imagePath}_${JSON.stringify(presetConfig)}`;
+      const cacheKey = `preset_${imagePath}_${JSON.stringify(presetConfig)}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
-      let imageData;
-      if (mode === 'webgpu' && this.webgpuProcessor) {
-        const result = await window.snerkAPI.loadImagePreview(imagePath);
-        imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
-      } else {
-        const result = await window.snerkAPI.applyPreset(imagePath, presetConfig);
-        imageData = {
-          src: `data:image/jpeg;base64,${result.data}`,
-          width: result.width,
-          height: result.height
-        };
-      }
+      const result = await window.snerkAPI.loadImagePreview(imagePath);
+      const imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
 
       this.cache.set(cacheKey, imageData);
 
@@ -94,12 +61,28 @@ class ImageProcessor {
 
   async exportImage(imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90) {
     try {
-      await window.snerkAPI.exportImage(imagePath, presetConfig, outputPath, format, quality);
+      const result = await window.snerkAPI.loadFullResolutionImage(imagePath);
+
+      let imageData;
+      if (this.webgpuProcessor) {
+        imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
+      } else {
+        throw new Error('WebGPU processor not initialized');
+      }
+
+      const blob = await this.dataURLToBlob(imageData.src);
+      await window.snerkAPI.saveBlobAsImage(blob, outputPath, format, quality);
+
       return true;
     } catch (error) {
       console.error('Error exporting image:', error);
       throw error;
     }
+  }
+
+  async dataURLToBlob(dataURL) {
+    const response = await fetch(dataURL);
+    return await response.blob();
   }
 
   async exportBatch(imagePaths, presetConfig, outputDir, format = 'jpeg', quality = 90, onProgress = null) {
