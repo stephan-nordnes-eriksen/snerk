@@ -13,11 +13,11 @@ Snerk is a minimalistic Electron-based photo viewer with RAW format support and 
 - No React/Vue/Svelte - just semantic HTML with Pico.css for styling
 - Minimalistic approach throughout the codebase
 
-**Why Sharp for Image Processing?**
-- Fast, production-grade image processing library
-- Cross-platform native bindings
-- Supports resize, color adjustments, and format conversion
-- Does NOT support RAW formats natively
+**Why Dual Rendering Modes (WebGPU + Sharp)?**
+- WebGPU (default): ~10x faster GPU-accelerated processing for previews
+- Sharp (fallback): CPU-based, always available, handles RAW extraction and all exports
+- Full feature parity between both modes
+- Automatic fallback if WebGPU unavailable
 
 **Why ExifTool for RAW Files?**
 - Sharp cannot read RAW files directly (.RAF, .ARW, .CR3, etc.)
@@ -132,6 +132,117 @@ image.modulate({ lightness: 1 + (shadows / 100) * 0.3 })
 
 These could be added in the future but weren't required for MVP.
 
+### WebGPU Rendering System (NEW)
+
+**Why WebGPU was added:**
+- User requested GPU acceleration as the default rendering mode
+- ~10x performance improvement for preset previews
+- Maintains full feature parity with Sharp implementation
+- Automatic fallback to Sharp if WebGPU unavailable
+
+**Architecture Decision: WebGPU in Renderer Process**
+
+WebGPU runs in the renderer process because:
+- Only renderer has access to `navigator.gpu` API
+- Sharp remains in main process for RAW extraction and exports
+- Images transferred via IPC as base64 JPEG
+- Separate cache namespaces for each mode
+
+**Rendering Pipeline Flow:**
+
+```
+User loads image with preset
+    ↓
+[Main Process]
+    1. Detect RAW → Extract preview with ExifTool
+    2. Resize to 2000x2000 with Sharp
+    3. Encode as base64 JPEG
+    4. Send to renderer via IPC
+    ↓
+[Renderer Process]
+    5. Check rendering mode (settingsManager.getRenderingMode())
+    ↓
+[If WebGPU mode]
+    6. Decode base64 → ImageBitmap
+    7. Upload to GPU texture
+    8. Run multi-pass shader pipeline:
+       - basicAdjustments (11 adjustments)
+       - splitToning (shadow/highlight colors)
+       - grain (film grain effect)
+       - vignette (edge darkening/lightening)
+    9. Download from GPU → Canvas
+    10. Encode Canvas → Data URL
+    11. Display in <img> element
+    ↓
+[If Sharp mode]
+    6. Use base64 directly as data:image URL
+    7. Display in <img> element
+```
+
+**Critical Implementation Details:**
+
+1. **Settings System**
+   - File: `~/.snerk/settings.json`
+   - Structure: `{ version, rendering: { mode, fallbackToSharp } }`
+   - Defaults: mode="webgpu", fallbackToSharp=true
+   - UI: Modal dialog accessible from Settings button in header
+
+2. **WebGPU Texture Lifecycle Management (CRITICAL)**
+   - Textures MUST be destroyed after GPU operations complete
+   - Always `await device.queue.onSubmittedWorkDone()` before destroying
+   - Pass-through textures (curves, HSL) must NOT be added to destroy list
+   - Check: `if (currentTexture !== inputTexture && nextTexture !== currentTexture)`
+
+3. **Uniform Buffer Handling (CRITICAL BUG FIX)**
+   - Never use `||` operator for default values with numeric uniforms
+   - `saturation: 0 || 1` evaluates to `1`, breaking B&W presets
+   - Always use: `adj.saturation !== undefined ? adj.saturation : 1`
+   - Affects: saturation, exposure, contrast, vibrance, all numeric adjustments
+
+4. **Shader Implementation Parity with Sharp**
+   - Every shader formula must EXACTLY match Sharp's implementation
+   - Example: Highlights only process negative values with gamma in Sharp
+   - Example: Saturation uses `rgb = lum + (rgb - lum) * saturation`
+   - Example: Contrast midpoint is `128/255`, not `0.5`
+   - Any deviation causes visible artifacts or incorrect color rendering
+
+5. **Cache Strategy**
+   - Separate namespaces: `"webgpu_preview_${path}"` vs `"sharp_preview_${path}"`
+   - Prevents cache collisions when switching modes
+   - Cache invalidation on mode change handled by different keys
+
+**WebGPU Shader Files:**
+
+- `utils.wgsl` - Shared functions (luminance, RGB↔HSL conversion)
+- `basicAdjustments.wgsl` - Exposure, temperature, tint, contrast, saturation, vibrance, shadows, highlights, whites, blacks, dehaze
+- `splitToning.wgsl` - Shadow/highlight color grading
+- `grain.wgsl` - Film grain simulation
+- `vignette.wgsl` - Radial gradient effect
+- `curves.wgsl` - Placeholder (not fully implemented)
+- `hsl.wgsl` - Placeholder (not fully implemented)
+
+**Shader Pipeline Order (matches Sharp):**
+
+1. Basic adjustments (exposure → temperature → tint → contrast → saturation → vibrance → shadows → highlights → whites → blacks → dehaze)
+2. Curves (if implemented)
+3. HSL selective (if implemented)
+4. Split toning
+5. Grain
+6. Vignette
+
+**Export Always Uses Sharp:**
+
+- WebGPU only processes preview-sized images (2000x2000 max)
+- Export needs full-resolution processing
+- Sharp in main process handles full RAW resolution without IPC overhead
+- No changes to export workflow when using WebGPU for previews
+
+**Known Limitations:**
+
+- Curves shader is placeholder (returns input unchanged)
+- HSL selective shader is placeholder (returns input unchanged)
+- Could be implemented in future if needed
+
 ## File Organization
 
 ```
@@ -142,9 +253,19 @@ src/
   styles.css         - Custom styling
   renderer.js        - UI logic, event handlers, state management
   lib/
-    fileManager.js      - Directory scanning, navigation logic
-    presetManager.js    - YAML loading and parsing
-    imageProcessor.js   - Image loading/caching interface
+    fileManager.js       - Directory scanning, navigation logic
+    presetManager.js     - YAML loading and parsing
+    imageProcessor.js    - Image loading/caching router (WebGPU vs Sharp)
+    settingsManager.js   - Settings persistence and WebGPU detection
+    webgpuProcessor.js   - WebGPU device, shader compilation, GPU pipeline
+    shaders/
+      utils.wgsl                - Shared utility functions
+      basicAdjustments.wgsl     - 11 basic adjustments (compute shader)
+      curves.wgsl               - Tone curves (placeholder)
+      hsl.wgsl                  - HSL selective (placeholder)
+      splitToning.wgsl          - Shadow/highlight color grading
+      grain.wgsl                - Film grain effect
+      vignette.wgsl             - Vignette effect
 ```
 
 **Why this structure?**
@@ -191,6 +312,35 @@ src/
 - Use `elements.exportDialog.close()` to close
 - Don't forget `setTimeout()` before auto-close to let user see final status
 
+### Issue: "Destroyed texture used in a submit" (WebGPU)
+
+**Cause:** Textures destroyed before GPU operations complete, or pass-through textures incorrectly added to destroy list
+
+**Solution:**
+- Always `await device.queue.onSubmittedWorkDone()` before destroying textures
+- Check if texture is pass-through: `if (currentTexture !== inputTexture && nextTexture !== currentTexture)`
+- Only add intermediate textures to destroy list, not input or pass-through textures
+
+### Issue: B&W presets not working, saturation: 0 shows full color (WebGPU)
+
+**Cause:** Using `||` operator for default values - `adj.saturation || 1` treats `0` as falsy
+
+**Solution:**
+- Use explicit undefined checks: `adj.saturation !== undefined ? adj.saturation : 1`
+- Apply to ALL numeric uniform values (exposure, saturation, contrast, etc.)
+- This is a critical bug that affects any adjustment where `0` is a valid value
+
+### Issue: Artifacts in dark areas or incorrect colors (WebGPU)
+
+**Cause:** WebGPU shader formulas don't exactly match Sharp's implementation
+
+**Solution:**
+- Compare shader code line-by-line with Sharp's implementation in main.js
+- Verify operation order matches Sharp (exposure → temperature → tint → contrast → saturation, etc.)
+- Check for type mismatches (scalar vs vec3) in shader operations
+- Example: Highlights in Sharp only processes negative values, positive values are ignored
+- Example: Saturation requires explicit vec3 conversion: `lumVec = vec3<f32>(lum)`
+
 ## Important User Requirements
 
 1. **Minimalism is key** - No feature bloat, simple UI, straightforward workflows
@@ -226,6 +376,15 @@ Currently no automated tests. For manual testing:
 3. **Navigation:** Test with 20+ images, verify smooth transitions
 4. **Export:** Test batch export with various formats/quality settings
 5. **Custom Presets:** Add a .yaml file to `~/.snerk/presets/`, verify it loads
+6. **WebGPU Rendering:**
+   - Test all presets in WebGPU mode, compare with Sharp mode
+   - Verify B&W presets (saturation: 0) produce true grayscale
+   - Check dark areas for artifacts (Modern presets with negative highlights)
+   - Test mode switching: Settings → Change mode → Reload image
+   - Test fallback: Disable WebGPU in browser flags, verify Sharp fallback works
+7. **Settings Persistence:**
+   - Change settings, restart app, verify settings persisted
+   - Check `~/.snerk/settings.json` file exists and has correct structure
 
 ## Future Enhancement Ideas
 
@@ -236,9 +395,10 @@ If asked to extend Snerk, consider:
 3. **Comparison mode:** Side-by-side before/after view
 4. **Histogram:** Show exposure/color distribution
 5. **Preset hot-reload:** Watch preset directory for changes
-6. **GPU acceleration:** Use GPU.js or WebGL for faster processing
-7. **Favorite presets:** Star frequently used presets
-8. **Batch rename:** Auto-rename exported files with patterns
+6. **Favorite presets:** Star frequently used presets
+7. **Batch rename:** Auto-rename exported files with patterns
+8. **Complete curves and HSL shaders:** Finish placeholder implementations in WebGPU
+9. **GPU-accelerated export:** Use WebGPU for full-resolution export (requires chunking for large images)
 
 ## Dependencies to Watch
 
@@ -348,9 +508,17 @@ npm run build:linux  # Creates .AppImage
 
 1. Update YAML schema in SPEC.md
 2. Add parsing in `presetManager.js` parseYAML()
-3. Implement in Sharp processing in `main.js` image:applyPreset
-4. Test with a sample preset file
-5. Document in README.md
+3. **Sharp implementation:**
+   - Add to Sharp processing in `main.js` image:applyPreset
+   - Follow existing Sharp patterns (modulate, linear, gamma, etc.)
+4. **WebGPU implementation:**
+   - Add uniform field to appropriate shader struct (usually `basicAdjustments.wgsl`)
+   - Update `runBasicAdjustments()` in `webgpuProcessor.js` to include new value
+   - Implement shader logic matching Sharp's formula EXACTLY
+   - Use `!== undefined` checks, never `||` operator for defaults
+5. Test with a sample preset file in both rendering modes
+6. Verify visual parity between WebGPU and Sharp
+7. Document in README.md
 
 ### Adding a New File Format
 

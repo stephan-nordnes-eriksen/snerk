@@ -10,7 +10,9 @@ Snerk is a minimalistic photo viewer application built with Electron that suppor
 
 - **Runtime**: Electron desktop application
 - **UI**: Pure HTML/CSS with Pico.css framework
-- **Image Processing**: Sharp library for image manipulation
+- **Image Processing**:
+  - WebGPU (default) - GPU-accelerated rendering in browser
+  - Sharp (fallback) - CPU-based image processing
 - **RAW Support**: ExifTool for extracting embedded previews from RAW files
 - **Preset Format**: YAML configuration files
 - **Supported Platforms**: macOS, Windows, Linux
@@ -113,28 +115,89 @@ adjustments:
 - Preserve EXIF metadata where possible
 - Handle filename conflicts gracefully
 
-### 4. User Interface
+### 4. Rendering Modes
+
+#### WebGPU Mode (Default)
+- **Processing**: GPU-accelerated compute shaders (WGSL)
+- **Location**: Renderer process
+- **Performance**: ~10x faster than Sharp for preview generation
+- **Features**: Full feature parity with all 18 preset adjustments
+- **Requirement**: Browser with WebGPU support (Chromium 113+)
+
+#### Sharp Mode (Fallback)
+- **Processing**: CPU-based image processing
+- **Location**: Main process
+- **Performance**: ~2000ms per preset application
+- **Features**: Full feature parity with all 18 preset adjustments
+- **Requirement**: None (always available)
+
+#### Settings System
+- **Storage**: `~/.snerk/settings.json`
+- **UI**: Settings modal dialog (accessible from header)
+- **Options**:
+  - Rendering mode selection (WebGPU or Sharp)
+  - Automatic fallback toggle
+  - WebGPU availability status
+- **Defaults**:
+  - Mode: WebGPU
+  - Fallback to Sharp: Enabled
+
+#### Rendering Pipeline Architecture
+```
+[Main Process]                    [Renderer Process]
+     │                                    │
+     ├─ Sharp (RAW extraction)            │
+     ├─ Sharp (Export, full-res)          │
+     │                                    │
+     │                            ┌───────┴────────┐
+     │                            │ SettingsManager │
+     │                            └────────┬────────┘
+     │                                     │
+     │                            ┌────────┴─────────┐
+     │                            │ ImageProcessor   │
+     │                            │  (routes based   │
+     │                            │   on mode)       │
+     │                            └────────┬─────────┘
+     │                                     │
+     │                            ┌────────┴─────────┐
+     │                            │                  │
+     │                    [mode=webgpu]    [mode=sharp]
+     │                            │                  │
+     │                   WebGPUProcessor    Use IPC result
+     │                   - GPU shaders        directly
+     │                   - Multi-pass
+```
+
+#### WebGPU Shader Pipeline (6 passes)
+1. **Basic Adjustments** (compute): exposure, temperature, tint, contrast, saturation, vibrance, shadows, highlights, whites, blacks, dehaze
+2. **Curves** (compute): RGB and per-channel tone curves via LUT (placeholder)
+3. **HSL Selective** (compute): Color-specific hue/sat/lum adjustments (placeholder)
+4. **Split Toning** (compute): Shadow/highlight color grading
+5. **Grain** (compute): Film grain effect
+6. **Vignette** (compute): Radial gradient darkening/lightening
+
+### 5. User Interface
 
 #### Layout
 ```
-┌─────────────────────────────────────────────┐
-│ Header: [Snerk]  [Open Folder] [Export All]│
-├─────────┬───────────────────────────────────┤
-│ Preset  │                                   │
-│ Panel   │        Image Viewer               │
-│         │                                   │
-│ - Select│                                   │
-│ - Cat 1 │                                   │
-│   • Pre1│                                   │
-│   • Pre2│                                   │
-│ - Cat 2 │                                   │
-│ - Export│                                   │
-│   Settings                                  │
-│         │  [← Prev] [5 / 23] [Next →]      │
-│         │       filename.RAF                │
-└─────────┴───────────────────────────────────┘
-│ Status: Ready                               │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│ Header: [Snerk]  [Open Folder] [Export All] [Settings]  │
+├─────────┬────────────────────────────────────────────────┤
+│ Preset  │                                                │
+│ Panel   │        Image Viewer                            │
+│         │                                                │
+│ - Select│                                                │
+│ - Cat 1 │                                                │
+│   • Pre1│                                                │
+│   • Pre2│                                                │
+│ - Cat 2 │                                                │
+│ - Export│                                                │
+│   Settings                                               │
+│         │  [← Prev] [5 / 23] [Next →]                   │
+│         │       filename.RAF                             │
+└─────────┴────────────────────────────────────────────────┘
+│ Status: Ready (webgpu rendering)                         │
+└──────────────────────────────────────────────────────────┘
 ```
 
 #### Preset Panel
@@ -205,7 +268,17 @@ snerk/
 │   └── lib/
 │       ├── fileManager.js      # Directory scanning
 │       ├── presetManager.js    # YAML loading
-│       └── imageProcessor.js   # Image processing
+│       ├── imageProcessor.js   # Image processing router
+│       ├── settingsManager.js  # Settings persistence
+│       ├── webgpuProcessor.js  # WebGPU rendering engine
+│       └── shaders/           # WGSL compute shaders
+│           ├── utils.wgsl           # Shared utility functions
+│           ├── basicAdjustments.wgsl
+│           ├── curves.wgsl
+│           ├── hsl.wgsl
+│           ├── splitToning.wgsl
+│           ├── grain.wgsl
+│           └── vignette.wgsl
 └── presets/              # Default presets
     ├── classic-film/
     ├── modern/
@@ -217,9 +290,10 @@ snerk/
 - Window creation and management
 - File system operations
 - RAW preview extraction (ExifTool)
-- Image processing (Sharp)
+- Image processing (Sharp - for Sharp mode and all exports)
 - IPC handler registration
 - Preset directory initialization
+- Settings file management
 
 #### Renderer Process Responsibilities
 - UI state management
@@ -228,6 +302,9 @@ snerk/
 - Image display
 - Preset selection
 - Navigation logic
+- Settings management
+- WebGPU initialization and processing (WebGPU mode only)
+- Rendering mode routing
 
 #### IPC Channels
 - `dialog:openFolder` - Open folder picker
@@ -237,9 +314,12 @@ snerk/
 - `file:writeFile` - Write buffer to file
 - `preset:getDirectory` - Get preset directory path
 - `preset:findAll` - Find all YAML preset files
-- `image:loadPreview` - Load image preview
-- `image:applyPreset` - Apply preset to image
-- `image:export` - Export single image
+- `image:loadPreview` - Load image preview (used by both rendering modes)
+- `image:applyPreset` - Apply preset to image (Sharp mode only)
+- `image:export` - Export single image (always uses Sharp)
+- `settings:getPath` - Get settings file path
+- `settings:load` - Load settings from file
+- `settings:save` - Save settings to file
 
 #### RAW File Handling
 1. Detect RAW file by extension
@@ -285,8 +365,8 @@ snerk/
 - Recent folders
 - Drag-and-drop folder opening
 - Full RAW conversion (vs. embedded preview)
-- GPU acceleration for processing
 - Batch rename on export
+- Complete curves and HSL shader implementations
 
 ## Default Presets Included
 
@@ -348,16 +428,30 @@ npm run build:linux  # Linux AppImage
 
 ### User Directory
 - Location: `~/.snerk/`
-- Contains: `presets/` directory
-- Populated on first launch with defaults
-- User can add custom presets here
+- Contains:
+  - `presets/` - User preset files
+  - `settings.json` - Application settings
+- Populated on first launch with default presets
+- Settings created on first settings save
+
+### Settings File Structure
+```json
+{
+  "version": "1.0",
+  "rendering": {
+    "mode": "webgpu",
+    "fallbackToSharp": true
+  }
+}
+```
 
 ## Performance Benchmarks (Target)
 
 - Application launch: < 3 seconds
 - Folder scan (100 images): < 2 seconds
 - RAW preview load: < 2 seconds
-- Preset application: < 500ms
+- Preset application (WebGPU): < 200ms
+- Preset application (Sharp): < 2000ms
 - Navigation between images: < 1 second
 - Export 100 images: < 5 minutes
 
