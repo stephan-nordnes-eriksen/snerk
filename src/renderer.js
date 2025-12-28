@@ -87,6 +87,9 @@ const elements = {
   editorTextureValue: document.getElementById('editorTextureValue'),
   editorDehaze: document.getElementById('editorDehaze'),
   editorDehazeValue: document.getElementById('editorDehazeValue'),
+  editorCurveR: document.getElementById('editorCurveR'),
+  editorCurveG: document.getElementById('editorCurveG'),
+  editorCurveB: document.getElementById('editorCurveB'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
   renamePresetBtn: document.getElementById('renamePresetBtn'),
   deletePresetBtn: document.getElementById('deletePresetBtn'),
@@ -803,6 +806,27 @@ function getEditorPresetConfig() {
   if (texture !== 0) config.adjustments.texture = texture;
   if (dehaze !== 0) config.adjustments.dehaze = dehaze;
 
+  const curves = {};
+  try {
+    if (elements.editorCurveR.value.trim()) {
+      curves.r = JSON.parse(elements.editorCurveR.value);
+    }
+  } catch (e) {}
+  try {
+    if (elements.editorCurveG.value.trim()) {
+      curves.g = JSON.parse(elements.editorCurveG.value);
+    }
+  } catch (e) {}
+  try {
+    if (elements.editorCurveB.value.trim()) {
+      curves.b = JSON.parse(elements.editorCurveB.value);
+    }
+  } catch (e) {}
+
+  if (Object.keys(curves).length > 0) {
+    config.curves = curves;
+  }
+
   return config;
 }
 
@@ -845,6 +869,9 @@ function resetPresetEditor() {
   elements.editorTextureValue.textContent = 0;
   elements.editorDehaze.value = 0;
   elements.editorDehazeValue.textContent = 0;
+  elements.editorCurveR.value = '';
+  elements.editorCurveG.value = '';
+  elements.editorCurveB.value = '';
 
   updateEditorPreview();
 }
@@ -870,6 +897,10 @@ function setupEditorSliders() {
       updateEditorPreview();
     });
   }
+
+  elements.editorCurveR.addEventListener('input', () => updateEditorPreview());
+  elements.editorCurveG.addEventListener('input', () => updateEditorPreview());
+  elements.editorCurveB.addEventListener('input', () => updateEditorPreview());
 }
 
 async function openPresetEditor() {
@@ -937,6 +968,19 @@ async function savePresetFromEditor() {
     yamlContent += `  dehaze: ${config.adjustments.dehaze}\n`;
   }
 
+  if (config.curves && Object.keys(config.curves).length > 0) {
+    yamlContent += `curves:\n`;
+    if (config.curves.r) {
+      yamlContent += `  r: ${JSON.stringify(config.curves.r)}\n`;
+    }
+    if (config.curves.g) {
+      yamlContent += `  g: ${JSON.stringify(config.curves.g)}\n`;
+    }
+    if (config.curves.b) {
+      yamlContent += `  b: ${JSON.stringify(config.curves.b)}\n`;
+    }
+  }
+
   try {
     await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
     updateStatus(`Saved preset "${presetName}"`);
@@ -993,6 +1037,16 @@ function populateEditorWithPreset(preset) {
 
   elements.editorDehaze.value = adj.dehaze || 0;
   elements.editorDehazeValue.textContent = adj.dehaze || 0;
+
+  if (preset.curves) {
+    elements.editorCurveR.value = preset.curves.r ? JSON.stringify(preset.curves.r) : '';
+    elements.editorCurveG.value = preset.curves.g ? JSON.stringify(preset.curves.g) : '';
+    elements.editorCurveB.value = preset.curves.b ? JSON.stringify(preset.curves.b) : '';
+  } else {
+    elements.editorCurveR.value = '';
+    elements.editorCurveG.value = '';
+    elements.editorCurveB.value = '';
+  }
 }
 
 async function showCurrentPresetConfig() {
@@ -1113,6 +1167,19 @@ async function savePresetFromEditorWithName(presetName) {
   }
   if (config.adjustments.dehaze !== undefined) {
     yamlContent += `  dehaze: ${config.adjustments.dehaze}\n`;
+  }
+
+  if (config.curves && Object.keys(config.curves).length > 0) {
+    yamlContent += `curves:\n`;
+    if (config.curves.r) {
+      yamlContent += `  r: ${JSON.stringify(config.curves.r)}\n`;
+    }
+    if (config.curves.g) {
+      yamlContent += `  g: ${JSON.stringify(config.curves.g)}\n`;
+    }
+    if (config.curves.b) {
+      yamlContent += `  b: ${JSON.stringify(config.curves.b)}\n`;
+    }
   }
 
   try {

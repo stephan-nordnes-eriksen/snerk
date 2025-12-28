@@ -34,5 +34,5 @@ todo:
 - [x] When deleting presets, other presets are being duplicated in the UI, and the one being deleted is not properly removed.
 - [x] Remove the edit button next to the name of the presets, and move the rename-functionality into the preset editor section
 - [x] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
-- [ ] Add better input methods for curves
+- [x] Add better input methods for curves
 - [ ] Prevent any kind of animation/delay on the images when changing configs, such as css transitions and so on.

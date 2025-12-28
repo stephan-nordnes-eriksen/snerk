@@ -150,6 +150,25 @@
           <input type="range" id="editorDehaze" min="-100" max="100" step="1" value="0">
           <small id="editorDehazeValue">0</small>
         </label>
+
+        <details>
+          <summary>Tone Curves (Advanced)</summary>
+          <label>
+            Red Curve
+            <input type="text" id="editorCurveR" placeholder="[[0,0],[128,128],[255,255]]">
+            <small>Points as [[x,y],[x,y],...]</small>
+          </label>
+          <label>
+            Green Curve
+            <input type="text" id="editorCurveG" placeholder="[[0,0],[128,128],[255,255]]">
+            <small>Points as [[x,y],[x,y],...]</small>
+          </label>
+          <label>
+            Blue Curve
+            <input type="text" id="editorCurveB" placeholder="[[0,0],[128,128],[255,255]]">
+            <small>Points as [[x,y],[x,y],...]</small>
+          </label>
+        </details>
       </div>
       <div class="panel-footer">
         <button id="resetPresetEditorBtn" class="outline secondary">Reset All</button>
