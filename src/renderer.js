@@ -11,7 +11,7 @@ const state = {
     level: 1,
     minLevel: 0.05,
     maxLevel: 30,
-    step: 0.1,
+    step: 0.05,
     panX: 0,
     panY: 0,
     isPanning: false,
@@ -1403,7 +1403,7 @@ function togglePresetPanel() {
 function applyZoom() {
   const { level, panX, panY } = state.zoom;
   elements.mainImage.style.transform = `scale(${level}) translate(${panX}px, ${panY}px)`;
-  elements.mainImage.style.cursor = level > 1 ? 'grab' : 'default';
+  elements.mainImage.style.cursor = 'grab';
 }
 
 function zoomIn() {
@@ -1468,11 +1468,9 @@ function handleWheel(e) {
 }
 
 function startPan(e) {
-  if (state.zoom.level <= 1) return;
-
   state.zoom.isPanning = true;
-  state.zoom.startX = e.clientX - state.zoom.panX;
-  state.zoom.startY = e.clientY - state.zoom.panY;
+  state.zoom.startX = e.clientX - state.zoom.panX * state.zoom.level;
+  state.zoom.startY = e.clientY - state.zoom.panY * state.zoom.level;
   elements.mainImage.style.cursor = 'grabbing';
 }
 
@@ -1480,8 +1478,8 @@ function doPan(e) {
   if (!state.zoom.isPanning) return;
 
   e.preventDefault();
-  state.zoom.panX = e.clientX - state.zoom.startX;
-  state.zoom.panY = e.clientY - state.zoom.startY;
+  state.zoom.panX = (e.clientX - state.zoom.startX) / state.zoom.level;
+  state.zoom.panY = (e.clientY - state.zoom.startY) / state.zoom.level;
   applyZoom();
 }
 
