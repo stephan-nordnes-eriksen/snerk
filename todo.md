@@ -24,12 +24,14 @@ todo:
 - [x] Implement texture adjustment (new Lightroom feature)
 - [x] Go through the xmp feature list and implement each missing feature (medium priority items)
 - [x] When making new configs, open the modal on the right-hand side and do not put a global overlay. When changing settings, they should be immediately visible in the displayed image.
-- [ ] Add more export output formats by using ffmpeg as the conversion tool
-- [ ] If applicable, use ffmpeg for applying color profiles
 - [x] Add a default background image when no folder is selected
 - [x] Add a "show config" button to the right which will open the custom config modal with the currently selected preset. This modal should have a "copy to custom preset" which copies the current preset, and allows you to change it, unless it is already a custom preset, in which case you can configure it immediately
-- [ ] Add the ability to delete custom configs, including imported ones.
-- [ ] There are some problem when importing XMP. 1. The name of the xmp file is not fully set to the imported setting. It imports duplicates.
-- [ ] Fix problem: Arrow keys does not go to next / previous image
-- [ ] Make a way to run a preset config from the command line on a list of files, with a target output folder. This will be used for comparing the filters with a know good state
-- [ ] Fix problem: In weg gpu mode, the black and white filters is not actually black and white, but has color.
+- [x] Add the ability to delete custom configs, including imported ones.
+- [x] There are some problem when importing XMP. 1. The name of the xmp file is not fully set to the imported setting. It imports duplicates.
+- [x] Fix problem: Arrow keys does not go to next / previous image
+- [x] Make a way to run a preset config from the command line on a list of files, with a target output folder. This will be used for comparing the filters with a know good state
+- [x] Fix problem: In weg gpu mode, the black and white filters is not actually black and white, but has color.
+- [ ] When deleting presets, other presets are being duplicated in the UI, and the one being deleted is not properly removed.
+- [ ] Remove the edit button next to the name of the presets, and move the rename-functionality into the preset editor section
+- [ ] Add support for more export formats. Possibly use ffmpeg as a conversion tool.
+- [ ] Add better input methods for curves

@@ -930,6 +930,16 @@ ipcMain.handle('settings:save', async (event, settingsJson) => {
   }
 });
 
+ipcMain.handle('file:delete', async (event, filePath) => {
+  try {
+    await fs.unlink(filePath);
+    return true;
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;

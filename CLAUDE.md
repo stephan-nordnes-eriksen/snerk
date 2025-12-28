@@ -4,6 +4,13 @@
 
 Snerk is a minimalistic Electron-based photo viewer with RAW format support and Lightroom-like preset functionality. The application allows users to browse photos, apply presets for quick color grading, and batch export images with filters applied.
 
+
+## Instructions from developer
+- When working on multi-step parts, like processing a todo list, make git commits between each step. eg. between each todo list item
+- When making significant changes, update CLAUDE.md and SPEC.md appropriately. Avoid this for things like bugfixing and style changes.
+- Avoid adding verbose comments and unnecessary code or abstractions. Aim to be as short an concise as possible
+- Avoid altering code / systems that are not part of the immediate task.
+
 ## Architecture Overview
 
 ### Technology Choices

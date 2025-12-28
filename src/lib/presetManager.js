@@ -125,6 +125,33 @@ class PresetManager {
     if (!preset.name || typeof preset.name !== 'string') return false;
     return true;
   }
+
+  async deletePreset(name) {
+    const preset = this.getPresetByName(name);
+    if (!preset) {
+      throw new Error(`Preset "${name}" not found`);
+    }
+
+    if (!preset.filePath) {
+      throw new Error(`Cannot delete preset "${name}" - no file path`);
+    }
+
+    // Don't allow deletion of default presets
+    const defaultCategories = ['basic', 'bw', 'classic-film', 'modern'];
+    if (preset.category && defaultCategories.includes(preset.category)) {
+      throw new Error(`Cannot delete default preset "${name}"`);
+    }
+
+    try {
+      await window.snerkAPI.deleteFile(preset.filePath);
+      this.presets = this.presets.filter(p => p.name !== name);
+      this.organizePresetsByCategory();
+      return true;
+    } catch (error) {
+      console.error('Error deleting preset:', error);
+      throw error;
+    }
+  }
 }
 
 window.PresetManager = PresetManager;

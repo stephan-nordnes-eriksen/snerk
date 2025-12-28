@@ -53,6 +53,7 @@ const elements = {
   exportConfigSelect: document.getElementById('exportConfigSelect'),
   exportApplyPreset: document.getElementById('exportApplyPreset'),
   saveExportConfigBtn: document.getElementById('saveExportConfigBtn'),
+  deleteExportConfigBtn: document.getElementById('deleteExportConfigBtn'),
   cancelExportConfigBtn: document.getElementById('cancelExportConfigBtn'),
   confirmExportBtn: document.getElementById('confirmExportBtn'),
   exportProgressDialog: document.getElementById('exportProgressDialog'),
@@ -87,6 +88,7 @@ const elements = {
   editorDehaze: document.getElementById('editorDehaze'),
   editorDehazeValue: document.getElementById('editorDehazeValue'),
   resetPresetEditorBtn: document.getElementById('resetPresetEditorBtn'),
+  deletePresetBtn: document.getElementById('deletePresetBtn'),
   cancelPresetEditorBtn: document.getElementById('cancelPresetEditorBtn'),
   copyToCustomBtn: document.getElementById('copyToCustomBtn'),
   updatePresetBtn: document.getElementById('updatePresetBtn'),
@@ -333,7 +335,16 @@ async function showExportConfigDialog() {
           elements.exportFormat.value = config.format;
           elements.exportQuality.value = config.quality;
           elements.qualityValue.textContent = config.quality;
+
+          // Show delete button only for custom configs (those with filePath)
+          if (config.filePath) {
+            elements.deleteExportConfigBtn.classList.remove('hidden');
+          } else {
+            elements.deleteExportConfigBtn.classList.add('hidden');
+          }
         }
+      } else {
+        elements.deleteExportConfigBtn.classList.add('hidden');
       }
     };
 
@@ -357,6 +368,29 @@ async function showExportConfigDialog() {
       }
     };
 
+    const handleDeleteConfig = async () => {
+      const configName = elements.exportConfigSelect.value;
+      if (!configName) return;
+
+      const confirmed = await showConfirmDialog(
+        'Delete Export Config',
+        `Are you sure you want to delete the export config "${configName}"? This cannot be undone.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        await exportConfigManager.deleteConfig(configName);
+        await loadExportConfigs();
+        elements.exportConfigSelect.value = '';
+        elements.deleteExportConfigBtn.classList.add('hidden');
+        updateStatus(`Deleted export config "${configName}"`);
+      } catch (error) {
+        console.error('Error deleting export config:', error);
+        await showAlert('Error deleting export config: ' + error.message);
+      }
+    };
+
     const handleConfirm = async () => {
       cleanup();
       elements.exportConfigDialog.close();
@@ -373,12 +407,14 @@ async function showExportConfigDialog() {
     const cleanup = () => {
       elements.exportConfigSelect.removeEventListener('change', handleConfigSelect);
       elements.saveExportConfigBtn.removeEventListener('click', handleSaveConfig);
+      elements.deleteExportConfigBtn.removeEventListener('click', handleDeleteConfig);
       elements.confirmExportBtn.removeEventListener('click', handleConfirm);
       elements.cancelExportConfigBtn.removeEventListener('click', handleCancel);
     };
 
     elements.exportConfigSelect.addEventListener('change', handleConfigSelect);
     elements.saveExportConfigBtn.addEventListener('click', handleSaveConfig);
+    elements.deleteExportConfigBtn.addEventListener('click', handleDeleteConfig);
     elements.confirmExportBtn.addEventListener('click', handleConfirm);
     elements.cancelExportConfigBtn.addEventListener('click', handleCancel);
 
@@ -536,6 +572,66 @@ function showAlert(message) {
   });
 }
 
+function showConfirmDialog(title, message) {
+  return new Promise((resolve) => {
+    elements.renameDialogTitle.textContent = title;
+    elements.renameInput.style.display = 'none';
+
+    const messageEl = document.createElement('p');
+    messageEl.textContent = message;
+    messageEl.style.margin = '1rem 0';
+
+    const contentDiv = elements.renameDialog.querySelector('div');
+    const originalContent = contentDiv.innerHTML;
+    contentDiv.innerHTML = '';
+    contentDiv.appendChild(messageEl);
+
+    elements.renameConfirmBtn.textContent = 'Yes';
+    elements.renameCancelBtn.textContent = 'No';
+    elements.renameCancelBtn.style.display = '';
+
+    const handleConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const handleKeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancel();
+      }
+    };
+
+    const cleanup = () => {
+      elements.renameConfirmBtn.removeEventListener('click', handleConfirm);
+      elements.renameCancelBtn.removeEventListener('click', handleCancel);
+      document.removeEventListener('keydown', handleKeydown);
+      elements.renameDialog.close();
+
+      // Restore original content
+      contentDiv.innerHTML = originalContent;
+      elements.renameInput.style.display = '';
+      elements.renameConfirmBtn.textContent = 'OK';
+      elements.renameCancelBtn.textContent = 'Cancel';
+      elements.renameCancelBtn.style.display = '';
+    };
+
+    elements.renameConfirmBtn.addEventListener('click', handleConfirm);
+    elements.renameCancelBtn.addEventListener('click', handleCancel);
+    document.addEventListener('keydown', handleKeydown);
+
+    elements.renameDialog.showModal();
+  });
+}
+
 async function openSettings() {
   elements.settingsRenderingMode.value = settingsManager.settings.rendering.mode;
   elements.settingsFallbackToSharp.checked = settingsManager.settings.rendering.fallbackToSharp;
@@ -634,18 +730,51 @@ async function importXmpPreset() {
     const preset = xmpImporter.parseXmpToPreset(xmpContent, filename);
 
     // Prompt user to customize the name
-    const customName = await showRenameDialog('Import Preset - Enter Name', preset.name);
-    if (customName === null) {
-      updateStatus('Import cancelled');
-      return;
+    let desiredName = preset.name;
+    let shouldOverwrite = false;
+
+    while (true) {
+      const customName = await showRenameDialog('Import Preset - Enter Name', desiredName);
+      if (customName === null) {
+        updateStatus('Import cancelled');
+        return;
+      }
+
+      const finalName = customName.trim() || preset.name;
+
+      // Check if preset with this name already exists
+      const existingPreset = state.presets.find(p => p.name === finalName);
+      if (existingPreset) {
+        const shouldReplace = await showConfirmDialog(
+          'Preset Already Exists',
+          `A preset named "${finalName}" already exists. Do you want to replace it?`
+        );
+
+        if (shouldReplace) {
+          // Delete the existing preset before importing
+          try {
+            await presetManager.deletePreset(finalName);
+            shouldOverwrite = true;
+            desiredName = finalName;
+            break;
+          } catch (error) {
+            // If we can't delete it (e.g., it's a default preset), suggest a new name
+            await showAlert(`Cannot replace preset "${finalName}". Please choose a different name.`);
+            desiredName = getUniquePresetName(finalName, state.presets.map(p => p.name));
+            continue;
+          }
+        } else {
+          // User chose not to replace, suggest a unique name
+          desiredName = getUniquePresetName(finalName, state.presets.map(p => p.name));
+          continue;
+        }
+      } else {
+        desiredName = finalName;
+        break;
+      }
     }
 
-    // Use custom name if provided, otherwise use default
-    const desiredName = customName || preset.name;
-
-    // Check for conflicts and get unique name
-    const existingNames = state.presets.map(p => p.name);
-    preset.name = getUniquePresetName(desiredName, existingNames);
+    preset.name = desiredName;
 
     const yamlContent = xmpImporter.generateYaml(preset);
 
@@ -773,6 +902,7 @@ async function openPresetEditor() {
   elements.savePresetEditorBtn.classList.remove('hidden');
   elements.copyToCustomBtn.classList.add('hidden');
   elements.updatePresetBtn.classList.add('hidden');
+  elements.deletePresetBtn.classList.add('hidden');
 
   // Show the panel
   const panel = document.getElementById('presetEditorPanel');
@@ -901,15 +1031,17 @@ async function showCurrentPresetConfig() {
 
   // Show appropriate buttons based on preset type
   if (isCustom) {
-    // For custom/imported presets, show Update button
+    // For custom/imported presets, show Update and Delete buttons
     elements.savePresetEditorBtn.classList.add('hidden');
     elements.copyToCustomBtn.classList.add('hidden');
     elements.updatePresetBtn.classList.remove('hidden');
+    elements.deletePresetBtn.classList.remove('hidden');
   } else {
-    // For default presets, show Copy to Custom button
+    // For default presets, show Copy to Custom button, hide Delete
     elements.savePresetEditorBtn.classList.add('hidden');
     elements.copyToCustomBtn.classList.remove('hidden');
     elements.updatePresetBtn.classList.add('hidden');
+    elements.deletePresetBtn.classList.add('hidden');
   }
 
   elements.presetEditorPanel.classList.remove('hidden');
@@ -926,6 +1058,34 @@ async function updateCurrentPreset() {
   if (!state.currentPreset) return;
 
   await savePresetFromEditorWithName(state.currentPreset.name);
+}
+
+async function deleteCurrentPreset() {
+  if (!state.currentPreset) return;
+
+  const confirmed = await showConfirmDialog(
+    'Delete Preset',
+    `Are you sure you want to delete the preset "${state.currentPreset.name}"? This cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await presetManager.deletePreset(state.currentPreset.name);
+    updateStatus(`Deleted preset "${state.currentPreset.name}"`);
+
+    // Close the editor panel
+    elements.presetEditorPanel.classList.add('hidden');
+
+    // Clear current preset selection
+    state.currentPreset = null;
+
+    // Reload presets and UI
+    await initialize();
+  } catch (error) {
+    console.error('Error deleting preset:', error);
+    await showAlert('Error deleting preset: ' + error.message);
+  }
 }
 
 async function savePresetFromEditorWithName(presetName) {
@@ -1022,6 +1182,7 @@ elements.cancelPresetEditorBtn.addEventListener('click', () => {
 elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
 elements.copyToCustomBtn.addEventListener('click', copyToCustomPreset);
 elements.updatePresetBtn.addEventListener('click', updateCurrentPreset);
+elements.deletePresetBtn.addEventListener('click', deleteCurrentPreset);
 elements.showConfigBtn.addEventListener('click', showCurrentPresetConfig);
 elements.closePresetEditor.addEventListener('click', () => {
   elements.presetEditorPanel.classList.add('hidden');
@@ -1232,7 +1393,8 @@ document.addEventListener('keydown', (e) => {
     elements.exportConfigDialog.open ||
     elements.exportProgressDialog.open ||
     elements.renameDialog.open ||
-    elements.presetEditorDialog.open;
+    elements.presetEditorDialog.open ||
+    elements.settingsDialog.open;
 
   switch (e.key) {
     case ' ':

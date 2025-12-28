@@ -190,17 +190,29 @@ class WebGPUProcessor {
   }
 
   needsBasicAdjustments(adj) {
-    return Math.abs(adj.exposure || 0) > 0.001 ||
-           Math.abs(adj.temperature || 0) > 0.001 ||
-           Math.abs(adj.tint || 0) > 0.001 ||
-           Math.abs((adj.contrast || 1) - 1) > 0.001 ||
-           Math.abs((adj.saturation || 1) - 1) > 0.001 ||
-           Math.abs(adj.vibrance || 0) > 0.001 ||
-           Math.abs(adj.shadows || 0) > 0.001 ||
-           Math.abs(adj.highlights || 0) > 0.001 ||
-           Math.abs(adj.whites || 0) > 0.001 ||
-           Math.abs(adj.blacks || 0) > 0.001 ||
-           Math.abs(adj.dehaze || 0) > 0.001;
+    const exposure = adj.exposure !== undefined ? adj.exposure : 0;
+    const temperature = adj.temperature !== undefined ? adj.temperature : 0;
+    const tint = adj.tint !== undefined ? adj.tint : 0;
+    const contrast = adj.contrast !== undefined ? adj.contrast : 1;
+    const saturation = adj.saturation !== undefined ? adj.saturation : 1;
+    const vibrance = adj.vibrance !== undefined ? adj.vibrance : 0;
+    const shadows = adj.shadows !== undefined ? adj.shadows : 0;
+    const highlights = adj.highlights !== undefined ? adj.highlights : 0;
+    const whites = adj.whites !== undefined ? adj.whites : 0;
+    const blacks = adj.blacks !== undefined ? adj.blacks : 0;
+    const dehaze = adj.dehaze !== undefined ? adj.dehaze : 0;
+
+    return Math.abs(exposure) > 0.001 ||
+           Math.abs(temperature) > 0.001 ||
+           Math.abs(tint) > 0.001 ||
+           Math.abs(contrast - 1) > 0.001 ||
+           Math.abs(saturation - 1) > 0.001 ||
+           Math.abs(vibrance) > 0.001 ||
+           Math.abs(shadows) > 0.001 ||
+           Math.abs(highlights) > 0.001 ||
+           Math.abs(whites) > 0.001 ||
+           Math.abs(blacks) > 0.001 ||
+           Math.abs(dehaze) > 0.001;
   }
 
   async runBasicAdjustments(inputTexture, adj, width, height) {

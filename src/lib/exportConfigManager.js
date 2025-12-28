@@ -70,4 +70,24 @@ class ExportConfigManager {
   findConfig(name) {
     return this.configs.find(c => c.name === name);
   }
+
+  async deleteConfig(name) {
+    const config = this.findConfig(name);
+    if (!config) {
+      throw new Error(`Config "${name}" not found`);
+    }
+
+    if (!config.filePath) {
+      throw new Error(`Cannot delete default config "${name}"`);
+    }
+
+    try {
+      await window.snerkAPI.deleteFile(config.filePath);
+      this.configs = this.configs.filter(c => c.name !== name);
+      return true;
+    } catch (error) {
+      console.error('Error deleting export config:', error);
+      throw error;
+    }
+  }
 }
