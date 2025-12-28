@@ -48,11 +48,10 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // 3. Tint (green/magenta)
     if (abs(uniforms.tint) > 0.001) {
         let tintAmount = uniforms.tint / 150.0;
-        if (tintAmount > 0.0) {
-            rgb.g = rgb.g * (1.0 + tintAmount * 0.1);
-        } else {
-            rgb.g = rgb.g * (1.0 + tintAmount * 0.1);
-        }
+        // Matches Sharp's formula: 1 - (amount * 0.1)
+        // Positive tint = magenta (reduce green)
+        // Negative tint = green (boost green, since amount is negative)
+        rgb.g = rgb.g * (1.0 - tintAmount * 0.1);
     }
 
     // 4. Contrast (matches Sharp's linear formula)
