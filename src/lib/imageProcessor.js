@@ -95,7 +95,11 @@ class ImageProcessor {
         const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
         const outputPath = `${outputDir}/${baseName}.${format}`;
 
-        await this.exportImage(imagePath, presetConfig, outputPath, format, quality);
+        const preset = typeof presetConfig === 'function'
+          ? presetConfig(imagePath)
+          : presetConfig;
+
+        await this.exportImage(imagePath, preset, outputPath, format, quality);
 
         results.push({ success: true, path: outputPath });
         completed++;

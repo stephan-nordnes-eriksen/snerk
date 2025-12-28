@@ -2,6 +2,7 @@ const fileManager = new FileManager();
 const presetManager = new PresetManager();
 const imageProcessor = new ImageProcessor();
 const exportConfigManager = new ExportConfigManager();
+const presetPinManager = new PresetPinManager();
 
 const state = {
   currentFolder: null,
@@ -102,6 +103,7 @@ const elements = {
   settingsCancelBtn: document.getElementById('settingsCancelBtn'),
   zoomFitBtn: document.getElementById('zoomFitBtn'),
   zoom100Btn: document.getElementById('zoom100Btn'),
+  pinPresetBtn: document.getElementById('pinPresetBtn'),
 };
 
 async function initialize() {
@@ -113,6 +115,7 @@ async function initialize() {
     state.presets = await presetManager.loadPresets();
     renderPresets();
     await loadExportConfigs();
+    await presetPinManager.loadPins();
 
     updateStatus('Ready');
   } catch (error) {
@@ -188,6 +191,7 @@ async function loadCurrentImage() {
   try {
     updateImageCounter();
     updateImagePath(currentImage);
+    updatePinButton();
 
     const imageData = state.currentPreset
       ? await imageProcessor.applyPresetToImage(currentImage, state.currentPreset)
@@ -237,6 +241,55 @@ function updateStatus(message) {
   elements.status.textContent = message;
 }
 
+function updatePinButton() {
+  const currentImage = fileManager.getCurrentImage();
+
+  if (!currentImage) {
+    elements.pinPresetBtn.disabled = true;
+    elements.pinPresetBtn.textContent = '📌';
+    elements.pinPresetBtn.title = 'Pin current preset to this image';
+    return;
+  }
+
+  const isPinned = presetPinManager.isPinned(currentImage);
+  const pinnedPresetName = presetPinManager.getPinnedPreset(currentImage);
+
+  if (isPinned) {
+    elements.pinPresetBtn.classList.add('active');
+    elements.pinPresetBtn.textContent = '📍';
+    elements.pinPresetBtn.title = `Pinned: ${pinnedPresetName}. Click to unpin.`;
+    elements.pinPresetBtn.disabled = false;
+  } else if (state.currentPreset) {
+    elements.pinPresetBtn.classList.remove('active');
+    elements.pinPresetBtn.textContent = '📌';
+    elements.pinPresetBtn.title = `Pin "${state.currentPreset.name}" to this image`;
+    elements.pinPresetBtn.disabled = false;
+  } else {
+    elements.pinPresetBtn.classList.remove('active');
+    elements.pinPresetBtn.textContent = '📌';
+    elements.pinPresetBtn.title = 'Select a preset to pin it to this image';
+    elements.pinPresetBtn.disabled = true;
+  }
+}
+
+async function togglePinPreset() {
+  const currentImage = fileManager.getCurrentImage();
+
+  if (!currentImage) return;
+
+  const isPinned = presetPinManager.isPinned(currentImage);
+
+  if (isPinned) {
+    await presetPinManager.unpinPreset(currentImage);
+    updateStatus('Unpinned preset from this image');
+  } else if (state.currentPreset) {
+    await presetPinManager.pinPreset(currentImage, state.currentPreset.name);
+    updateStatus(`Pinned "${state.currentPreset.name}" to this image`);
+  }
+
+  updatePinButton();
+}
+
 async function navigateNext() {
   fileManager.getNextImage();
   await loadCurrentImage();
@@ -263,6 +316,8 @@ async function selectPreset(presetName) {
     setActivePresetButton(presetName);
     elements.showConfigBtn.disabled = false;
   }
+
+  updatePinButton();
 
   if (fileManager.getCurrentImage()) {
     await loadCurrentImage();
@@ -416,7 +471,14 @@ async function performExport() {
     const format = elements.exportFormat.value;
     const quality = parseInt(elements.exportQuality.value);
     const applyPreset = elements.exportApplyPreset.checked;
-    const preset = applyPreset ? state.currentPreset : null;
+
+    const getPresetForImage = (imagePath) => {
+      const pinnedPresetName = presetPinManager.getPinnedPreset(imagePath);
+      if (pinnedPresetName) {
+        return presetManager.getPresetByName(pinnedPresetName);
+      }
+      return applyPreset ? state.currentPreset : null;
+    };
 
     elements.exportProgressDialog.showModal();
     elements.exportProgress.max = images.length;
@@ -425,7 +487,7 @@ async function performExport() {
 
     const results = await imageProcessor.exportBatch(
       images,
-      preset,
+      getPresetForImage,
       outputDir,
       format,
       quality,
@@ -1270,6 +1332,7 @@ elements.closePresetEditor.addEventListener('click', () => {
 });
 elements.zoomFitBtn.addEventListener('click', zoomFitToWindow);
 elements.zoom100Btn.addEventListener('click', zoom100Percent);
+elements.pinPresetBtn.addEventListener('click', togglePinPreset);
 
 elements.exportQuality.addEventListener('input', (e) => {
   elements.qualityValue.textContent = e.target.value;

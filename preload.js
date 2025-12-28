@@ -34,6 +34,10 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   saveSettings: (settingsJson) => ipcRenderer.invoke('settings:save', settingsJson),
 
+  loadPresetPins: () => ipcRenderer.invoke('presetPins:load'),
+
+  savePresetPins: (pinsObj) => ipcRenderer.invoke('presetPins:save', pinsObj),
+
   openSnerkFolder: () => ipcRenderer.invoke('folder:openSnerkFolder'),
 
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

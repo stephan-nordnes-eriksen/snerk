@@ -930,6 +930,30 @@ ipcMain.handle('settings:save', async (event, settingsJson) => {
   }
 });
 
+ipcMain.handle('presetPins:load', async () => {
+  try {
+    const PINS_FILE = path.join(os.homedir(), '.snerk', 'preset-pins.json');
+    const buffer = await fs.readFile(PINS_FILE);
+    const text = buffer.toString('utf8');
+    return JSON.parse(text);
+  } catch (error) {
+    return {};
+  }
+});
+
+ipcMain.handle('presetPins:save', async (event, pinsObj) => {
+  try {
+    const snerkDir = path.join(os.homedir(), '.snerk');
+    await fs.mkdir(snerkDir, { recursive: true });
+    const PINS_FILE = path.join(snerkDir, 'preset-pins.json');
+    await fs.writeFile(PINS_FILE, JSON.stringify(pinsObj, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error saving preset pins:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('file:delete', async (event, filePath) => {
   try {
     await fs.unlink(filePath);
