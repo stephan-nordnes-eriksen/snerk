@@ -9,6 +9,8 @@ struct Uniforms {
     highlights: f32,
     whites: f32,
     blacks: f32,
+    clarity: f32,
+    texture: f32,
     dehaze: f32,
     padding: f32,
 }
@@ -107,7 +109,56 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
         rgb = rgb + amount * 20.0 / 255.0;
     }
 
-    // 11. Dehaze (matches Sharp's linear + saturation)
+    // 11. Clarity (simplified local contrast enhancement)
+    if (abs(uniforms.clarity) > 0.001) {
+        let clarityAmount = uniforms.clarity / 100.0;
+
+        // Simple edge detection using neighboring pixels
+        let center = rgb;
+        var edge = vec3<f32>(0.0);
+
+        // Sample a 3x3 grid
+        for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+                if (dx == 0 && dy == 0) { continue; }
+                let sampleCoords = coords + vec2<i32>(dx, dy);
+                if (sampleCoords.x >= 0 && sampleCoords.x < i32(dims.x) &&
+                    sampleCoords.y >= 0 && sampleCoords.y < i32(dims.y)) {
+                    let sample = textureLoad(inputTexture, sampleCoords, 0).rgb;
+                    edge = edge + (center - sample);
+                }
+            }
+        }
+
+        // Apply clarity as edge enhancement
+        rgb = rgb + edge * clarityAmount * 0.3;
+    }
+
+    // 12. Texture (similar to clarity but more subtle)
+    if (abs(uniforms.texture) > 0.001) {
+        let textureAmount = uniforms.texture / 100.0;
+
+        // Similar edge detection but with less intensity
+        let center = rgb;
+        var edge = vec3<f32>(0.0);
+
+        for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+                if (dx == 0 && dy == 0) { continue; }
+                let sampleCoords = coords + vec2<i32>(dx, dy);
+                if (sampleCoords.x >= 0 && sampleCoords.x < i32(dims.x) &&
+                    sampleCoords.y >= 0 && sampleCoords.y < i32(dims.y)) {
+                    let sample = textureLoad(inputTexture, sampleCoords, 0).rgb;
+                    edge = edge + (center - sample);
+                }
+            }
+        }
+
+        // Apply texture with less intensity than clarity
+        rgb = rgb + edge * textureAmount * 0.15;
+    }
+
+    // 13. Dehaze (matches Sharp's linear + saturation)
     if (uniforms.dehaze > 0.001) {
         let amount = uniforms.dehaze / 100.0;
         // Linear: multiply by (1 + amount * 0.5), subtract (amount * 20 / 255)

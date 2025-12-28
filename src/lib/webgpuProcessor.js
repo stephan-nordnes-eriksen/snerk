@@ -200,6 +200,8 @@ class WebGPUProcessor {
     const highlights = adj.highlights !== undefined ? adj.highlights : 0;
     const whites = adj.whites !== undefined ? adj.whites : 0;
     const blacks = adj.blacks !== undefined ? adj.blacks : 0;
+    const clarity = adj.clarity !== undefined ? adj.clarity : 0;
+    const texture = adj.texture !== undefined ? adj.texture : 0;
     const dehaze = adj.dehaze !== undefined ? adj.dehaze : 0;
 
     return Math.abs(exposure) > 0.001 ||
@@ -212,6 +214,8 @@ class WebGPUProcessor {
            Math.abs(highlights) > 0.001 ||
            Math.abs(whites) > 0.001 ||
            Math.abs(blacks) > 0.001 ||
+           Math.abs(clarity) > 0.001 ||
+           Math.abs(texture) > 0.001 ||
            Math.abs(dehaze) > 0.001;
   }
 
@@ -229,6 +233,8 @@ class WebGPUProcessor {
       adj.highlights !== undefined ? adj.highlights : 0,
       adj.whites !== undefined ? adj.whites : 0,
       adj.blacks !== undefined ? adj.blacks : 0,
+      adj.clarity !== undefined ? adj.clarity : 0,
+      adj.texture !== undefined ? adj.texture : 0,
       adj.dehaze !== undefined ? adj.dehaze : 0,
       0 // padding
     ]);
