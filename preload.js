@@ -46,6 +46,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   loadFullResolutionImage: (imagePath) => ipcRenderer.invoke('image:loadFullResolution', imagePath),
 
+  getImageExifData: (imagePath) => ipcRenderer.invoke('image:getExifData', imagePath),
+
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),
 
   saveBlobAsImage: async (blob, outputPath, format, quality) => {

@@ -104,6 +104,10 @@ const elements = {
   zoomFitBtn: document.getElementById('zoomFitBtn'),
   zoom100Btn: document.getElementById('zoom100Btn'),
   pinPresetBtn: document.getElementById('pinPresetBtn'),
+  infoOverlay: document.getElementById('infoOverlay'),
+  infoPathValue: document.getElementById('infoPathValue'),
+  infoExif: document.getElementById('infoExif'),
+  histogramCanvas: document.getElementById('histogramCanvas'),
 };
 
 async function initialize() {
@@ -288,6 +292,130 @@ async function togglePinPreset() {
   }
 
   updatePinButton();
+}
+
+async function toggleInfoOverlay() {
+  const currentImage = fileManager.getCurrentImage();
+
+  if (!currentImage) return;
+
+  const isHidden = elements.infoOverlay.classList.contains('hidden');
+
+  if (isHidden) {
+    await showImageInfo(currentImage);
+    elements.infoOverlay.classList.remove('hidden');
+  } else {
+    elements.infoOverlay.classList.add('hidden');
+  }
+}
+
+async function showImageInfo(imagePath) {
+  elements.infoPathValue.textContent = imagePath;
+
+  const exifData = await window.snerkAPI.getImageExifData(imagePath);
+
+  const exifHtml = [];
+  if (exifData.make || exifData.model) {
+    exifHtml.push(`<dt>Camera:</dt><dd>${exifData.make || ''} ${exifData.model || ''}</dd>`);
+  }
+  if (exifData.lens) {
+    exifHtml.push(`<dt>Lens:</dt><dd>${exifData.lens}</dd>`);
+  }
+  if (exifData.focalLength) {
+    exifHtml.push(`<dt>Focal Length:</dt><dd>${exifData.focalLength}</dd>`);
+  }
+  if (exifData.fNumber) {
+    exifHtml.push(`<dt>Aperture:</dt><dd>f/${exifData.fNumber}</dd>`);
+  }
+  if (exifData.exposureTime) {
+    exifHtml.push(`<dt>Shutter Speed:</dt><dd>${exifData.exposureTime}s</dd>`);
+  }
+  if (exifData.iso) {
+    exifHtml.push(`<dt>ISO:</dt><dd>${exifData.iso}</dd>`);
+  }
+  if (exifData.width && exifData.height) {
+    exifHtml.push(`<dt>Dimensions:</dt><dd>${exifData.width} × ${exifData.height}</dd>`);
+  }
+  if (exifData.dateTime) {
+    exifHtml.push(`<dt>Date Taken:</dt><dd>${exifData.dateTime}</dd>`);
+  }
+
+  if (exifHtml.length > 0) {
+    elements.infoExif.innerHTML = '<strong>EXIF Data:</strong><dl>' + exifHtml.join('') + '</dl>';
+  } else {
+    elements.infoExif.innerHTML = '<strong>EXIF Data:</strong><p>No EXIF data available</p>';
+  }
+
+  drawHistogram();
+}
+
+function drawHistogram() {
+  const canvas = elements.histogramCanvas;
+  const ctx = canvas.getContext('2d');
+  const img = elements.mainImage;
+
+  if (!img.complete || !img.naturalWidth) {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Image not loaded', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+
+  tempCanvas.width = Math.min(img.naturalWidth, 1000);
+  tempCanvas.height = Math.min(img.naturalHeight, 1000);
+
+  tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  const data = imageData.data;
+
+  const r = new Array(256).fill(0);
+  const g = new Array(256).fill(0);
+  const b = new Array(256).fill(0);
+
+  for (let i = 0; i < data.length; i += 4) {
+    r[data[i]]++;
+    g[data[i + 1]]++;
+    b[data[i + 2]]++;
+  }
+
+  const maxR = Math.max(...r);
+  const maxG = Math.max(...g);
+  const maxB = Math.max(...b);
+  const maxVal = Math.max(maxR, maxG, maxB);
+
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const barWidth = canvas.width / 256;
+
+  ctx.globalCompositeOperation = 'lighten';
+
+  ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+  for (let i = 0; i < 256; i++) {
+    const height = (r[i] / maxVal) * canvas.height;
+    ctx.fillRect(i * barWidth, canvas.height - height, barWidth, height);
+  }
+
+  ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+  for (let i = 0; i < 256; i++) {
+    const height = (g[i] / maxVal) * canvas.height;
+    ctx.fillRect(i * barWidth, canvas.height - height, barWidth, height);
+  }
+
+  ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+  for (let i = 0; i < 256; i++) {
+    const height = (b[i] / maxVal) * canvas.height;
+    ctx.fillRect(i * barWidth, canvas.height - height, barWidth, height);
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
 }
 
 async function navigateNext() {
@@ -1616,6 +1744,11 @@ document.addEventListener('keydown', (e) => {
         selectPreset('');
       }
       break;
+    case 'i':
+    case 'I':
+      e.preventDefault();
+      toggleInfoOverlay();
+      break;
     default:
       if (e.key >= '1' && e.key <= '9') {
         if (!isDialogOpen) {
@@ -1650,6 +1783,12 @@ elements.mainImage.addEventListener('mousemove', doPan);
 elements.mainImage.addEventListener('mouseup', endPan);
 elements.mainImage.addEventListener('mouseleave', endPan);
 elements.mainImage.addEventListener('dblclick', resetZoom);
+
+elements.infoOverlay.addEventListener('click', (e) => {
+  if (e.target === elements.infoOverlay) {
+    elements.infoOverlay.classList.add('hidden');
+  }
+});
 
 setupEditorSliders();
 setupCurveEditors();

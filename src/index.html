@@ -295,6 +295,20 @@
     </article>
   </dialog>
 
+  <div id="infoOverlay" class="hidden">
+    <div class="info-panel">
+      <h3>Image Information</h3>
+      <div id="infoPath" class="info-section">
+        <strong>Path:</strong> <span id="infoPathValue"></span>
+      </div>
+      <div id="infoExif" class="info-section"></div>
+      <div id="histogramContainer" class="info-section">
+        <strong>Histogram:</strong>
+        <canvas id="histogramCanvas" width="400" height="150"></canvas>
+      </div>
+    </div>
+  </div>
+
   <script src="lib/fileManager.js"></script>
   <script src="lib/presetManager.js"></script>
   <script src="lib/imageProcessor.js"></script>

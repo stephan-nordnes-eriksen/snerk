@@ -964,6 +964,27 @@ ipcMain.handle('file:delete', async (event, filePath) => {
   }
 });
 
+ipcMain.handle('image:getExifData', async (event, imagePath) => {
+  try {
+    const metadata = await exiftool.read(imagePath);
+    return {
+      make: metadata.Make,
+      model: metadata.Model,
+      lens: metadata.LensModel,
+      iso: metadata.ISO,
+      fNumber: metadata.FNumber,
+      exposureTime: metadata.ExposureTime,
+      focalLength: metadata.FocalLength,
+      dateTime: metadata.DateTimeOriginal || metadata.CreateDate,
+      width: metadata.ImageWidth,
+      height: metadata.ImageHeight,
+    };
+  } catch (error) {
+    console.error('Error reading EXIF data:', error);
+    return {};
+  }
+});
+
 ipcMain.handle('image:loadPreview', async (event, imagePath) => {
   try {
     let imageBuffer;
