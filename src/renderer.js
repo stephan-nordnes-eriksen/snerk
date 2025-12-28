@@ -9,8 +9,8 @@ const state = {
   presets: [],
   zoom: {
     level: 1,
-    minLevel: 0.5,
-    maxLevel: 5,
+    minLevel: 0.05,
+    maxLevel: 30,
     step: 0.1,
     panX: 0,
     panY: 0,
