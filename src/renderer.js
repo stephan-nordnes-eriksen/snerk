@@ -1608,10 +1608,6 @@ function zoomIn() {
 
 function zoomOut() {
   state.zoom.level = Math.max(state.zoom.level - state.zoom.step, state.zoom.minLevel);
-  if (state.zoom.level === 1) {
-    state.zoom.panX = 0;
-    state.zoom.panY = 0;
-  }
   applyZoom();
 }
 
@@ -1732,14 +1728,12 @@ document.addEventListener('keydown', (e) => {
       if (!isDialogOpen) {
         e.preventDefault();
         navigatePrevious();
-        resetZoom();
       }
       break;
     case 'ArrowRight':
       if (!isDialogOpen) {
         e.preventDefault();
         navigateNext();
-        resetZoom();
       }
       break;
     case '0':
