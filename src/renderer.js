@@ -101,11 +101,7 @@ const elements = {
   savePresetEditorBtn: document.getElementById('savePresetEditorBtn'),
   settingsBtn: document.getElementById('settingsBtn'),
   settingsDialog: document.getElementById('settingsDialog'),
-  settingsRenderingMode: document.getElementById('settingsRenderingMode'),
-  settingsFallbackToSharp: document.getElementById('settingsFallbackToSharp'),
-  webgpuStatusText: document.getElementById('webgpuStatusText'),
-  settingsSaveBtn: document.getElementById('settingsSaveBtn'),
-  settingsCancelBtn: document.getElementById('settingsCancelBtn'),
+  settingsCloseBtn: document.getElementById('settingsCloseBtn'),
   zoomFitBtn: document.getElementById('zoomFitBtn'),
   zoom100Btn: document.getElementById('zoom100Btn'),
   pinPresetBtn: document.getElementById('pinPresetBtn'),
@@ -862,10 +858,6 @@ async function openSettings() {
   elements.settingsDialog.showModal();
 }
 
-async function saveSettings() {
-  elements.settingsDialog.close();
-}
-
 async function renamePreset(preset) {
   try {
     const newName = await showRenameDialog('Rename Preset', preset.name);
@@ -1484,8 +1476,7 @@ elements.githubLink.addEventListener('click', async (e) => {
   }
 });
 elements.settingsBtn.addEventListener('click', openSettings);
-elements.settingsSaveBtn.addEventListener('click', saveSettings);
-elements.settingsCancelBtn.addEventListener('click', () => {
+elements.settingsCloseBtn.addEventListener('click', () => {
   elements.settingsDialog.close();
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);

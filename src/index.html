@@ -46,21 +46,6 @@
         <button id="openSnerkFolderBtn" class="outline secondary">Open Snerk Folder</button>
 
       <div id="presetCategories"></div>
-
-      <details>
-        <summary>Export Settings</summary>
-        <button id="manageExportConfigsBtn" class="outline">Manage Export Configs</button>
-      </details>
-
-      <details>
-        <summary>About</summary>
-        <div style="padding: 0.5rem 0;">
-          <p style="margin: 0.5rem 0; font-size: 0.85rem;">Snerk - Color Studio</p>
-          <p style="margin: 0.5rem 0; font-size: 0.75rem;">Version 0.1.0</p>
-          <p style="margin: 0.5rem 0; font-size: 0.75rem;">Licensed under GPL v3</p>
-          <a href="#" id="githubLink" style="font-size: 0.75rem;">GitHub Repository</a>
-        </div>
-      </details>
       </div>
     </aside>
 
@@ -277,24 +262,19 @@
         <h3>Settings</h3>
       </header>
       <div>
-        <label>
-          Rendering Mode
-          <select id="settingsRenderingMode">
-            <option value="webgpu">WebGPU (GPU Accelerated)</option>
-            <option value="sharp">Sharp (CPU)</option>
-          </select>
-        </label>
-        <label>
-          <input type="checkbox" id="settingsFallbackToSharp">
-          Fallback to Sharp if WebGPU unavailable
-        </label>
-        <div id="webgpuStatus" style="margin-top: 1rem; padding: 0.5rem; background: var(--pico-background-color);">
-          <small><strong>WebGPU Status:</strong> <span id="webgpuStatusText">Checking...</span></small>
+        <h4>Export Settings</h4>
+        <button id="manageExportConfigsBtn" class="outline">Manage Export Configs</button>
+
+        <h4 style="margin-top: 2rem;">About</h4>
+        <div style="padding: 0.5rem 0;">
+          <p style="margin: 0.5rem 0; font-size: 0.85rem;">Snerk - Color Studio</p>
+          <p style="margin: 0.5rem 0; font-size: 0.75rem;">Version 0.1.0</p>
+          <p style="margin: 0.5rem 0; font-size: 0.75rem;">Licensed under GPL v3</p>
+          <a href="#" id="githubLink" style="font-size: 0.75rem;">GitHub Repository</a>
         </div>
       </div>
       <footer>
-        <button id="settingsCancelBtn" class="secondary">Cancel</button>
-        <button id="settingsSaveBtn">Save</button>
+        <button id="settingsCloseBtn">Close</button>
       </footer>
     </article>
   </dialog>

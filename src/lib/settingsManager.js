@@ -1,65 +1,18 @@
 class SettingsManager {
   constructor() {
-    this.settings = null;
     this.webgpuAvailable = false;
     this.effectiveMode = 'sharp';
   }
 
-  async loadSettings() {
-    try {
-      const settingsPath = await window.snerkAPI.getSettingsPath();
-      const buffer = await window.snerkAPI.loadSettings();
-
-      if (!buffer) {
-        console.log('Settings file not found, using defaults');
-        return this.getDefaultSettings();
-      }
-
-      const text = new TextDecoder().decode(buffer);
-      return JSON.parse(text);
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      return this.getDefaultSettings();
-    }
-  }
-
-  async saveSettings() {
-    try {
-      const json = JSON.stringify(this.settings, null, 2);
-      await window.snerkAPI.saveSettings(json);
-      return true;
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      throw error;
-    }
-  }
-
-  getDefaultSettings() {
-    return {
-      version: "1.0",
-      rendering: {
-        mode: "webgpu",
-        fallbackToSharp: true
-      }
-    };
-  }
-
   async initialize() {
-    this.settings = await this.loadSettings();
     this.webgpuAvailable = await this.detectWebGPU();
 
-    const requestedMode = this.settings.rendering.mode;
-
-    if (requestedMode === 'webgpu' && !this.webgpuAvailable) {
-      if (this.settings.rendering.fallbackToSharp) {
-        console.warn('WebGPU unavailable, falling back to Sharp');
-        this.effectiveMode = 'sharp';
-        this.showFallbackNotification();
-      } else {
-        throw new Error('WebGPU requested but not available. Please enable fallback or use Sharp mode.');
-      }
+    if (this.webgpuAvailable) {
+      this.effectiveMode = 'webgpu';
     } else {
-      this.effectiveMode = requestedMode;
+      console.warn('WebGPU unavailable, falling back to Sharp');
+      this.effectiveMode = 'sharp';
+      this.showFallbackNotification();
     }
 
     return this.effectiveMode;
@@ -105,18 +58,6 @@ class SettingsManager {
         status.style.color = '';
       }, 5000);
     }
-  }
-
-  async updateSetting(path, value) {
-    const keys = path.split('.');
-    let current = this.settings;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]];
-    }
-
-    current[keys[keys.length - 1]] = value;
-    await this.saveSettings();
   }
 }
 
