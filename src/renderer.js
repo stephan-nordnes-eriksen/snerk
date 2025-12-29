@@ -1812,15 +1812,37 @@ function zoomOut() {
   applyZoom();
 }
 
+function calculateFitZoomLevel() {
+  const currentImage = fileManager.getCurrentImage();
+  if (!currentImage) return 1;
+
+  const rotation = state.rotations.get(currentImage) || 0;
+  const isRotated90or270 = rotation === 90 || rotation === 270;
+
+  const imgWidth = elements.mainImage.naturalWidth;
+  const imgHeight = elements.mainImage.naturalHeight;
+
+  const effectiveWidth = isRotated90or270 ? imgHeight : imgWidth;
+  const effectiveHeight = isRotated90or270 ? imgWidth : imgHeight;
+
+  const containerWidth = elements.mainImage.parentElement.clientWidth;
+  const containerHeight = elements.mainImage.parentElement.clientHeight;
+
+  const scaleX = containerWidth / effectiveWidth;
+  const scaleY = containerHeight / effectiveHeight;
+
+  return Math.min(scaleX, scaleY, 1);
+}
+
 function resetZoom() {
-  state.zoom.level = 1;
+  state.zoom.level = calculateFitZoomLevel();
   state.zoom.panX = 0;
   state.zoom.panY = 0;
   applyZoom();
 }
 
 function zoomFitToWindow() {
-  state.zoom.level = 1;
+  state.zoom.level = calculateFitZoomLevel();
   state.zoom.panX = 0;
   state.zoom.panY = 0;
   applyZoom();
