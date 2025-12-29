@@ -1918,6 +1918,13 @@ document.addEventListener('keydown', (e) => {
         resetZoom();
       }
       break;
+    case 'z':
+    case 'Z':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        zoom100Percent();
+      }
+      break;
     case '+':
     case '=':
       if (!isDialogOpen) {
