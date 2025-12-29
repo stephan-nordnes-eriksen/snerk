@@ -1,6 +1,6 @@
 # Snerk
 
-A minimalistic photo viewer with RAW support and Lightroom-like presets.
+A minimalistic color studio with RAW support.
 
 ## Documentation
 

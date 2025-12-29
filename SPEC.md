@@ -2,7 +2,7 @@
 
 ## Overview
 
-Snerk is a minimalistic photo viewer application built with Electron that supports RAW image formats and provides Lightroom-like preset functionality for batch processing images.
+Snerk is a minimalistic color studio application built with Electron that supports RAW image formats and provides Lightroom-like preset functionality for batch processing images.
 
 ## Core Requirements
 

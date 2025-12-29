@@ -85,7 +85,7 @@ class ImageProcessor {
     return await response.blob();
   }
 
-  async exportBatch(imagePaths, presetConfig, outputDir, format = 'jpeg', quality = 90, onProgress = null) {
+  async exportBatch(imagePaths, presetConfig, outputDir, format = 'jpeg', quality = 90, includeRaw = false, onProgress = null) {
     const results = [];
     let completed = 0;
 
@@ -100,6 +100,15 @@ class ImageProcessor {
           : presetConfig;
 
         await this.exportImage(imagePath, preset, outputPath, format, quality);
+
+        if (includeRaw) {
+          const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+          const rawExtensions = ['.raf', '.arw', '.cr2', '.cr3', '.nef', '.dng', '.orf', '.rw2'];
+          if (rawExtensions.includes(extension)) {
+            const rawOutputPath = `${outputDir}/${fileName}`;
+            await window.snerkAPI.copyFile(imagePath, rawOutputPath);
+          }
+        }
 
         results.push({ success: true, path: outputPath });
         completed++;

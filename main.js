@@ -964,6 +964,16 @@ ipcMain.handle('file:delete', async (event, filePath) => {
   }
 });
 
+ipcMain.handle('file:copy', async (event, srcPath, destPath) => {
+  try {
+    await fs.copyFile(srcPath, destPath);
+    return true;
+  } catch (error) {
+    console.error('Error copying file:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('image:getExifData', async (event, imagePath) => {
   try {
     const metadata = await exiftool.read(imagePath);

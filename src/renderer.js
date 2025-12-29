@@ -56,6 +56,7 @@ const elements = {
   exportConfigDialog: document.getElementById('exportConfigDialog'),
   exportConfigSelect: document.getElementById('exportConfigSelect'),
   exportApplyPreset: document.getElementById('exportApplyPreset'),
+  exportIncludeRaw: document.getElementById('exportIncludeRaw'),
   saveExportConfigBtn: document.getElementById('saveExportConfigBtn'),
   deleteExportConfigBtn: document.getElementById('deleteExportConfigBtn'),
   cancelExportConfigBtn: document.getElementById('cancelExportConfigBtn'),
@@ -607,6 +608,7 @@ async function performExport() {
     const format = elements.exportFormat.value;
     const quality = parseInt(elements.exportQuality.value);
     const applyPreset = elements.exportApplyPreset.checked;
+    const includeRaw = elements.exportIncludeRaw.checked;
 
     const getPresetForImage = (imagePath) => {
       const pinnedPresetName = presetPinManager.getPinnedPreset(imagePath);
@@ -627,6 +629,7 @@ async function performExport() {
       outputDir,
       format,
       quality,
+      includeRaw,
       (completed, total) => {
         elements.exportProgress.value = completed;
         elements.exportStatus.textContent = `Exported ${completed} / ${total}...`;

@@ -1,7 +1,7 @@
 {
   "name": "snerk",
   "version": "0.1.0",
-  "description": "Minimalistic photo viewer with RAW support and Lightroom-like presets",
+  "description": "Minimalistic color studio with RAW support",
   "main": "main.js",
   "bin": {
     "snerk-cli": "./snerk-cli.js"

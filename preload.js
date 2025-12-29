@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   deleteFile: (filePath) => ipcRenderer.invoke('file:delete', filePath),
 
+  copyFile: (srcPath, destPath) => ipcRenderer.invoke('file:copy', srcPath, destPath),
+
   getPresetDirectory: () => ipcRenderer.invoke('preset:getDirectory'),
 
   findAllPresets: () => ipcRenderer.invoke('preset:findAll'),
