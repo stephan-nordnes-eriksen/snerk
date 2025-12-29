@@ -3,6 +3,7 @@ const presetManager = new PresetManager();
 const imageProcessor = new ImageProcessor();
 const exportConfigManager = new ExportConfigManager();
 const presetPinManager = new PresetPinManager();
+const settingsManager = new SettingsManager();
 
 const state = {
   currentFolder: null,
@@ -117,6 +118,9 @@ const elements = {
 
 async function initialize() {
   try {
+    updateStatus('Initializing settings...');
+    await settingsManager.initialize();
+
     updateStatus('Initializing WebGPU...');
     await imageProcessor.initialize();
 
@@ -558,6 +562,13 @@ async function showExportConfigDialog(exportCurrent = false) {
     return;
   }
 
+  const lastConfig = settingsManager.getLastExportConfig();
+  elements.exportFormat.value = lastConfig.format;
+  elements.exportQuality.value = lastConfig.quality;
+  elements.qualityValue.textContent = lastConfig.quality;
+  elements.exportApplyPreset.checked = lastConfig.applyPreset;
+  elements.exportIncludeRaw.checked = lastConfig.includeRaw;
+
   return new Promise((resolve) => {
     const handleConfigSelect = () => {
       const configName = elements.exportConfigSelect.value;
@@ -624,6 +635,13 @@ async function showExportConfigDialog(exportCurrent = false) {
     };
 
     const handleConfirm = async () => {
+      await settingsManager.setLastExportConfig({
+        format: elements.exportFormat.value,
+        quality: parseInt(elements.exportQuality.value),
+        applyPreset: elements.exportApplyPreset.checked,
+        includeRaw: elements.exportIncludeRaw.checked
+      });
+
       cleanup();
       elements.exportConfigDialog.close();
       if (exportCurrent) {

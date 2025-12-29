@@ -2,9 +2,19 @@ class SettingsManager {
   constructor() {
     this.webgpuAvailable = false;
     this.effectiveMode = 'sharp';
+    this.settings = {
+      lastExportConfig: {
+        format: 'jpeg',
+        quality: 95,
+        applyPreset: true,
+        includeRaw: false
+      }
+    };
   }
 
   async initialize() {
+    await this.loadSettings();
+
     this.webgpuAvailable = await this.detectWebGPU();
 
     if (this.webgpuAvailable) {
@@ -16,6 +26,37 @@ class SettingsManager {
     }
 
     return this.effectiveMode;
+  }
+
+  async loadSettings() {
+    try {
+      const buffer = await window.snerkAPI.loadSettings();
+      if (buffer) {
+        const text = new TextDecoder().decode(buffer);
+        const loaded = JSON.parse(text);
+        this.settings = { ...this.settings, ...loaded };
+      }
+    } catch (error) {
+      console.log('No saved settings, using defaults');
+    }
+  }
+
+  async saveSettings() {
+    try {
+      const json = JSON.stringify(this.settings, null, 2);
+      await window.snerkAPI.saveSettings(json);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  }
+
+  getLastExportConfig() {
+    return { ...this.settings.lastExportConfig };
+  }
+
+  async setLastExportConfig(config) {
+    this.settings.lastExportConfig = { ...config };
+    await this.saveSettings();
   }
 
   async detectWebGPU() {
