@@ -28,6 +28,7 @@ const state = {
 const elements = {
   openFolderBtn: document.getElementById('openFolder'),
   exportBtn: document.getElementById('exportBtn'),
+  exportCurrentBtn: document.getElementById('exportCurrentBtn'),
   importXmpBtn: document.getElementById('importXmpBtn'),
   mainImage: document.getElementById('mainImage'),
   imageCounter: document.getElementById('imageCounter'),
@@ -189,6 +190,7 @@ async function openFolder() {
 
     elements.emptyState.classList.add('hidden');
     elements.exportBtn.disabled = false;
+    elements.exportCurrentBtn.disabled = false;
 
     updateStatus(`Loaded ${images.length} images`);
     updateImageCounter();
@@ -542,11 +544,16 @@ async function loadExportConfigs() {
   }
 }
 
-async function showExportConfigDialog() {
+async function showExportConfigDialog(exportCurrent = false) {
   const images = fileManager.getAllImages();
 
   if (images.length === 0) {
     updateStatus('No images to export');
+    return;
+  }
+
+  if (exportCurrent && !fileManager.getCurrentImage()) {
+    updateStatus('No image selected');
     return;
   }
 
@@ -618,7 +625,11 @@ async function showExportConfigDialog() {
     const handleConfirm = async () => {
       cleanup();
       elements.exportConfigDialog.close();
-      await performExport();
+      if (exportCurrent) {
+        await exportCurrentImage();
+      } else {
+        await performExport();
+      }
       resolve();
     };
 
@@ -697,6 +708,63 @@ async function performExport() {
   } catch (error) {
     console.error('Error exporting images:', error);
     updateStatus('Error exporting images');
+    elements.exportProgressDialog.close();
+  }
+}
+
+async function exportCurrentImage() {
+  try {
+    const currentImage = fileManager.getCurrentImage();
+    if (!currentImage) {
+      updateStatus('No image selected');
+      return;
+    }
+
+    const outputDir = await window.snerkAPI.selectExportFolder();
+    if (!outputDir) return;
+
+    const format = elements.exportFormat.value;
+    const quality = parseInt(elements.exportQuality.value);
+    const applyPreset = elements.exportApplyPreset.checked;
+    const includeRaw = elements.exportIncludeRaw.checked;
+
+    const getPresetForImage = (imagePath) => {
+      const pinnedPresetName = presetPinManager.getPinnedPreset(imagePath);
+      if (pinnedPresetName) {
+        return presetManager.getPresetByName(pinnedPresetName);
+      }
+      return applyPreset ? state.currentPreset : null;
+    };
+
+    elements.exportProgressDialog.showModal();
+    elements.exportProgress.max = 1;
+    elements.exportProgress.value = 0;
+    elements.exportStatus.textContent = 'Exporting current image...';
+
+    const results = await imageProcessor.exportBatch(
+      [currentImage],
+      getPresetForImage,
+      outputDir,
+      format,
+      quality,
+      includeRaw,
+      (completed, total) => {
+        elements.exportProgress.value = completed;
+        elements.exportStatus.textContent = `Exporting ${completed} / ${total}...`;
+      }
+    );
+
+    const success = results[0]?.success;
+    elements.exportStatus.textContent = success ? 'Image exported successfully' : 'Export failed';
+
+    setTimeout(() => {
+      elements.exportProgressDialog.close();
+    }, 2000);
+
+    updateStatus(success ? 'Export complete' : 'Export failed');
+  } catch (error) {
+    console.error('Error exporting current image:', error);
+    updateStatus('Error exporting image');
     elements.exportProgressDialog.close();
   }
 }
@@ -1465,7 +1533,8 @@ async function savePresetFromEditorWithName(presetName) {
 }
 
 elements.openFolderBtn.addEventListener('click', openFolder);
-elements.exportBtn.addEventListener('click', showExportConfigDialog);
+elements.exportBtn.addEventListener('click', () => showExportConfigDialog(false));
+elements.exportCurrentBtn.addEventListener('click', () => showExportConfigDialog(true));
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.createPresetBtn.addEventListener('click', openPresetEditor);
 elements.noFilterBtn.addEventListener('click', () => selectPreset(''));
