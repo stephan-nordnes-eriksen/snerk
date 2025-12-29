@@ -2064,6 +2064,15 @@ elements.infoOverlay.addEventListener('click', (e) => {
   }
 });
 
+// Close dialogs when clicking outside
+[elements.exportConfigDialog, elements.settingsDialog, elements.shortcutsDialog, elements.renameDialog].forEach(dialog => {
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) {
+      dialog.close();
+    }
+  });
+});
+
 setupEditorSliders();
 setupCurveEditors();
 initialize();
