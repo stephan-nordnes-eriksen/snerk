@@ -35,13 +35,13 @@
 
     <aside id="presetPanel">
       <div class="panel-header">
-        <h3>Presets</h3>
+        <h3>Color Profiles</h3>
         <button id="togglePresetPanel" class="outline secondary" aria-label="Toggle panel">◀</button>
       </div>
 
       <div id="presetPanelContent">
-        <button id="importXmpBtn" class="outline secondary">Import XMP Preset</button>
-        <button id="createPresetBtn" class="outline">Create New Preset</button>
+        <button id="importXmpBtn" class="outline secondary">Import XMP Profile</button>
+        <button id="createPresetBtn" class="outline">Create New Profile</button>
         <button id="noFilterBtn" class="secondary">No Filter</button>
         <button id="openSnerkFolderBtn" class="outline secondary">Open Snerk Folder</button>
 
@@ -61,17 +61,17 @@
     <div id="rightActions">
       <button id="zoomFitBtn" class="outline secondary" title="Fit to window">Fit</button>
       <button id="zoom100Btn" class="outline secondary" title="1:1 pixel zoom">1:1</button>
-      <button id="pinPresetBtn" class="outline secondary" disabled title="Pin current preset to this image">
+      <button id="pinPresetBtn" class="outline secondary" disabled title="Pin current profile to this image">
         📌
       </button>
-      <button id="showConfigBtn" class="outline secondary" disabled title="Show preset configuration">
+      <button id="showConfigBtn" class="outline secondary" disabled title="Show profile configuration">
         ⚙
       </button>
     </div>
 
     <aside id="presetEditorPanel" class="hidden">
       <div class="panel-header">
-        <h3>Preset Editor</h3>
+        <h3>Profile Editor</h3>
         <button id="closePresetEditor" class="outline secondary" aria-label="Close">×</button>
       </div>
       <div id="presetEditorContent">
@@ -165,12 +165,12 @@
       </div>
       <div class="panel-footer">
         <button id="resetPresetEditorBtn" class="outline secondary">Reset All</button>
-        <button id="renamePresetBtn" class="outline secondary hidden">Rename Preset</button>
-        <button id="deletePresetBtn" class="outline secondary hidden" style="color: #d32f2f;">Delete Preset</button>
+        <button id="renamePresetBtn" class="outline secondary hidden">Rename Profile</button>
+        <button id="deletePresetBtn" class="outline secondary hidden" style="color: #d32f2f;">Delete Profile</button>
         <button id="cancelPresetEditorBtn" class="secondary">Cancel</button>
         <button id="copyToCustomBtn" class="hidden">Copy to Custom</button>
-        <button id="updatePresetBtn" class="hidden">Update Preset</button>
-        <button id="savePresetEditorBtn">Save as Preset</button>
+        <button id="updatePresetBtn" class="hidden">Update Profile</button>
+        <button id="savePresetEditorBtn">Save as Profile</button>
       </div>
     </aside>
 
@@ -209,7 +209,7 @@
         </label>
         <label>
           <input type="checkbox" id="exportApplyPreset" checked>
-          Apply current preset
+          Apply current profile
         </label>
         <label>
           <input type="checkbox" id="exportIncludeRaw">
@@ -241,12 +241,12 @@
   <dialog id="renameDialog">
     <article>
       <header>
-        <h3 id="renameDialogTitle">Rename Preset</h3>
+        <h3 id="renameDialogTitle">Rename Profile</h3>
       </header>
       <div>
         <label>
-          Preset Name
-          <input type="text" id="renameInput" placeholder="Enter preset name" autofocus>
+          Profile Name
+          <input type="text" id="renameInput" placeholder="Enter profile name" autofocus>
         </label>
       </div>
       <footer>

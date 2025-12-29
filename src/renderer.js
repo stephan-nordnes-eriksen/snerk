@@ -117,7 +117,7 @@ async function initialize() {
     updateStatus('Initializing WebGPU...');
     await imageProcessor.initialize();
 
-    updateStatus('Loading presets...');
+    updateStatus('Loading color profiles...');
     state.presets = await presetManager.loadPresets();
     renderPresets();
     await loadExportConfigs();
@@ -286,7 +286,7 @@ function updatePinButton() {
   } else {
     elements.pinPresetBtn.classList.remove('active');
     elements.pinPresetBtn.textContent = '📌';
-    elements.pinPresetBtn.title = 'Select a preset to pin it to this image';
+    elements.pinPresetBtn.title = 'Select a profile to pin it to this image';
     elements.pinPresetBtn.disabled = true;
   }
 }
@@ -317,7 +317,7 @@ async function togglePinPreset() {
 
   if (isPinned) {
     await presetPinManager.unpinPreset(currentImage);
-    updateStatus('Unpinned preset from this image');
+    updateStatus('Unpinned profile from this image');
   } else if (state.currentPreset) {
     await presetPinManager.pinPreset(currentImage, state.currentPreset.name);
     updateStatus(`Pinned "${state.currentPreset.name}" to this image`);
@@ -860,7 +860,7 @@ async function openSettings() {
 
 async function renamePreset(preset) {
   try {
-    const newName = await showRenameDialog('Rename Preset', preset.name);
+    const newName = await showRenameDialog('Rename Profile', preset.name);
     if (!newName || newName === '') {
       return;
     }
@@ -872,11 +872,11 @@ async function renamePreset(preset) {
     // Check for conflicts
     const existingNames = state.presets.map(p => p.name).filter(n => n !== preset.name);
     if (existingNames.includes(newName)) {
-      await showAlert('A preset with this name already exists');
+      await showAlert('A profile with this name already exists');
       return;
     }
 
-    updateStatus('Renaming preset...');
+    updateStatus('Renaming profile...');
 
     await window.snerkAPI.renamePreset(preset.filePath, newName);
 
@@ -886,14 +886,14 @@ async function renamePreset(preset) {
     await initialize();
   } catch (error) {
     console.error('Error renaming preset:', error);
-    updateStatus('Error renaming preset: ' + error.message);
-    await showAlert('Error renaming preset: ' + error.message);
+    updateStatus('Error renaming profile: ' + error.message);
+    await showAlert('Error renaming profile: ' + error.message);
   }
 }
 
 async function importXmpPreset() {
   try {
-    updateStatus('Select XMP preset file...');
+    updateStatus('Select XMP profile file...');
     const xmpPath = await window.snerkAPI.selectXmpFile();
 
     if (!xmpPath) {
@@ -908,7 +908,7 @@ async function importXmpPreset() {
     // Extract filename from path
     const filename = xmpPath.split(/[\\/]/).pop();
 
-    updateStatus('Converting preset...');
+    updateStatus('Converting profile...');
     const xmpImporter = new XmpImporter();
     const preset = xmpImporter.parseXmpToPreset(xmpContent, filename);
 
@@ -917,7 +917,7 @@ async function importXmpPreset() {
     let shouldOverwrite = false;
 
     while (true) {
-      const customName = await showRenameDialog('Import Preset - Enter Name', desiredName);
+      const customName = await showRenameDialog('Import Profile - Enter Name', desiredName);
       if (customName === null) {
         updateStatus('Import cancelled');
         return;
@@ -929,8 +929,8 @@ async function importXmpPreset() {
       const existingPreset = state.presets.find(p => p.name === finalName);
       if (existingPreset) {
         const shouldReplace = await showConfirmDialog(
-          'Preset Already Exists',
-          `A preset named "${finalName}" already exists. Do you want to replace it?`
+          'Profile Already Exists',
+          `A profile named "${finalName}" already exists. Do you want to replace it?`
         );
 
         if (shouldReplace) {
@@ -961,7 +961,7 @@ async function importXmpPreset() {
 
     const yamlContent = xmpImporter.generateYaml(preset);
 
-    updateStatus('Saving preset...');
+    updateStatus('Saving profile...');
     await window.snerkAPI.saveImportedPreset(preset.name, yamlContent);
 
     updateStatus(`Imported "${preset.name}" successfully`);
@@ -970,7 +970,7 @@ async function importXmpPreset() {
     await initialize();
   } catch (error) {
     console.error('Error importing XMP preset:', error);
-    updateStatus('Error importing XMP preset: ' + error.message);
+    updateStatus('Error importing XMP profile: ' + error.message);
   }
 }
 
@@ -1239,7 +1239,7 @@ async function savePresetFromEditor() {
 
   try {
     await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
-    updateStatus(`Saved preset "${presetName}"`);
+    updateStatus(`Saved profile "${presetName}"`);
     elements.presetEditorPanel.classList.add('hidden');
     await initialize();
   } catch (error) {
@@ -1361,15 +1361,15 @@ async function deleteCurrentPreset() {
   if (!state.currentPreset) return;
 
   const confirmed = await showConfirmDialog(
-    'Delete Preset',
-    `Are you sure you want to delete the preset "${state.currentPreset.name}"? This cannot be undone.`
+    'Delete Profile',
+    `Are you sure you want to delete the profile "${state.currentPreset.name}"? This cannot be undone.`
   );
 
   if (!confirmed) return;
 
   try {
     await presetManager.deletePreset(state.currentPreset.name);
-    updateStatus(`Deleted preset "${state.currentPreset.name}"`);
+    updateStatus(`Deleted profile "${state.currentPreset.name}"`);
 
     // Close the editor panel
     elements.presetEditorPanel.classList.add('hidden');
@@ -1442,7 +1442,7 @@ async function savePresetFromEditorWithName(presetName) {
 
   try {
     await window.snerkAPI.saveImportedPreset(presetName, yamlContent);
-    updateStatus(`Saved preset "${presetName}"`);
+    updateStatus(`Saved profile "${presetName}"`);
     elements.presetEditorPanel.classList.add('hidden');
     await initialize();
     // Select the newly saved/updated preset
