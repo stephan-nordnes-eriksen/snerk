@@ -1814,7 +1814,7 @@ function zoomOut() {
 
 function calculateFitZoomLevel() {
   const currentImage = fileManager.getCurrentImage();
-  if (!currentImage) return 1;
+  if (!currentImage || !elements.mainImage.naturalWidth) return 1;
 
   const rotation = state.rotations.get(currentImage) || 0;
   const isRotated90or270 = rotation === 90 || rotation === 270;
@@ -1825,13 +1825,14 @@ function calculateFitZoomLevel() {
   const effectiveWidth = isRotated90or270 ? imgHeight : imgWidth;
   const effectiveHeight = isRotated90or270 ? imgWidth : imgHeight;
 
-  const containerWidth = elements.mainImage.parentElement.clientWidth;
-  const containerHeight = elements.mainImage.parentElement.clientHeight;
+  const container = elements.mainImage.parentElement;
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
 
   const scaleX = containerWidth / effectiveWidth;
   const scaleY = containerHeight / effectiveHeight;
 
-  return Math.min(scaleX, scaleY, 1);
+  return Math.min(scaleX, scaleY);
 }
 
 function resetZoom() {
@@ -1902,7 +1903,7 @@ function handleWheel(e) {
 }
 
 function rotatePanCoordinates(x, y, rotation) {
-  const radians = -(rotation * Math.PI / 180);
+  const radians = rotation * Math.PI / 180;
   const cos = Math.cos(radians);
   const sin = Math.sin(radians);
   return {
