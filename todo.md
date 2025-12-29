@@ -10,6 +10,6 @@ todo:
 - [x] Date Taken in "Image Information" says "[object Object]"
 - [x] When collapsing the preset pane, the element containing the expand button takes up the full height of the view
 - [x] Add support for exporting raw files
-- [ ] Add support for adding stars to the exif data
+- [x] Add support for adding stars to the exif data
 - [ ] The pin style to photo does not work, the style is changed when I change the style on a different photo, and go back to the photo with a pinned style. The UI should update to display the style which was pinned to that photo. In other words, there should be a "global" style, which is active by default for all photos, and a "Local style" for each photo if that is set.
 - [ ] Add support for full-screen mode by pressing f11

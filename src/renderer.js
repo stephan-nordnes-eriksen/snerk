@@ -111,6 +111,7 @@ const elements = {
   pinPresetBtn: document.getElementById('pinPresetBtn'),
   infoOverlay: document.getElementById('infoOverlay'),
   infoPathValue: document.getElementById('infoPathValue'),
+  infoRatingValue: document.getElementById('infoRatingValue'),
   infoExif: document.getElementById('infoExif'),
   histogramCanvas: document.getElementById('histogramCanvas'),
 };
@@ -285,6 +286,23 @@ function updatePinButton() {
   }
 }
 
+async function setImageRating(rating) {
+  const currentImage = fileManager.getCurrentImage();
+  if (!currentImage) return;
+
+  try {
+    await window.snerkAPI.setImageRating(currentImage, rating);
+    updateStatus(`Set rating to ${rating} stars`);
+
+    if (!elements.infoOverlay.classList.contains('hidden')) {
+      await showImageInfo(currentImage);
+    }
+  } catch (error) {
+    console.error('Error setting rating:', error);
+    updateStatus('Error setting rating');
+  }
+}
+
 async function togglePinPreset() {
   const currentImage = fileManager.getCurrentImage();
 
@@ -322,6 +340,8 @@ async function showImageInfo(imagePath) {
   elements.infoPathValue.textContent = imagePath;
 
   const exifData = await window.snerkAPI.getImageExifData(imagePath);
+
+  elements.infoRatingValue.textContent = exifData.rating !== undefined ? '★'.repeat(exifData.rating) + '☆'.repeat(5 - exifData.rating) : '☆☆☆☆☆';
 
   const exifHtml = [];
   if (exifData.make || exifData.model) {
@@ -1788,6 +1808,11 @@ document.addEventListener('keydown', (e) => {
       if (!elements.exportBtn.disabled) {
         showExportConfigDialog();
       }
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key >= '0' && e.key <= '5') {
+      e.preventDefault();
+      setImageRating(parseInt(e.key));
     }
   }
 });

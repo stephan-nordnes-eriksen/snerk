@@ -989,10 +989,21 @@ ipcMain.handle('image:getExifData', async (event, imagePath) => {
       dateTime: dateTime ? String(dateTime) : undefined,
       width: metadata.ImageWidth,
       height: metadata.ImageHeight,
+      rating: metadata.Rating || 0,
     };
   } catch (error) {
     console.error('Error reading EXIF data:', error);
     return {};
+  }
+});
+
+ipcMain.handle('image:setRating', async (event, imagePath, rating) => {
+  try {
+    await exiftool.write(imagePath, { Rating: rating });
+    return true;
+  } catch (error) {
+    console.error('Error writing rating:', error);
+    throw error;
   }
 });
 
