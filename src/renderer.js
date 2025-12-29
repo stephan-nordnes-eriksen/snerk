@@ -1833,6 +1833,17 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
+  // Prevent tab navigation globally (except in input fields)
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    return;
+  }
+
+  // Prevent space from triggering focused buttons
+  if (e.key === ' ' && e.target.tagName === 'BUTTON') {
+    e.preventDefault();
+  }
+
   // Check if any dialog is open
   const isDialogOpen =
     elements.exportConfigDialog.open ||

@@ -10,6 +10,8 @@ body {
   overflow: hidden;
   height: 100vh;
   width: 100vw;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 #imageContainer {
@@ -354,6 +356,8 @@ footer {
   font-size: 0.75rem;
   word-break: break-all;
   max-width: 300px;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 #exportDialog article {
