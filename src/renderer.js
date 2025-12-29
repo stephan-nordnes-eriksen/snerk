@@ -24,6 +24,7 @@ const state = {
     isActive: false,
     savedPreset: null,
   },
+  rotations: new Map(),
 };
 
 const elements = {
@@ -699,6 +700,10 @@ async function performExport() {
       return applyPreset ? state.currentPreset : null;
     };
 
+    const getRotationForImage = (imagePath) => {
+      return state.rotations.get(imagePath) || 0;
+    };
+
     elements.exportProgressDialog.showModal();
     elements.exportProgress.max = images.length;
     elements.exportProgress.value = 0;
@@ -707,6 +712,7 @@ async function performExport() {
     const results = await imageProcessor.exportBatch(
       images,
       getPresetForImage,
+      getRotationForImage,
       outputDir,
       format,
       quality,
@@ -757,6 +763,10 @@ async function exportCurrentImage() {
       return applyPreset ? state.currentPreset : null;
     };
 
+    const getRotationForImage = (imagePath) => {
+      return state.rotations.get(imagePath) || 0;
+    };
+
     elements.exportProgressDialog.showModal();
     elements.exportProgress.max = 1;
     elements.exportProgress.value = 0;
@@ -765,6 +775,7 @@ async function exportCurrentImage() {
     const results = await imageProcessor.exportBatch(
       [currentImage],
       getPresetForImage,
+      getRotationForImage,
       outputDir,
       format,
       quality,
@@ -1743,7 +1754,9 @@ function togglePresetPanel() {
 
 function applyZoom() {
   const { level, panX, panY } = state.zoom;
-  elements.mainImage.style.transform = `scale(${level}) translate(${panX}px, ${panY}px)`;
+  const currentImage = fileManager.getCurrentImage();
+  const rotation = currentImage ? (state.rotations.get(currentImage) || 0) : 0;
+  elements.mainImage.style.transform = `rotate(${rotation}deg) scale(${level}) translate(${panX}px, ${panY}px)`;
   elements.mainImage.style.cursor = 'grab';
 }
 
@@ -1789,6 +1802,26 @@ function zoom100Percent() {
   state.zoom.level = scale;
   state.zoom.panX = 0;
   state.zoom.panY = 0;
+  applyZoom();
+}
+
+function rotateImageLeft() {
+  const currentImage = fileManager.getCurrentImage();
+  if (!currentImage) return;
+
+  const currentRotation = state.rotations.get(currentImage) || 0;
+  const newRotation = (currentRotation - 90 + 360) % 360;
+  state.rotations.set(currentImage, newRotation);
+  applyZoom();
+}
+
+function rotateImageRight() {
+  const currentImage = fileManager.getCurrentImage();
+  if (!currentImage) return;
+
+  const currentRotation = state.rotations.get(currentImage) || 0;
+  const newRotation = (currentRotation + 90) % 360;
+  state.rotations.set(currentImage, newRotation);
   applyZoom();
 }
 
@@ -1925,6 +1958,18 @@ document.addEventListener('keydown', (e) => {
       if (!isDialogOpen) {
         e.preventDefault();
         window.snerkAPI.toggleFullScreen();
+      }
+      break;
+    case '[':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        rotateImageLeft();
+      }
+      break;
+    case ']':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        rotateImageRight();
       }
       break;
     default:

@@ -1098,9 +1098,13 @@ ipcMain.handle('image:loadFullResolution', async (event, imagePath) => {
   }
 });
 
-ipcMain.handle('image:saveBlob', async (event, blobBuffer, outputPath, format, quality) => {
+ipcMain.handle('image:saveBlob', async (event, blobBuffer, outputPath, format, quality, rotation = 0) => {
   try {
-    const image = sharp(Buffer.from(blobBuffer));
+    let image = sharp(Buffer.from(blobBuffer));
+
+    if (rotation && rotation !== 0) {
+      image = image.rotate(rotation);
+    }
 
     const formatOptions = {
       jpeg: { quality },

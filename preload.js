@@ -56,8 +56,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   applyPreset: (imagePath, presetConfig) => ipcRenderer.invoke('image:applyPreset', imagePath, presetConfig),
 
-  saveBlobAsImage: async (blob, outputPath, format, quality) => {
+  saveBlobAsImage: async (blob, outputPath, format, quality, rotation = 0) => {
     const arrayBuffer = await blob.arrayBuffer();
-    return ipcRenderer.invoke('image:saveBlob', arrayBuffer, outputPath, format, quality);
+    return ipcRenderer.invoke('image:saveBlob', arrayBuffer, outputPath, format, quality, rotation);
   },
 });

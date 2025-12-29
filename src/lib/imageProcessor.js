@@ -59,7 +59,7 @@ class ImageProcessor {
     }
   }
 
-  async exportImage(imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90) {
+  async exportImage(imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90, rotation = 0) {
     try {
       const result = await window.snerkAPI.loadFullResolutionImage(imagePath);
 
@@ -71,7 +71,7 @@ class ImageProcessor {
       }
 
       const blob = await this.dataURLToBlob(imageData.src);
-      await window.snerkAPI.saveBlobAsImage(blob, outputPath, format, quality);
+      await window.snerkAPI.saveBlobAsImage(blob, outputPath, format, quality, rotation);
 
       return true;
     } catch (error) {
@@ -85,7 +85,7 @@ class ImageProcessor {
     return await response.blob();
   }
 
-  async exportBatch(imagePaths, presetConfig, outputDir, format = 'jpeg', quality = 90, includeRaw = false, onProgress = null) {
+  async exportBatch(imagePaths, presetConfig, rotationConfig, outputDir, format = 'jpeg', quality = 90, includeRaw = false, onProgress = null) {
     const results = [];
     let completed = 0;
 
@@ -99,7 +99,11 @@ class ImageProcessor {
           ? presetConfig(imagePath)
           : presetConfig;
 
-        await this.exportImage(imagePath, preset, outputPath, format, quality);
+        const rotation = typeof rotationConfig === 'function'
+          ? rotationConfig(imagePath)
+          : (rotationConfig || 0);
+
+        await this.exportImage(imagePath, preset, outputPath, format, quality, rotation);
 
         if (includeRaw) {
           const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
