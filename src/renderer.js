@@ -1945,7 +1945,7 @@ document.addEventListener('keydown', (e) => {
       }
       break;
     case '0':
-      if (!isDialogOpen) {
+      if (!isDialogOpen && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         selectPreset('');
       }
@@ -1994,7 +1994,7 @@ document.addEventListener('keydown', (e) => {
       break;
     default:
       if (e.key >= '1' && e.key <= '9') {
-        if (!isDialogOpen) {
+        if (!isDialogOpen && !e.ctrlKey && !e.metaKey && !e.altKey) {
           e.preventDefault();
           const index = parseInt(e.key) - 1;
           const presets = state.presets;
