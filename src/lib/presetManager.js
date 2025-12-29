@@ -93,7 +93,8 @@ class PresetManager {
         currentSection = 'vignette';
         preset.vignette = {};
       } else if (currentSection === 'adjustments') {
-        preset.adjustments[key] = parseFloat(value) || 0;
+        const parsedValue = parseFloat(value);
+        preset.adjustments[key] = !isNaN(parsedValue) ? parsedValue : 0;
       } else if (currentSection === 'curves' && (key === 'r' || key === 'g' || key === 'b')) {
         try {
           preset.curves[key] = JSON.parse(value);
@@ -101,13 +102,17 @@ class PresetManager {
           console.error('Error parsing curve:', e);
         }
       } else if (currentSection === 'splitToning') {
-        preset.splitToning[key] = parseFloat(value) || 0;
+        const parsedValue = parseFloat(value);
+        preset.splitToning[key] = !isNaN(parsedValue) ? parsedValue : 0;
       } else if (currentSection === 'sharpening') {
-        preset.sharpening[key] = parseFloat(value) || 0;
+        const parsedValue = parseFloat(value);
+        preset.sharpening[key] = !isNaN(parsedValue) ? parsedValue : 0;
       } else if (currentSection === 'grain') {
-        preset.grain[key] = parseFloat(value) || 0;
+        const parsedValue = parseFloat(value);
+        preset.grain[key] = !isNaN(parsedValue) ? parsedValue : 0;
       } else if (currentSection === 'vignette') {
-        preset.vignette[key] = parseFloat(value) || 0;
+        const parsedValue = parseFloat(value);
+        preset.vignette[key] = !isNaN(parsedValue) ? parsedValue : 0;
       }
     }
 
