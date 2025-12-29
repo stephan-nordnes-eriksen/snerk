@@ -1804,6 +1804,10 @@ document.addEventListener('keydown', (e) => {
         loadCurrentImage();
       }
       break;
+    case 'F11':
+      e.preventDefault();
+      window.snerkAPI.toggleFullScreen();
+      break;
     default:
       if (e.key >= '1' && e.key <= '9') {
         if (!isDialogOpen) {

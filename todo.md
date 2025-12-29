@@ -12,4 +12,4 @@ todo:
 - [x] Add support for exporting raw files
 - [x] Add support for adding stars to the exif data
 - [x] The pin style to photo does not work, the style is changed when I change the style on a different photo, and go back to the photo with a pinned style. The UI should update to display the style which was pinned to that photo. In other words, there should be a "global" style, which is active by default for all photos, and a "Local style" for each photo if that is set.
-- [ ] Add support for full-screen mode by pressing f11
+- [x] Add support for full-screen mode by pressing f11

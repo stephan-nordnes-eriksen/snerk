@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld('snerkAPI', {
 
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
 
+  toggleFullScreen: () => ipcRenderer.invoke('window:toggleFullScreen'),
+
   loadImagePreview: (imagePath) => ipcRenderer.invoke('image:loadPreview', imagePath),
 
   loadFullResolutionImage: (imagePath) => ipcRenderer.invoke('image:loadFullResolution', imagePath),

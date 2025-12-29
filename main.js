@@ -803,6 +803,15 @@ ipcMain.handle('shell:openExternal', async (event, url) => {
   await shell.openExternal(url);
 });
 
+ipcMain.handle('window:toggleFullScreen', async () => {
+  if (mainWindow) {
+    const isFullScreen = mainWindow.isFullScreen();
+    mainWindow.setFullScreen(!isFullScreen);
+    return !isFullScreen;
+  }
+  return false;
+});
+
 async function findAllYamlFiles(dirPath, results = []) {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
