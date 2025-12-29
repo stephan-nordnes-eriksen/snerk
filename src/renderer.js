@@ -114,6 +114,9 @@ const elements = {
   infoRatingValue: document.getElementById('infoRatingValue'),
   infoExif: document.getElementById('infoExif'),
   histogramCanvas: document.getElementById('histogramCanvas'),
+  shortcutsDialog: document.getElementById('shortcutsDialog'),
+  shortcutsCloseBtn: document.getElementById('shortcutsCloseBtn'),
+  showShortcutsBtn: document.getElementById('showShortcutsBtn'),
 };
 
 async function initialize() {
@@ -1600,6 +1603,12 @@ elements.settingsCloseBtn.addEventListener('click', () => {
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
+elements.showShortcutsBtn.addEventListener('click', () => {
+  elements.shortcutsDialog.showModal();
+});
+elements.shortcutsCloseBtn.addEventListener('click', () => {
+  elements.shortcutsDialog.close();
+});
 elements.prevBtn.addEventListener('click', navigatePrevious);
 elements.nextBtn.addEventListener('click', navigateNext);
 elements.resetPresetEditorBtn.addEventListener('click', resetPresetEditor);
@@ -1874,7 +1883,8 @@ document.addEventListener('keydown', (e) => {
     elements.exportProgressDialog.open ||
     elements.renameDialog.open ||
     !elements.presetEditorPanel.classList.contains('hidden') ||
-    elements.settingsDialog.open;
+    elements.settingsDialog.open ||
+    elements.shortcutsDialog.open;
 
   // Handle tab key for preview mode
   if (e.key === 'Tab') {
@@ -1944,6 +1954,14 @@ document.addEventListener('keydown', (e) => {
     case 'I':
       e.preventDefault();
       toggleInfoOverlay();
+      break;
+    case '?':
+      e.preventDefault();
+      if (elements.shortcutsDialog.open) {
+        elements.shortcutsDialog.close();
+      } else {
+        elements.shortcutsDialog.showModal();
+      }
       break;
     case 'p':
     case 'P':

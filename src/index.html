@@ -75,6 +75,9 @@
       <button id="showConfigBtn" class="outline secondary" disabled title="Show profile configuration">
         ⚙
       </button>
+      <button id="showShortcutsBtn" class="outline secondary" title="Show keyboard shortcuts">
+        ?
+      </button>
     </div>
 
     <aside id="presetEditorPanel" class="hidden">
@@ -286,6 +289,51 @@
       </div>
       <footer>
         <button id="settingsCloseBtn">Close</button>
+      </footer>
+    </article>
+  </dialog>
+
+  <dialog id="shortcutsDialog">
+    <article>
+      <header>
+        <h3>Keyboard Shortcuts</h3>
+      </header>
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><kbd>Space</kbd></td><td>Toggle UI visibility</td></tr>
+            <tr><td><kbd>I</kbd></td><td>Toggle image information</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Toggle fullscreen</td></tr>
+            <tr><td><kbd>?</kbd></td><td>Show keyboard shortcuts</td></tr>
+            <tr><td colspan="2"><strong>Navigation</strong></td></tr>
+            <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Previous / Next image</td></tr>
+            <tr><td colspan="2"><strong>Zoom</strong></td></tr>
+            <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in / out</td></tr>
+            <tr><td><kbd>R</kbd></td><td>Reset zoom</td></tr>
+            <tr><td><kbd>Alt</kbd> + <kbd>0</kbd></td><td>Fit to window</td></tr>
+            <tr><td><kbd>Alt</kbd> + <kbd>1-4</kbd></td><td>Zoom levels (1x, 2x, 3x, 4x)</td></tr>
+            <tr><td colspan="2"><strong>Rotation</strong></td></tr>
+            <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>Rotate left / right (90°)</td></tr>
+            <tr><td colspan="2"><strong>Profiles</strong></td></tr>
+            <tr><td><kbd>0</kbd></td><td>Clear profile</td></tr>
+            <tr><td><kbd>1-9</kbd></td><td>Apply profile by number</td></tr>
+            <tr><td><kbd>P</kbd> / <kbd>Tab</kbd></td><td>Preview mode (hold to view original)</td></tr>
+            <tr><td colspan="2"><strong>Rating</strong></td></tr>
+            <tr><td><kbd>Cmd/Ctrl</kbd> + <kbd>0-5</kbd></td><td>Set image rating</td></tr>
+            <tr><td colspan="2"><strong>File Operations</strong></td></tr>
+            <tr><td><kbd>Cmd/Ctrl</kbd> + <kbd>O</kbd></td><td>Open folder</td></tr>
+            <tr><td><kbd>Cmd/Ctrl</kbd> + <kbd>E</kbd></td><td>Export images</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer>
+        <button id="shortcutsCloseBtn">Close</button>
       </footer>
     </article>
   </dialog>
