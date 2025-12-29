@@ -233,6 +233,8 @@ async function loadCurrentImage() {
     elements.mainImage.src = imageData.src;
     elements.mainImage.classList.add('loaded');
 
+    applyZoom();
+
     updateNavigationButtons();
 
     if (!elements.infoOverlay.classList.contains('hidden')) {
