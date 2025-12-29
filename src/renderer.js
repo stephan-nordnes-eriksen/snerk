@@ -1,3 +1,15 @@
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 const fileManager = new FileManager();
 const presetManager = new PresetManager();
 const imageProcessor = new ImageProcessor();
@@ -1157,9 +1169,18 @@ function getEditorPresetConfig() {
   return config;
 }
 
+let isUpdatingPreview = false;
+let pendingPreviewUpdate = false;
+
 async function updateEditorPreview() {
   if (!fileManager.getCurrentImage()) return;
 
+  if (isUpdatingPreview) {
+    pendingPreviewUpdate = true;
+    return;
+  }
+
+  isUpdatingPreview = true;
   const config = getEditorPresetConfig();
 
   try {
@@ -1170,6 +1191,12 @@ async function updateEditorPreview() {
     elements.mainImage.src = imageData.src;
   } catch (error) {
     console.error('Error updating editor preview:', error);
+  } finally {
+    isUpdatingPreview = false;
+    if (pendingPreviewUpdate) {
+      pendingPreviewUpdate = false;
+      updateEditorPreview();
+    }
   }
 }
 
@@ -1220,10 +1247,12 @@ function setupEditorSliders() {
     { slider: elements.editorDehaze, value: elements.editorDehazeValue },
   ];
 
+  const debouncedUpdate = debounce(updateEditorPreview, 150);
+
   for (const { slider, value } of sliders) {
     slider.addEventListener('input', () => {
       value.textContent = slider.value;
-      updateEditorPreview();
+      debouncedUpdate();
     });
   }
 
@@ -1244,8 +1273,10 @@ function setupCurveEditors() {
   curveEditors.g = new CurveEditor('curveEditorG');
   curveEditors.b = new CurveEditor('curveEditorB');
 
+  const debouncedUpdate = debounce(updateEditorPreview, 150);
+
   Object.values(curveEditors).forEach(editor => {
-    editor.onChange = () => updateEditorPreview();
+    editor.onChange = () => debouncedUpdate();
   });
 
   document.querySelectorAll('.curve-tab').forEach(tab => {
