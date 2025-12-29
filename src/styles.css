@@ -616,7 +616,31 @@ nav details[role="list"] ul {
 #shortcutsDialog article {
   max-width: 600px;
   max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#shortcutsDialog header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--pico-card-background-color);
+  z-index: 1;
+}
+
+#shortcutsDialog > article > div {
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#shortcutsDialog footer {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: var(--pico-card-background-color);
+  z-index: 1;
 }
 
 #shortcutsDialog table {
