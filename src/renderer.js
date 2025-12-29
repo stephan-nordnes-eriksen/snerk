@@ -1951,6 +1951,18 @@ document.addEventListener('keydown', (e) => {
         navigateNext();
       }
       break;
+    case 'ArrowUp':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        rotateImageLeft();
+      }
+      break;
+    case 'ArrowDown':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        rotateImageRight();
+      }
+      break;
     case '0':
       if (!isDialogOpen && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
