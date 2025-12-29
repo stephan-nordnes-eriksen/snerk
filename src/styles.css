@@ -1,6 +1,6 @@
 :root {
   --viewer-bg: var(--pico-background-color);
-  --ui-bg: rgba(0, 0, 0, 0.85);
+  --ui-bg: rgba(0, 0, 0, 1);
   --ui-backdrop: rgba(0, 0, 0, 0.3);
 }
 
@@ -537,7 +537,7 @@ nav details[role="list"] ul {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 1);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
