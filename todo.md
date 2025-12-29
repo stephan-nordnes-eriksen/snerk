@@ -1,34 +1,3 @@
 todo:
-- [x] Mouse drag-to-pan is not linked to zoom level, so it pans really fast in high zoom levels
-- [x] The drag-to-pan does not work if zoomed out
-- [x] The scroll zoom level is too sensitive, zooming in and out too quickly
-- [x] Ability to "pin" preset style to one photo, so that that particular photo will use that preset when it is exported
-- [x] Make a histogram graph that can be shown if pressing "i" on the keyboard. It should also show more info, like path to the file, and some exifdata
-- [x] pressing, and holding, "p" should temporarily disable the style, so you can "preview" how it used to look quickly
-- [x] When zooming, panning, and zooming out, the image snaps to the center. Don't do this, only do so if pressing the "fit" button
-- [x] The histogram and Image Information must update if next/previous image is chosen by pressing left/right key
-- [x] Date Taken in "Image Information" says "[object Object]"
-- [x] When collapsing the preset pane, the element containing the expand button takes up the full height of the view
-- [x] Add support for exporting raw files
-- [x] Add support for adding stars to the exif data
-- [x] The pin style to photo does not work, the style is changed when I change the style on a different photo, and go back to the photo with a pinned style. The UI should update to display the style which was pinned to that photo. In other words, there should be a "global" style, which is active by default for all photos, and a "Local style" for each photo if that is set.
-- [x] Add support for full-screen mode by pressing f11
-- [x] Pressing "p" does not temporarily disable the styling for pinned photos.
-- [x] change f11 shortcut to "f", for full-screen
-- [x] Remove settings for changing rendering mode. Only webgpu is supported, and it is not necessary to advertise it anywhere
-- [x] Move export settings to the "settings" button in the top-right in stead of having it at the end of the presets list
-- [x] Change the name "Presets" to "Color Profiles"
-- [x] Move "imported" and "custom" profiles to the top of the list
-- [x] Vibrance = 0 causes a black preview
-- [x] Add the ability to export currently selected photo
-- [x] Make the export buttons be part of a dropdown called "export", and have the two options "current" and "all" be under it.
-- [x] Make "High quality JPEG" be the default for the export, but remember the export config between restarts
-- [x] Move the "open snerk folder" into the settings modal
-- [x] Change the button "create new profile" to a pluss icon
-- [x] Change the import xmp profile to a download icon
-- [x] Move the plus and import buttons next to each other
-- [x] Remove the "no filter" button
-- [x] When pressing "p" on a photo with a pinned style, the selected profile is still active (blue), but non-pinned photos has the active profile non-blue when the "p" button is pressed. Change this so that both has the active filter highlighted, but not blue, maybe gray or "disabled" i assume is a good setting
-- [x] Make shortcuts for the different zoom levels.
-- [x] Disable web shortcuts like tab to go to next button, and pressing space to trigger selected button. Also disable text selection, except for the file name. I don't want it to feel like a website, but rather a native application
-- [x] Make the "tab"-button behave like the "p" button, when holding it down, the active filter is disabled
+- [ ] All the black backgrounds in the UI should be opaque and with a blur filter
+- [ ] Support for rotating the images, and have that rotation be applied to the exports
