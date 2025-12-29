@@ -422,6 +422,14 @@ nav details[role="list"] ul {
   margin-top: 0.25rem;
 }
 
+#createPresetBtn,
+#importXmpBtn {
+  flex: 1;
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
 @media (max-width: 768px) {
   #presetPanel {
     width: calc(100% - 2rem);
