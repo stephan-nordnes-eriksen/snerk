@@ -2023,7 +2023,7 @@ document.addEventListener('keydown', (e) => {
       setImageRating(parseInt(e.key));
     }
 
-    if (e.altKey && e.key >= '0' && e.key <= '4') {
+    if (e.altKey && e.key >= '0' && e.key <= '5') {
       e.preventDefault();
       const zoomLevel = parseInt(e.key);
       if (zoomLevel === 0) {
