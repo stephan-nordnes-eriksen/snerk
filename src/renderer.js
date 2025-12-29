@@ -505,10 +505,10 @@ async function selectPreset(presetName) {
 
 function updateActivePresetUI(pinnedPresetName, activePreset) {
   if (pinnedPresetName) {
-    setActivePresetButton(pinnedPresetName);
+    setActivePresetButton(pinnedPresetName, state.previewMode.isActive);
     elements.showConfigBtn.disabled = activePreset ? false : true;
   } else if (state.currentPreset) {
-    setActivePresetButton(state.currentPreset.name);
+    setActivePresetButton(state.currentPreset.name, state.previewMode.isActive);
     elements.showConfigBtn.disabled = false;
   } else {
     clearActivePresetButtons();
@@ -516,18 +516,21 @@ function updateActivePresetUI(pinnedPresetName, activePreset) {
   }
 }
 
-function setActivePresetButton(presetName) {
+function setActivePresetButton(presetName, isDisabled = false) {
   clearActivePresetButtons();
 
   const button = document.querySelector(`button[data-preset-name="${presetName}"]`);
   if (button) {
     button.classList.add('active');
+    if (isDisabled) {
+      button.classList.add('disabled');
+    }
   }
 }
 
 function clearActivePresetButtons() {
   document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.classList.remove('active');
+    btn.classList.remove('active', 'disabled');
   });
 }
 

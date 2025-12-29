@@ -172,6 +172,12 @@ footer {
   color: white;
 }
 
+.preset-btn.active.disabled {
+  background-color: var(--pico-secondary-background);
+  color: var(--pico-secondary-color);
+  opacity: 0.6;
+}
+
 .rename-btn {
   padding: 0.5rem;
   margin: 0;
