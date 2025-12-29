@@ -135,7 +135,18 @@ function renderPresets() {
 
   elements.presetCategories.innerHTML = '';
 
-  for (const [category, presets] of Object.entries(categories)) {
+  const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
+    const priority = { 'imported': 0, 'custom': 1 };
+    const priorityA = priority[catA] !== undefined ? priority[catA] : 100;
+    const priorityB = priority[catB] !== undefined ? priority[catB] : 100;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    return catA.localeCompare(catB);
+  });
+
+  for (const [category, presets] of sortedCategories) {
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'preset-category';
 
