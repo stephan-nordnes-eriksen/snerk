@@ -8,7 +8,7 @@ todo:
 - [x] When clicking outside of a modal, the modal should close
 - [x] Add a shortcut for 1:1 zoom level
 - [x] Up and down arrows should rotate the photo
-- [ ] if all properties are "0" for a new color profile, then the image becomes completely black
-- [ ] Changing the tone curve is very slow. Make sure it does not do double-work, but triggering an update to the image, and reading the current values of the filters, and not queuing up multiple edits.
-- [ ] Reset zoom after a rotate is incorrect. It probably resets to the previous dimensions
-- [ ] Pan is incorrect after rotate, it seems linked to the old dimensions
+- [x] if all properties are "0" for a new color profile, then the image becomes completely black
+- [x] Changing the tone curve is very slow. Make sure it does not do double-work, but triggering an update to the image, and reading the current values of the filters, and not queuing up multiple edits.
+- [x] Reset zoom after a rotate is incorrect. It probably resets to the previous dimensions
+- [x] Pan is incorrect after rotate, it seems linked to the old dimensions
