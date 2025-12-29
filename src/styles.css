@@ -408,6 +408,20 @@ header nav {
   justify-content: flex-end;
 }
 
+nav details[role="list"] {
+  margin: 0;
+  padding: 0;
+}
+
+nav details[role="list"] summary {
+  margin: 0;
+  padding: 0.5rem 1rem;
+}
+
+nav details[role="list"] ul {
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 768px) {
   #presetPanel {
     width: calc(100% - 2rem);

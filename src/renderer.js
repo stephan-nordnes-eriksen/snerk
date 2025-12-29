@@ -27,6 +27,8 @@ const state = {
 
 const elements = {
   openFolderBtn: document.getElementById('openFolder'),
+  exportDropdown: document.getElementById('exportDropdown'),
+  exportDropdownBtn: document.getElementById('exportDropdownBtn'),
   exportBtn: document.getElementById('exportBtn'),
   exportCurrentBtn: document.getElementById('exportCurrentBtn'),
   importXmpBtn: document.getElementById('importXmpBtn'),
@@ -189,8 +191,7 @@ async function openFolder() {
     }
 
     elements.emptyState.classList.add('hidden');
-    elements.exportBtn.disabled = false;
-    elements.exportCurrentBtn.disabled = false;
+    elements.exportDropdownBtn.disabled = false;
 
     updateStatus(`Loaded ${images.length} images`);
     updateImageCounter();
@@ -1533,8 +1534,14 @@ async function savePresetFromEditorWithName(presetName) {
 }
 
 elements.openFolderBtn.addEventListener('click', openFolder);
-elements.exportBtn.addEventListener('click', () => showExportConfigDialog(false));
-elements.exportCurrentBtn.addEventListener('click', () => showExportConfigDialog(true));
+elements.exportBtn.addEventListener('click', () => {
+  showExportConfigDialog(false);
+  elements.exportDropdown.removeAttribute('open');
+});
+elements.exportCurrentBtn.addEventListener('click', () => {
+  showExportConfigDialog(true);
+  elements.exportDropdown.removeAttribute('open');
+});
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.createPresetBtn.addEventListener('click', openPresetEditor);
 elements.noFilterBtn.addEventListener('click', () => selectPreset(''));
@@ -1905,7 +1912,7 @@ document.addEventListener('keydown', (e) => {
 
     if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
       e.preventDefault();
-      if (!elements.exportBtn.disabled) {
+      if (!elements.exportDropdownBtn.disabled) {
         showExportConfigDialog();
       }
     }
