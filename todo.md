@@ -21,14 +21,14 @@ todo:
 - [x] Move "imported" and "custom" profiles to the top of the list
 - [x] Vibrance = 0 causes a black preview
 - [x] Add the ability to export currently selected photo
-- [ ] Make the export buttons be part of a dropdown called "export", and have the two options "current" and "all" be under it.
-- [ ] Make "High quality JPEG" be the default for the export, but remember the export config between restarts
-- [ ] Move the "open snerk folder" into the settings modal
-- [ ] Change the button "create new profile" to a pluss icon
-- [ ] Change the import xmp profile to a download icon
-- [ ] Move the plus and import buttons next to each other
-- [ ] Remove the "no filter" button
-- [ ] When pressing "p" on a photo with a pinned style, the selected profile is still active (blue), but non-pinned photos has the active profile non-blue when the "p" button is pressed. Change this so that both has the active filter highlighted, but not blue, maybe gray or "disabled" i assume is a good setting
-- [ ] Make shortcuts for the different zoom levels. 
-- [ ] Disable web shortcuts like tab to go to next button, and pressing space to trigger selected button. Also disable text selection, except for the file name. I don't want it to feel like a website, but rather a native application
-- [ ] Make the "tab"-button behave like the "p" button, when holding it down, the active filter is disabled
+- [x] Make the export buttons be part of a dropdown called "export", and have the two options "current" and "all" be under it.
+- [x] Make "High quality JPEG" be the default for the export, but remember the export config between restarts
+- [x] Move the "open snerk folder" into the settings modal
+- [x] Change the button "create new profile" to a pluss icon
+- [x] Change the import xmp profile to a download icon
+- [x] Move the plus and import buttons next to each other
+- [x] Remove the "no filter" button
+- [x] When pressing "p" on a photo with a pinned style, the selected profile is still active (blue), but non-pinned photos has the active profile non-blue when the "p" button is pressed. Change this so that both has the active filter highlighted, but not blue, maybe gray or "disabled" i assume is a good setting
+- [x] Make shortcuts for the different zoom levels.
+- [x] Disable web shortcuts like tab to go to next button, and pressing space to trigger selected button. Also disable text selection, except for the file name. I don't want it to feel like a website, but rather a native application
+- [x] Make the "tab"-button behave like the "p" button, when holding it down, the active filter is disabled
