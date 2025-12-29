@@ -1833,9 +1833,23 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Prevent tab navigation globally (except in input fields)
+  // Check if any dialog is open (needed for tab key handling)
+  const isDialogOpen =
+    elements.exportConfigDialog.open ||
+    elements.exportProgressDialog.open ||
+    elements.renameDialog.open ||
+    !elements.presetEditorPanel.classList.contains('hidden') ||
+    elements.settingsDialog.open;
+
+  // Handle tab key for preview mode
   if (e.key === 'Tab') {
     e.preventDefault();
+    if (!isDialogOpen && !state.previewMode.isActive) {
+      state.previewMode.isActive = true;
+      state.previewMode.savedPreset = state.currentPreset;
+      state.currentPreset = null;
+      loadCurrentImage();
+    }
     return;
   }
 
@@ -1843,14 +1857,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ' && e.target.tagName === 'BUTTON') {
     e.preventDefault();
   }
-
-  // Check if any dialog is open
-  const isDialogOpen =
-    elements.exportConfigDialog.open ||
-    elements.exportProgressDialog.open ||
-    elements.renameDialog.open ||
-    !elements.presetEditorPanel.classList.contains('hidden') ||
-    elements.settingsDialog.open;
 
   switch (e.key) {
     case ' ':
@@ -1969,7 +1975,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
-  if (e.key === 'p' || e.key === 'P') {
+  if (e.key === 'p' || e.key === 'P' || e.key === 'Tab') {
     if (state.previewMode.isActive) {
       e.preventDefault();
       state.currentPreset = state.previewMode.savedPreset;
