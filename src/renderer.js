@@ -203,8 +203,15 @@ async function loadCurrentImage() {
     updateImagePath(currentImage);
     updatePinButton();
 
-    const imageData = state.currentPreset
-      ? await imageProcessor.applyPresetToImage(currentImage, state.currentPreset)
+    const pinnedPresetName = presetPinManager.getPinnedPreset(currentImage);
+    const activePreset = pinnedPresetName
+      ? presetManager.getPresetByName(pinnedPresetName)
+      : state.currentPreset;
+
+    updateActivePresetUI(pinnedPresetName, activePreset);
+
+    const imageData = activePreset
+      ? await imageProcessor.applyPresetToImage(currentImage, activePreset)
       : await imageProcessor.loadImage(currentImage);
 
     elements.mainImage.src = imageData.src;
@@ -478,6 +485,19 @@ async function selectPreset(presetName) {
 
   if (fileManager.getCurrentImage()) {
     await loadCurrentImage();
+  }
+}
+
+function updateActivePresetUI(pinnedPresetName, activePreset) {
+  if (pinnedPresetName) {
+    setActivePresetButton(pinnedPresetName);
+    elements.showConfigBtn.disabled = activePreset ? false : true;
+  } else if (state.currentPreset) {
+    setActivePresetButton(state.currentPreset.name);
+    elements.showConfigBtn.disabled = false;
+  } else {
+    clearActivePresetButtons();
+    elements.showConfigBtn.disabled = true;
   }
 }
 
