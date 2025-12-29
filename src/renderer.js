@@ -1940,6 +1940,20 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
       setImageRating(parseInt(e.key));
     }
+
+    if (e.altKey && e.key >= '0' && e.key <= '4') {
+      e.preventDefault();
+      const zoomLevel = parseInt(e.key);
+      if (zoomLevel === 0) {
+        zoomFitToWindow();
+      } else {
+        zoom100Percent();
+        state.zoom.level = zoomLevel;
+        state.zoom.panX = 0;
+        state.zoom.panY = 0;
+        applyZoom();
+      }
+    }
   }
 });
 
