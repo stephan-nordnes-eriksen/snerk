@@ -15,3 +15,11 @@ todo:
 - [ ] Create a .snerk file in the folder that is opened with metadata about the current state of the files that are being processed. Upon opening a folder, if it has a .snerk file, it should load that. The .snerk file stores which filters are stored to which files, what rotation, and so on. It is effectively a project-file for a folder. If a picture file, which is referenced in the .snerk file, is no longer in the folder, just ignore it. When saving, remove references which no longer exists. Every time a change is made, save the .snerk file, so there should not be a "Save" button anywhere. It is simply implicitly saved whenever a change is done. Also store the export-settings here, so two folders can have separate export settings.
 - [ ] Pan is still not correct for all orientations
 - [ ] Resetting zoom "Fit", is still incorrect after rotating
+- [ ] Getting this error: 
+    > Error reading directory: [Error: ENOENT: no such file or directory, scandir '/> Users/stephaneriksen/.snerk/export-configs'] {
+    > errno: -2,
+    > code: 'ENOENT',
+    > syscall: 'scandir',
+    > path: '/Users/stephaneriksen/.snerk/export-configs'
+    > }
+    
