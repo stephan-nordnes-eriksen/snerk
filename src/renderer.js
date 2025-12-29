@@ -68,7 +68,6 @@ const elements = {
   exportProgressDialog: document.getElementById('exportProgressDialog'),
   manageExportConfigsBtn: document.getElementById('manageExportConfigsBtn'),
   createPresetBtn: document.getElementById('createPresetBtn'),
-  noFilterBtn: document.getElementById('noFilterBtn'),
   openSnerkFolderBtn: document.getElementById('openSnerkFolderBtn'),
   githubLink: document.getElementById('githubLink'),
   showConfigBtn: document.getElementById('showConfigBtn'),
@@ -1562,7 +1561,6 @@ elements.exportCurrentBtn.addEventListener('click', () => {
 });
 elements.importXmpBtn.addEventListener('click', importXmpPreset);
 elements.createPresetBtn.addEventListener('click', openPresetEditor);
-elements.noFilterBtn.addEventListener('click', () => selectPreset(''));
 elements.openSnerkFolderBtn.addEventListener('click', async () => {
   try {
     await window.snerkAPI.openSnerkFolder();
