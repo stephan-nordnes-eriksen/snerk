@@ -193,7 +193,7 @@ class WebGPUProcessor {
     const exposure = adj.exposure !== undefined ? adj.exposure : 0;
     const temperature = adj.temperature !== undefined ? adj.temperature : 0;
     const tint = adj.tint !== undefined ? adj.tint : 0;
-    const contrast = adj.contrast !== undefined ? adj.contrast : 1;
+    const contrast = adj.contrast !== undefined ? (adj.contrast === 0 ? 1 : adj.contrast) : 1;
     const saturation = adj.saturation !== undefined ? adj.saturation : 1;
     const vibrance = adj.vibrance !== undefined ? adj.vibrance : 0;
     const shadows = adj.shadows !== undefined ? adj.shadows : 0;
@@ -222,11 +222,13 @@ class WebGPUProcessor {
   async runBasicAdjustments(inputTexture, adj, width, height) {
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
+    const contrast = adj.contrast !== undefined ? (adj.contrast === 0 ? 1 : adj.contrast) : 1;
+
     const uniformData = new Float32Array([
       adj.exposure !== undefined ? adj.exposure : 0,
       adj.temperature !== undefined ? adj.temperature : 0,
       adj.tint !== undefined ? adj.tint : 0,
-      adj.contrast !== undefined ? adj.contrast : 1,
+      contrast,
       adj.saturation !== undefined ? adj.saturation : 1,
       adj.vibrance !== undefined ? adj.vibrance : 0,
       adj.shadows !== undefined ? adj.shadows : 0,
