@@ -15,3 +15,9 @@ todo:
 - [x] Add support for full-screen mode by pressing f11
 - [x] Pressing "p" does not temporarily disable the styling for pinned photos.
 - [x] change f11 shortcut to "f", for full-screen
+- [x] Remove settings for changing rendering mode. Only webgpu is supported, and it is not necessary to advertise it anywhere
+- [x] Move export settings to the "settings" button in the top-right in stead of having it at the end of the presets list
+- [x] Change the name "Presets" to "Color Profiles"
+- [x] Move "imported" and "custom" profiles to the top of the list
+- [x] Vibrance = 0 causes a black preview
+- [x] Add the ability to export currently selected photo
