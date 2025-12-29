@@ -204,9 +204,11 @@ async function loadCurrentImage() {
     updatePinButton();
 
     const pinnedPresetName = presetPinManager.getPinnedPreset(currentImage);
-    const activePreset = pinnedPresetName
-      ? presetManager.getPresetByName(pinnedPresetName)
-      : state.currentPreset;
+    const activePreset = state.previewMode.isActive
+      ? null
+      : (pinnedPresetName
+        ? presetManager.getPresetByName(pinnedPresetName)
+        : state.currentPreset);
 
     updateActivePresetUI(pinnedPresetName, activePreset);
 
@@ -1804,9 +1806,12 @@ document.addEventListener('keydown', (e) => {
         loadCurrentImage();
       }
       break;
-    case 'F11':
-      e.preventDefault();
-      window.snerkAPI.toggleFullScreen();
+    case 'f':
+    case 'F':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        window.snerkAPI.toggleFullScreen();
+      }
       break;
     default:
       if (e.key >= '1' && e.key <= '9') {
