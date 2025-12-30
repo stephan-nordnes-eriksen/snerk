@@ -677,6 +677,10 @@ async function initializePresetDirectory() {
   try {
     await fs.mkdir(PRESET_DIR, { recursive: true });
 
+    const snerkDir = path.join(os.homedir(), '.snerk');
+    const exportConfigsDir = path.join(snerkDir, 'export-configs');
+    await fs.mkdir(exportConfigsDir, { recursive: true });
+
     const defaultPresetsDir = path.join(__dirname, 'presets');
 
     if (fsSync.existsSync(defaultPresetsDir)) {
