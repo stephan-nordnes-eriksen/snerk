@@ -16,6 +16,7 @@ const imageProcessor = new ImageProcessor();
 const exportConfigManager = new ExportConfigManager();
 const presetPinManager = new PresetPinManager();
 const settingsManager = new SettingsManager();
+const projectManager = new ProjectManager();
 
 const state = {
   currentFolder: null,
@@ -211,6 +212,17 @@ async function openFolder() {
       return;
     }
 
+    await projectManager.loadProject(folderPath);
+    projectManager.cleanupMissingFiles(images);
+
+    const allMetadata = projectManager.getAllFileMetadata();
+    for (const [filename, metadata] of Object.entries(allMetadata)) {
+      const imagePath = images.find(p => p.endsWith(filename));
+      if (imagePath && metadata.rotation) {
+        state.rotations.set(imagePath, metadata.rotation);
+      }
+    }
+
     elements.emptyState.classList.add('hidden');
     elements.exportDropdownBtn.disabled = false;
 
@@ -357,9 +369,11 @@ async function togglePinPreset() {
 
   if (isPinned) {
     await presetPinManager.unpinPreset(currentImage);
+    projectManager.removePinnedPreset(currentImage);
     updateStatus('Unpinned profile from this image');
   } else if (state.currentPreset) {
     await presetPinManager.pinPreset(currentImage, state.currentPreset.name);
+    projectManager.setPinnedPreset(currentImage, state.currentPreset.name);
     updateStatus(`Pinned "${state.currentPreset.name}" to this image`);
   }
 
@@ -587,12 +601,18 @@ async function showExportConfigDialog(exportCurrent = false) {
     return;
   }
 
-  const lastConfig = settingsManager.getLastExportConfig();
+  const projectConfig = projectManager.getExportConfig();
+  const globalConfig = settingsManager.getLastExportConfig();
+  const lastConfig = {
+    ...globalConfig,
+    ...projectConfig
+  };
+
   elements.exportFormat.value = lastConfig.format;
   elements.exportQuality.value = lastConfig.quality;
   elements.qualityValue.textContent = lastConfig.quality;
-  elements.exportApplyPreset.checked = lastConfig.applyPreset;
-  elements.exportIncludeRaw.checked = lastConfig.includeRaw;
+  elements.exportApplyPreset.checked = lastConfig.applyPreset !== undefined ? lastConfig.applyPreset : true;
+  elements.exportIncludeRaw.checked = lastConfig.includeRaw !== undefined ? lastConfig.includeRaw : false;
 
   return new Promise((resolve) => {
     const handleConfigSelect = () => {
@@ -660,11 +680,17 @@ async function showExportConfigDialog(exportCurrent = false) {
     };
 
     const handleConfirm = async () => {
-      await settingsManager.setLastExportConfig({
+      const exportConfig = {
         format: elements.exportFormat.value,
         quality: parseInt(elements.exportQuality.value),
         applyPreset: elements.exportApplyPreset.checked,
         includeRaw: elements.exportIncludeRaw.checked
+      };
+
+      await settingsManager.setLastExportConfig(exportConfig);
+      projectManager.setExportConfig({
+        format: exportConfig.format,
+        quality: exportConfig.quality
       });
 
       cleanup();
@@ -1894,6 +1920,7 @@ function rotateImageLeft() {
   const currentRotation = state.rotations.get(currentImage) || 0;
   const newRotation = (currentRotation - 90 + 360) % 360;
   state.rotations.set(currentImage, newRotation);
+  projectManager.setRotation(currentImage, newRotation);
   applyZoom();
 }
 
@@ -1904,6 +1931,7 @@ function rotateImageRight() {
   const currentRotation = state.rotations.get(currentImage) || 0;
   const newRotation = (currentRotation + 90) % 360;
   state.rotations.set(currentImage, newRotation);
+  projectManager.setRotation(currentImage, newRotation);
   applyZoom();
 }
 
