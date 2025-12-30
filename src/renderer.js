@@ -129,6 +129,8 @@ const elements = {
   shortcutsDialog: document.getElementById('shortcutsDialog'),
   shortcutsCloseBtn: document.getElementById('shortcutsCloseBtn'),
   showShortcutsBtn: document.getElementById('showShortcutsBtn'),
+  zoomSensitivitySlider: document.getElementById('zoomSensitivitySlider'),
+  zoomSensitivityValue: document.getElementById('zoomSensitivityValue'),
 };
 
 async function initialize() {
@@ -986,6 +988,9 @@ function showConfirmDialog(title, message) {
 }
 
 async function openSettings() {
+  const sensitivity = settingsManager.getZoomSensitivity();
+  elements.zoomSensitivitySlider.value = sensitivity;
+  elements.zoomSensitivityValue.textContent = sensitivity.toFixed(1);
   elements.settingsDialog.showModal();
 }
 
@@ -1635,6 +1640,11 @@ elements.settingsBtn.addEventListener('click', openSettings);
 elements.settingsCloseBtn.addEventListener('click', () => {
   elements.settingsDialog.close();
 });
+elements.zoomSensitivitySlider.addEventListener('input', async (e) => {
+  const sensitivity = parseFloat(e.target.value);
+  elements.zoomSensitivityValue.textContent = sensitivity.toFixed(1);
+  await settingsManager.setZoomSensitivity(sensitivity);
+});
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
 elements.showShortcutsBtn.addEventListener('click', () => {
@@ -1806,12 +1816,16 @@ function applyZoom() {
 }
 
 function zoomIn() {
-  state.zoom.level = Math.min(state.zoom.level + state.zoom.step, state.zoom.maxLevel);
+  const sensitivity = settingsManager.getZoomSensitivity();
+  const step = state.zoom.step * sensitivity;
+  state.zoom.level = Math.min(state.zoom.level + step, state.zoom.maxLevel);
   applyZoom();
 }
 
 function zoomOut() {
-  state.zoom.level = Math.max(state.zoom.level - state.zoom.step, state.zoom.minLevel);
+  const sensitivity = settingsManager.getZoomSensitivity();
+  const step = state.zoom.step * sensitivity;
+  state.zoom.level = Math.max(state.zoom.level - step, state.zoom.minLevel);
   applyZoom();
 }
 

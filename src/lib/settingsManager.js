@@ -8,7 +8,8 @@ class SettingsManager {
         quality: 95,
         applyPreset: true,
         includeRaw: false
-      }
+      },
+      zoomSensitivity: 1.0
     };
   }
 
@@ -56,6 +57,15 @@ class SettingsManager {
 
   async setLastExportConfig(config) {
     this.settings.lastExportConfig = { ...config };
+    await this.saveSettings();
+  }
+
+  getZoomSensitivity() {
+    return this.settings.zoomSensitivity || 1.0;
+  }
+
+  async setZoomSensitivity(sensitivity) {
+    this.settings.zoomSensitivity = sensitivity;
     await this.saveSettings();
   }
 
