@@ -1919,9 +1919,9 @@ function startPan(e) {
   state.zoom.isPanning = true;
   const currentImage = fileManager.getCurrentImage();
   const rotation = currentImage ? (state.rotations.get(currentImage) || 0) : 0;
-  const rotated = rotatePanCoordinates(state.zoom.panX * state.zoom.level, state.zoom.panY * state.zoom.level, rotation);
-  state.zoom.startX = e.clientX - rotated.x;
-  state.zoom.startY = e.clientY - rotated.y;
+  const rotated = rotatePanCoordinates(state.zoom.panX, state.zoom.panY, rotation);
+  state.zoom.startX = e.clientX - (rotated.x * state.zoom.level);
+  state.zoom.startY = e.clientY - (rotated.y * state.zoom.level);
   elements.mainImage.style.cursor = 'grabbing';
 }
 
@@ -1931,9 +1931,11 @@ function doPan(e) {
   e.preventDefault();
   const currentImage = fileManager.getCurrentImage();
   const rotation = currentImage ? (state.rotations.get(currentImage) || 0) : 0;
-  const offsetX = (e.clientX - state.zoom.startX) / state.zoom.level;
-  const offsetY = (e.clientY - state.zoom.startY) / state.zoom.level;
-  const rotated = rotatePanCoordinates(offsetX, offsetY, -rotation);
+  const screenOffsetX = e.clientX - state.zoom.startX;
+  const screenOffsetY = e.clientY - state.zoom.startY;
+  const scaledOffsetX = screenOffsetX / state.zoom.level;
+  const scaledOffsetY = screenOffsetY / state.zoom.level;
+  const rotated = rotatePanCoordinates(scaledOffsetX, scaledOffsetY, -rotation);
   state.zoom.panX = rotated.x;
   state.zoom.panY = rotated.y;
   applyZoom();
