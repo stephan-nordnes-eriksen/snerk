@@ -248,6 +248,9 @@ async function loadCurrentImage() {
     elements.mainImage.src = imageData.src;
     elements.mainImage.classList.add('loaded');
 
+    state.zoom.level = calculateFitZoomLevel();
+    state.zoom.panX = 0;
+    state.zoom.panY = 0;
     applyZoom();
 
     updateNavigationButtons();
