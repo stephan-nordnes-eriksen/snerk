@@ -102,6 +102,37 @@ Images are cached in memory after loading:
 - Prevents re-processing when navigating back/forward
 - Cleared only manually (not automatic based on memory)
 
+### .snerk Project File System
+
+**Design Decision: Per-folder project files**
+- Each opened folder can have a `.snerk` file storing folder-specific state
+- Enables resuming work exactly where you left off
+- Different folders can have different export settings
+- No manual "Save" button - auto-saves on every change
+
+**What's stored in .snerk:**
+- File rotations (per image)
+- Pinned presets (which preset is applied to which image)
+- Export settings (format, quality) - folder-specific overrides
+- Version number for future compatibility
+
+**Lifecycle:**
+1. When opening a folder, `projectManager.loadProject()` checks for `.snerk` file
+2. If found, loads all metadata and applies to current state
+3. On any change (rotation, pin preset, export config), auto-saves to `.snerk`
+4. Cleanup: References to deleted files are removed on load and save
+
+**Implementation:**
+- File: `src/lib/projectManager.js`
+- Format: JSON for simplicity and reliability
+- Location: `.snerk` in the root of each opened folder
+- See `DOT-SNERK.md` for detailed file format specification
+
+**Trade-offs:**
+- Files keyed by filename only (not full path) - assumes unique filenames in folder
+- No conflict resolution if same image appears in nested folders
+- Simple, works for 99% of use cases
+
 ### Loading Behavior (Important UX Detail)
 
 **Original Problem:** Loading indicator flashed between image changes, creating jarring experience
@@ -263,7 +294,12 @@ src/
     presetManager.js     - YAML loading and parsing
     imageProcessor.js    - Image loading/caching router (WebGPU vs Sharp)
     settingsManager.js   - Settings persistence and WebGPU detection
+    projectManager.js    - .snerk project file management
+    presetPinManager.js  - Preset pinning to images (legacy, superseded by projectManager)
+    exportConfigManager.js - Export configuration management
     webgpuProcessor.js   - WebGPU device, shader compilation, GPU pipeline
+    xmpImporter.js       - XMP preset import from Lightroom
+    curveEditor.js       - Tone curve editor UI component
     shaders/
       utils.wgsl                - Shared utility functions
       basicAdjustments.wgsl     - 11 basic adjustments (compute shader)
