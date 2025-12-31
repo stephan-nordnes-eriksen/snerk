@@ -577,12 +577,12 @@ function drawHistogram() {
 
 async function navigateNext() {
   fileManager.getNextImage();
-  await loadCurrentImage();
+  await loadCurrentImage(false);
 }
 
 async function navigatePrevious() {
   fileManager.getPreviousImage();
-  await loadCurrentImage();
+  await loadCurrentImage(false);
 }
 
 async function selectPreset(presetName) {
@@ -1851,7 +1851,7 @@ async function applyEditorPreview() {
       state.currentPreset = tempPreset;
 
       // Load the image with the preview
-      await loadCurrentImage();
+      await loadCurrentImage(false);
 
       // Restore the previous preset reference
       state.currentPreset = previousPreset;
@@ -2093,7 +2093,7 @@ document.addEventListener('keydown', (e) => {
       state.previewMode.isActive = true;
       state.previewMode.savedPreset = state.currentPreset;
       state.currentPreset = null;
-      loadCurrentImage();
+      loadCurrentImage(false);
     }
     return;
   }
@@ -2189,7 +2189,7 @@ document.addEventListener('keydown', (e) => {
         state.previewMode.isActive = true;
         state.previewMode.savedPreset = state.currentPreset;
         state.currentPreset = null;
-        loadCurrentImage();
+        loadCurrentImage(false);
       }
       break;
     case 'f':
@@ -2265,7 +2265,7 @@ document.addEventListener('keyup', (e) => {
       state.currentPreset = state.previewMode.savedPreset;
       state.previewMode.isActive = false;
       state.previewMode.savedPreset = null;
-      loadCurrentImage();
+      loadCurrentImage(false);
     }
   }
 });
