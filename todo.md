@@ -7,3 +7,4 @@ todo:
     - While calling [Queue].Submit([[Invalid CommandBuffer]])
     """
 - [ ] Make more color profiles that resemble the most popular filters from instagram, snap chat, and tiktok, but do not reference them by brand names
+- [ ] In the manage visible profiles, make the categories collapsible, eg. use html <details> <summary>
