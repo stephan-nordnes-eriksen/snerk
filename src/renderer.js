@@ -231,10 +231,36 @@ function showPresetVisibilityDialog() {
     details.open = true;
 
     const summary = document.createElement('summary');
-    summary.textContent = category.replace(/-/g, ' ');
     summary.style.cursor = 'pointer';
     summary.style.fontWeight = 'bold';
     summary.style.marginBottom = '0.5rem';
+    summary.style.display = 'flex';
+    summary.style.alignItems = 'center';
+    summary.style.gap = '0.5rem';
+
+    const categoryCheckbox = document.createElement('input');
+    categoryCheckbox.type = 'checkbox';
+    categoryCheckbox.style.margin = '0';
+    const allVisible = presets.every(preset => presetVisibilityManager.isVisible(preset));
+    const someVisible = presets.some(preset => presetVisibilityManager.isVisible(preset));
+    categoryCheckbox.checked = allVisible;
+    categoryCheckbox.indeterminate = !allVisible && someVisible;
+
+    categoryCheckbox.onclick = async (e) => {
+      e.stopPropagation();
+      const newState = !allVisible;
+      for (const preset of presets) {
+        await presetVisibilityManager.setVisibility(preset.name, newState);
+      }
+      renderPresets();
+      showPresetVisibilityDialog();
+    };
+
+    const categoryTitle = document.createElement('span');
+    categoryTitle.textContent = category.replace(/-/g, ' ');
+
+    summary.appendChild(categoryCheckbox);
+    summary.appendChild(categoryTitle);
     details.appendChild(summary);
 
     const contentDiv = document.createElement('div');
