@@ -179,6 +179,9 @@ class WebGPUProcessor {
       currentTexture = nextTexture;
     }
 
+    // Wait for all processing passes to complete before blending
+    await this.device.queue.onSubmittedWorkDone();
+
     // Pass 7: Blend with original based on strength
     if (strength < 1.0) {
       const nextTexture = await this.runBlend(inputTexture, currentTexture, strength, width, height);
@@ -359,7 +362,6 @@ class WebGPUProcessor {
   }
 
   async runBlend(originalTexture, processedTexture, strength, width, height) {
-    console.log('runBlend called with strength:', strength);
     if (!this.pipelines.blend) {
       throw new Error('Blend pipeline not initialized');
     }
@@ -399,7 +401,6 @@ class WebGPUProcessor {
 
     uniformBuffer.destroy();
 
-    console.log('runBlend completed successfully');
     return outputTexture;
   }
 
