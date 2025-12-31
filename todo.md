@@ -36,7 +36,7 @@ todo:
     """
 - [x] There should be a setting for zoom sensitivity
 - [x] Create a .snerk file in the folder that is opened with metadata about the current state of the files that are being processed. Upon opening a folder, if it has a .snerk file, it should load that. The .snerk file stores which filters are stored to which files, what rotation, and so on. It is effectively a project-file for a folder. If a picture file, which is referenced in the .snerk file, is no longer in the folder, just ignore it. When saving, remove references which no longer exists. Every time a change is made, save the .snerk file, so there should not be a "Save" button anywhere. It is simply implicitly saved whenever a change is done. Also store the export-settings here, so two folders can have separate export settings.
-- [ ] Add a slider for the strength of the whole filter. Eg 0% = no filter, 100% is the full filter
-- [ ] when applying a profile, the zoom is reset. It should not do that
-- [ ] Make a large library of different color profiles, but they are not visible by default. You have to open a modal and then check the ones you want to be available in the ui. This UI also allows you to hide previously imported styles. The styles should not be removed by this, simply hidden in the main list in the app
-- [ ] The default zoom sensitivity should be 0.3
+- [x] Add a slider for the strength of the whole filter. Eg 0% = no filter, 100% is the full filter
+- [x] when applying a profile, the zoom is reset. It should not do that
+- [x] Make a large library of different color profiles, but they are not visible by default. You have to open a modal and then check the ones you want to be available in the ui. This UI also allows you to hide previously imported styles. The styles should not be removed by this, simply hidden in the main list in the app
+- [x] The default zoom sensitivity should be 0.3
