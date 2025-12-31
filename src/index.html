@@ -51,6 +51,7 @@
         <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
           <button id="createPresetBtn" class="outline" title="Create new profile">+</button>
           <button id="importXmpBtn" class="outline secondary" title="Import XMP profile">↓</button>
+          <button id="managePresetsBtn" class="outline secondary" title="Manage visible profiles">👁</button>
         </div>
 
         <div style="margin-bottom: 1rem; padding: 0 0.5rem;">
@@ -354,6 +355,21 @@
     </article>
   </dialog>
 
+  <dialog id="presetVisibilityDialog">
+    <article style="max-width: 600px; max-height: 80vh;">
+      <header>
+        <h3>Manage Visible Profiles</h3>
+      </header>
+      <div style="overflow-y: auto; max-height: 50vh;">
+        <p style="font-size: 0.85rem; margin-bottom: 1rem;">Select which profiles should appear in the sidebar.</p>
+        <div id="presetVisibilityList"></div>
+      </div>
+      <footer>
+        <button id="presetVisibilityCloseBtn">Close</button>
+      </footer>
+    </article>
+  </dialog>
+
   <div id="infoOverlay" class="hidden">
     <div class="info-panel">
       <h3>Image Information</h3>
@@ -381,6 +397,7 @@
   <script src="lib/projectManager.js"></script>
   <script src="lib/webgpuProcessor.js"></script>
   <script src="lib/curveEditor.js"></script>
+  <script src="lib/presetVisibilityManager.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

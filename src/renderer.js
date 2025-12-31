@@ -17,6 +17,7 @@ const exportConfigManager = new ExportConfigManager();
 const presetPinManager = new PresetPinManager();
 const settingsManager = new SettingsManager();
 const projectManager = new ProjectManager();
+const presetVisibilityManager = new PresetVisibilityManager();
 
 const state = {
   currentFolder: null,
@@ -135,6 +136,10 @@ const elements = {
   zoomSensitivityValue: document.getElementById('zoomSensitivityValue'),
   presetStrengthSlider: document.getElementById('presetStrengthSlider'),
   presetStrengthValue: document.getElementById('presetStrengthValue'),
+  managePresetsBtn: document.getElementById('managePresetsBtn'),
+  presetVisibilityDialog: document.getElementById('presetVisibilityDialog'),
+  presetVisibilityList: document.getElementById('presetVisibilityList'),
+  presetVisibilityCloseBtn: document.getElementById('presetVisibilityCloseBtn'),
 };
 
 async function initialize() {
@@ -147,6 +152,7 @@ async function initialize() {
 
     updateStatus('Loading color profiles...');
     state.presets = await presetManager.loadPresets();
+    await presetVisibilityManager.initialize();
     renderPresets();
     await loadExportConfigs();
     await presetPinManager.loadPins();
@@ -175,6 +181,10 @@ function renderPresets() {
   });
 
   for (const [category, presets] of sortedCategories) {
+    const visiblePresets = presets.filter(preset => presetVisibilityManager.isVisible(preset.name));
+
+    if (visiblePresets.length === 0) continue;
+
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'preset-category';
 
@@ -185,7 +195,7 @@ function renderPresets() {
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'preset-buttons';
 
-    for (const preset of presets) {
+    for (const preset of visiblePresets) {
       const button = document.createElement('button');
       button.className = 'preset-btn secondary';
       button.textContent = preset.name;
@@ -197,6 +207,60 @@ function renderPresets() {
     categoryDiv.appendChild(buttonContainer);
     elements.presetCategories.appendChild(categoryDiv);
   }
+}
+
+function showPresetVisibilityDialog() {
+  elements.presetVisibilityList.innerHTML = '';
+
+  const categories = presetManager.getPresetsByCategory();
+  const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
+    const priority = { 'imported': 0, 'custom': 1 };
+    const priorityA = priority[catA] !== undefined ? priority[catA] : 100;
+    const priorityB = priority[catB] !== undefined ? priority[catB] : 100;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    return catA.localeCompare(catB);
+  });
+
+  for (const [category, presets] of sortedCategories) {
+    const categoryDiv = document.createElement('div');
+    categoryDiv.style.marginBottom = '1.5rem';
+
+    const categoryTitle = document.createElement('h5');
+    categoryTitle.textContent = category.replace(/-/g, ' ');
+    categoryTitle.style.marginBottom = '0.5rem';
+    categoryDiv.appendChild(categoryTitle);
+
+    for (const preset of presets) {
+      const label = document.createElement('label');
+      label.style.display = 'flex';
+      label.style.alignItems = 'center';
+      label.style.marginBottom = '0.5rem';
+      label.style.cursor = 'pointer';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = presetVisibilityManager.isVisible(preset.name);
+      checkbox.style.marginRight = '0.5rem';
+      checkbox.onchange = async () => {
+        await presetVisibilityManager.setVisibility(preset.name, checkbox.checked);
+        renderPresets();
+      };
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = preset.name;
+
+      label.appendChild(checkbox);
+      label.appendChild(nameSpan);
+      categoryDiv.appendChild(label);
+    }
+
+    elements.presetVisibilityList.appendChild(categoryDiv);
+  }
+
+  elements.presetVisibilityDialog.showModal();
 }
 
 async function openFolder() {
@@ -1686,6 +1750,10 @@ elements.presetStrengthSlider.addEventListener('input', async (e) => {
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
+elements.managePresetsBtn.addEventListener('click', showPresetVisibilityDialog);
+elements.presetVisibilityCloseBtn.addEventListener('click', () => {
+  elements.presetVisibilityDialog.close();
+});
 elements.showShortcutsBtn.addEventListener('click', () => {
   elements.shortcutsDialog.showModal();
 });
@@ -2216,7 +2284,7 @@ elements.infoOverlay.addEventListener('click', (e) => {
 });
 
 // Close dialogs when clicking outside
-[elements.exportConfigDialog, elements.settingsDialog, elements.shortcutsDialog, elements.renameDialog].forEach(dialog => {
+[elements.exportConfigDialog, elements.settingsDialog, elements.shortcutsDialog, elements.renameDialog, elements.presetVisibilityDialog].forEach(dialog => {
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) {
       dialog.close();
