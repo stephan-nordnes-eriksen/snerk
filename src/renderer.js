@@ -49,6 +49,7 @@ const elements = {
   exportBtn: document.getElementById('exportBtn'),
   exportCurrentBtn: document.getElementById('exportCurrentBtn'),
   importXmpBtn: document.getElementById('importXmpBtn'),
+  imageContainer: document.getElementById('imageContainer'),
   mainImage: document.getElementById('mainImage'),
   imageCounter: document.getElementById('imageCounter'),
   imagePath: document.getElementById('imagePath'),
@@ -2093,8 +2094,28 @@ function doPan(e) {
   const scaledOffsetX = screenOffsetX / state.zoom.level;
   const scaledOffsetY = screenOffsetY / state.zoom.level;
   const rotated = rotatePanCoordinates(scaledOffsetX, scaledOffsetY, -rotation);
-  state.zoom.panX = rotated.x;
-  state.zoom.panY = rotated.y;
+
+  const containerWidth = elements.imageContainer.clientWidth;
+  const containerHeight = elements.imageContainer.clientHeight;
+  const imageWidth = elements.mainImage.naturalWidth;
+  const imageHeight = elements.mainImage.naturalHeight;
+
+  if (imageWidth && imageHeight) {
+    const displayWidth = imageWidth * state.zoom.level;
+    const displayHeight = imageHeight * state.zoom.level;
+
+    const maxPanX = (displayWidth + containerWidth) / 2 / state.zoom.level;
+    const minPanX = -(displayWidth + containerWidth) / 2 / state.zoom.level;
+    const maxPanY = (displayHeight + containerHeight) / 2 / state.zoom.level;
+    const minPanY = -(displayHeight + containerHeight) / 2 / state.zoom.level;
+
+    state.zoom.panX = Math.max(minPanX, Math.min(maxPanX, rotated.x));
+    state.zoom.panY = Math.max(minPanY, Math.min(maxPanY, rotated.y));
+  } else {
+    state.zoom.panX = rotated.x;
+    state.zoom.panY = rotated.y;
+  }
+
   applyZoom();
 }
 
@@ -2305,10 +2326,10 @@ document.addEventListener('keyup', (e) => {
 });
 
 elements.mainImage.addEventListener('wheel', handleWheel, { passive: false });
-elements.mainImage.addEventListener('mousedown', startPan);
-elements.mainImage.addEventListener('mousemove', doPan);
-elements.mainImage.addEventListener('mouseup', endPan);
-elements.mainImage.addEventListener('mouseleave', endPan);
+elements.imageContainer.addEventListener('mousedown', startPan);
+elements.imageContainer.addEventListener('mousemove', doPan);
+elements.imageContainer.addEventListener('mouseup', endPan);
+elements.imageContainer.addEventListener('mouseleave', endPan);
 elements.mainImage.addEventListener('dblclick', resetZoom);
 
 elements.infoOverlay.addEventListener('click', (e) => {
