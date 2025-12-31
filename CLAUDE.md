@@ -21,16 +21,16 @@ Snerk is a minimalistic Electron-based color studio with RAW format support and 
 - No React/Vue/Svelte - just semantic HTML with Pico.css for styling
 - Minimalistic approach throughout the codebase
 
-**Why Dual Rendering Modes (WebGPU + Sharp)?**
-- WebGPU (default): ~10x faster GPU-accelerated processing for previews
-- Sharp (fallback): CPU-based, always available, handles RAW extraction and all exports
-- Full feature parity between both modes
-- Automatic fallback if WebGPU unavailable
+**Why WebGPU for Image Processing?**
+- ~10x faster GPU-accelerated processing for all operations
+- All preset application happens in GPU shaders in the renderer process
+- No CPU-based image processing library needed
+- Handles exposure, contrast, saturation, and all other adjustments via compute shaders
 
 **Why ExifTool for RAW Files?**
-- Sharp cannot read RAW files directly (.RAF, .ARW, .CR3, etc.)
+- RAW files (.RAF, .ARW, .CR3, etc.) cannot be read directly by browsers
 - ExifTool extracts embedded JPEG previews from RAW files
-- This preview is then processed by Sharp
+- These previews are then processed by WebGPU just like regular images
 - Trade-off: Using embedded preview vs. full RAW conversion (faster, good enough for preview/export)
 
 ### Process Separation (Electron)
@@ -38,12 +38,14 @@ Snerk is a minimalistic Electron-based color studio with RAW format support and 
 **Main Process (`main.js`)**
 - Handles all file I/O operations
 - Runs ExifTool for RAW preview extraction
-- Runs Sharp for image processing
+- Reads image files and converts to base64 for IPC transfer
+- Writes exported image blobs to disk
 - Manages IPC handlers
 - Window creation and lifecycle
 
 **Renderer Process (`src/renderer.js`)**
 - Pure UI logic
+- All image processing via WebGPU compute shaders
 - No direct file system access
 - Communicates via IPC through preload script
 - Manages application state (current image, preset, etc.)
@@ -64,10 +66,12 @@ RAW files are detected by extension and processed differently:
 if (isRawFile(imagePath)) {
   // 1. Extract embedded JPEG preview using ExifTool
   const imageBuffer = await extractRawPreview(imagePath);
-  // 2. Load preview into Sharp
-  const image = sharp(imageBuffer);
-  // 3. Process normally with Sharp
+  // 2. Convert to base64 for IPC transfer
+  return { data: imageBuffer.toString('base64'), ... };
 }
+// In renderer (webgpuProcessor.js)
+// 3. Decode base64 → ImageBitmap
+// 4. Process with WebGPU shaders
 ```
 
 **Why embedded preview?**
@@ -144,48 +148,21 @@ Images are cached in memory after loading:
 - Replace image only when new one is fully loaded
 - Update counter and filename immediately for responsiveness
 
-### Preset Application with Sharp
+### WebGPU Rendering System
 
-Sharp doesn't have direct "exposure" or "temperature" controls like Lightroom. Here's how adjustments map:
-
-```javascript
-// Exposure -> Brightness modulate
-image.modulate({ brightness: 1 + exposure })
-
-// Saturation -> Saturation modulate
-image.modulate({ saturation: saturationValue })
-
-// Contrast -> Linear transformation
-image.linear(contrast, -(128 * contrast) + 128)
-
-// Shadows/Highlights -> Simplified via lightness modulate
-// Note: This is a simplified approximation
-image.modulate({ lightness: 1 + (shadows / 100) * 0.3 })
-```
-
-**Known Limitations:**
-- Temperature/tint not fully implemented (would need complex color matrix)
-- Curves not implemented (would need custom pixel manipulation)
-- HSL selective adjustments not implemented
-- Grain/vignette not implemented
-
-These could be added in the future but weren't required for MVP.
-
-### WebGPU Rendering System (NEW)
-
-**Why WebGPU was added:**
-- User requested GPU acceleration as the default rendering mode
-- ~10x performance improvement for preset previews
-- Maintains full feature parity with Sharp implementation
-- Automatic fallback to Sharp if WebGPU unavailable
+**Why WebGPU:**
+- ~10x performance improvement over CPU-based processing
+- All preset application happens in GPU compute shaders
+- Handles all Lightroom-style adjustments: exposure, temperature, tint, contrast, saturation, etc.
+- Supports advanced features: split toning, grain, vignette, curves (partial)
 
 **Architecture Decision: WebGPU in Renderer Process**
 
 WebGPU runs in the renderer process because:
 - Only renderer has access to `navigator.gpu` API
-- Sharp remains in main process for RAW extraction and exports
-- Images transferred via IPC as base64 JPEG
-- Separate cache namespaces for each mode
+- Main process only handles file I/O and RAW extraction
+- Images transferred via IPC as base64
+- All processing happens on GPU in renderer
 
 **Rendering Pipeline Flow:**
 
@@ -193,37 +170,31 @@ WebGPU runs in the renderer process because:
 User loads image with preset
     ↓
 [Main Process]
-    1. Detect RAW → Extract preview with ExifTool
-    2. Encode as base64 JPEG
-    3. Send to renderer via IPC
+    1. Detect RAW → Extract preview with ExifTool (if RAW)
+    2. Read image file as buffer
+    3. Encode as base64
+    4. Send to renderer via IPC
     ↓
-[Renderer Process]
-    4. Check rendering mode (settingsManager.getRenderingMode())
-    ↓
-[If WebGPU mode]
+[Renderer Process - WebGPU]
     5. Decode base64 → ImageBitmap
     6. Upload to GPU texture
     7. Run multi-pass shader pipeline:
-       - basicAdjustments (11 adjustments)
+       - basicAdjustments (11 adjustments: exposure, temp, tint, etc.)
        - splitToning (shadow/highlight colors)
        - grain (film grain effect)
        - vignette (edge darkening/lightening)
+       - blend (preset strength 0-100%)
     8. Download from GPU → Canvas
     9. Encode Canvas → Data URL
     10. Display in <img> element
-    ↓
-[If Sharp mode]
-    5. Use base64 directly as data:image URL
-    6. Display in <img> element
 ```
 
 **Critical Implementation Details:**
 
 1. **Settings System**
    - File: `~/.snerk/settings.json`
-   - Structure: `{ version, rendering: { mode, fallbackToSharp } }`
-   - Defaults: mode="webgpu", fallbackToSharp=true
-   - UI: Modal dialog accessible from Settings button in header
+   - Stores user preferences and preset visibility
+   - Persisted across sessions
 
 2. **WebGPU Texture Lifecycle Management (CRITICAL)**
    - Textures MUST be destroyed after GPU operations complete
@@ -237,17 +208,17 @@ User loads image with preset
    - Always use: `adj.saturation !== undefined ? adj.saturation : 1`
    - Affects: saturation, exposure, contrast, vibrance, all numeric adjustments
 
-4. **Shader Implementation Parity with Sharp**
-   - Every shader formula must EXACTLY match Sharp's implementation
-   - Example: Highlights only process negative values with gamma in Sharp
+4. **Shader Implementation Accuracy**
+   - Formulas must match Lightroom/photography standards
+   - Example: Highlights only process negative values with gamma
    - Example: Saturation uses `rgb = lum + (rgb - lum) * saturation`
    - Example: Contrast midpoint is `128/255`, not `0.5`
    - Any deviation causes visible artifacts or incorrect color rendering
 
 5. **Cache Strategy**
-   - Separate namespaces: `"webgpu_preview_${path}"` vs `"sharp_preview_${path}"`
-   - Prevents cache collisions when switching modes
-   - Cache invalidation on mode change handled by different keys
+   - Cache key includes: image path, preset config, and strength
+   - Prevents unnecessary reprocessing when parameters don't change
+   - Cache cleared only manually
 
 **WebGPU Shader Files:**
 
@@ -259,7 +230,7 @@ User loads image with preset
 - `curves.wgsl` - Placeholder (not fully implemented)
 - `hsl.wgsl` - Placeholder (not fully implemented)
 
-**Shader Pipeline Order (matches Sharp):**
+**Shader Pipeline Order:**
 
 1. Basic adjustments (exposure → temperature → tint → contrast → saturation → vibrance → shadows → highlights → whites → blacks → dehaze)
 2. Curves (if implemented)
@@ -267,13 +238,14 @@ User loads image with preset
 4. Split toning
 5. Grain
 6. Vignette
+7. Blend (strength mixing)
 
-**Export Always Uses Sharp:**
+**Export Process:**
 
-- WebGPU processes images at full resolution for previews
-- Export uses Sharp in main process for full-resolution processing
-- Sharp handles full RAW resolution without IPC overhead
-- No changes to export workflow when using WebGPU for previews
+- WebGPU processes images at full resolution
+- Processed image sent as blob to main process
+- Main process writes blob directly to disk
+- Rotation applied in renderer before export (via canvas transform)
 
 **Known Limitations:**
 
@@ -284,7 +256,7 @@ User loads image with preset
 ## File Organization
 
 ```
-main.js              - Electron main, IPC handlers, RAW extraction, Sharp processing
+main.js              - Electron main, IPC handlers, RAW extraction, file I/O
 preload.js           - IPC bridge (security boundary)
 src/
   index.html         - UI structure (Pico.css)
@@ -293,7 +265,7 @@ src/
   lib/
     fileManager.js       - Directory scanning, navigation logic
     presetManager.js     - YAML loading and parsing
-    imageProcessor.js    - Image loading/caching router (WebGPU vs Sharp)
+    imageProcessor.js    - Image loading/caching, calls WebGPU processor
     settingsManager.js   - Settings persistence and WebGPU detection
     projectManager.js    - .snerk project file management
     presetPinManager.js  - Preset pinning to images (legacy, superseded by projectManager)
@@ -420,14 +392,15 @@ Currently no automated tests. For manual testing:
 4. **Export:** Test batch export with various formats/quality settings
 5. **Custom Presets:** Add a .yaml file to `~/.snerk/presets/`, verify it loads
 6. **WebGPU Rendering:**
-   - Test all presets in WebGPU mode, compare with Sharp mode
+   - Test all presets produce correct visual results
    - Verify B&W presets (saturation: 0) produce true grayscale
    - Check dark areas for artifacts (Modern presets with negative highlights)
-   - Test mode switching: Settings → Change mode → Reload image
-   - Test fallback: Disable WebGPU in browser flags, verify Sharp fallback works
+   - Test preset strength slider (0-100%)
+   - Verify smooth performance at full resolution
 7. **Settings Persistence:**
    - Change settings, restart app, verify settings persisted
    - Check `~/.snerk/settings.json` file exists and has correct structure
+   - Test preset visibility management
 
 ## Future Enhancement Ideas
 
@@ -451,15 +424,15 @@ If asked to extend Snerk, consider:
 - Could be replaced with native ExifTool install if size is a concern
 - But current approach is more user-friendly (no manual install)
 
-**sharp**
-- Native bindings, platform-specific
-- Rebuild required if changing Node.js version
-- Usually works out of the box with electron-builder
-
 **Pico.css**
 - Loaded from CDN in index.html
 - Could be bundled locally for offline use
 - Version pinned to v2
+
+**No image processing libraries needed**
+- All image processing done in WebGPU shaders
+- No Sharp, Jimp, or similar dependencies
+- Smaller bundle size, no native bindings to rebuild
 
 ## Development Workflow
 
@@ -551,23 +524,20 @@ npm run build:linux  # Creates .AppImage
 
 1. Update YAML schema in SPEC.md
 2. Add parsing in `presetManager.js` parseYAML()
-3. **Sharp implementation:**
-   - Add to Sharp processing in `main.js` image:applyPreset
-   - Follow existing Sharp patterns (modulate, linear, gamma, etc.)
-4. **WebGPU implementation:**
+3. **WebGPU implementation:**
    - Add uniform field to appropriate shader struct (usually `basicAdjustments.wgsl`)
    - Update `runBasicAdjustments()` in `webgpuProcessor.js` to include new value
-   - Implement shader logic matching Sharp's formula EXACTLY
+   - Implement shader logic matching photography standards
    - Use `!== undefined` checks, never `||` operator for defaults
-5. Test with a sample preset file in both rendering modes
-6. Verify visual parity between WebGPU and Sharp
-7. Document in README.md
+4. Test with a sample preset file
+5. Verify visual accuracy matches expected photographic behavior
+6. Document in README.md
 
 ### Adding a New File Format
 
 1. Add extension to `SUPPORTED_EXTENSIONS` in `fileManager.js`
 2. If RAW: Add to `RAW_EXTENSIONS` in `main.js`
-3. Test that Sharp can handle it (or add to RAW extraction path)
+3. Test that browser can decode it (or add to RAW extraction path)
 4. Update SPEC.md and README.md
 
 ### Adding a New Keyboard Shortcut
@@ -613,11 +583,11 @@ If extending functionality, clarify:
 
 If performance issues arise:
 
-1. **Image loading slow:** Check RAW extraction time, cache hits
-2. **Preset application slow:** Profile Sharp operations, simplify adjustments
-3. **UI unresponsive:** Check for blocking operations, add worker threads
-4. **Memory issues:** Implement cache eviction, limit cache size
-5. **Export slow:** Consider parallel processing, optimize Sharp pipeline
+1. **Image loading slow:** Check RAW extraction time, cache hits, IPC overhead
+2. **Preset application slow:** Profile GPU operations, optimize shader pipeline
+3. **UI unresponsive:** Check for blocking operations, optimize WebGPU texture lifecycle
+4. **Memory issues:** Implement cache eviction, limit cache size, check texture cleanup
+5. **Export slow:** Consider processing multiple images in parallel on GPU
 
 ## Contact & Support
 
