@@ -225,13 +225,19 @@ function showPresetVisibilityDialog() {
   });
 
   for (const [category, presets] of sortedCategories) {
-    const categoryDiv = document.createElement('div');
-    categoryDiv.style.marginBottom = '1.5rem';
+    const details = document.createElement('details');
+    details.style.marginBottom = '1rem';
+    details.open = true;
 
-    const categoryTitle = document.createElement('h5');
-    categoryTitle.textContent = category.replace(/-/g, ' ');
-    categoryTitle.style.marginBottom = '0.5rem';
-    categoryDiv.appendChild(categoryTitle);
+    const summary = document.createElement('summary');
+    summary.textContent = category.replace(/-/g, ' ');
+    summary.style.cursor = 'pointer';
+    summary.style.fontWeight = 'bold';
+    summary.style.marginBottom = '0.5rem';
+    details.appendChild(summary);
+
+    const contentDiv = document.createElement('div');
+    contentDiv.style.marginLeft = '1.5rem';
 
     for (const preset of presets) {
       const label = document.createElement('label');
@@ -254,10 +260,11 @@ function showPresetVisibilityDialog() {
 
       label.appendChild(checkbox);
       label.appendChild(nameSpan);
-      categoryDiv.appendChild(label);
+      contentDiv.appendChild(label);
     }
 
-    elements.presetVisibilityList.appendChild(categoryDiv);
+    details.appendChild(contentDiv);
+    elements.presetVisibilityList.appendChild(details);
   }
 
   elements.presetVisibilityDialog.showModal();
