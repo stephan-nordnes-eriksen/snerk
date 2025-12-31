@@ -12,11 +12,11 @@ test.describe('App Launch', () => {
   test('should show main window', async ({ page }) => {
     expect(page).toBeTruthy();
     const title = await page.title();
-    expect(title).toBe('Snerk');
+    expect(title).toBe('Snerk - Color Studio');
   });
 
   test('should have main UI elements', async ({ page }) => {
-    await expect(page.locator('#openFolderBtn')).toBeVisible();
+    await expect(page.locator('#openFolder')).toBeVisible();
     await expect(page.locator('#imageContainer')).toBeVisible();
     await expect(page.locator('#presetList')).toBeVisible();
   });
