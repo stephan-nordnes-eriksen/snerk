@@ -9,7 +9,7 @@ class SettingsManager {
         applyPreset: true,
         includeRaw: false
       },
-      zoomSensitivity: 1.0
+      zoomSensitivity: 0.3
     };
   }
 
@@ -61,7 +61,7 @@ class SettingsManager {
   }
 
   getZoomSensitivity() {
-    return this.settings.zoomSensitivity || 1.0;
+    return this.settings.zoomSensitivity !== undefined ? this.settings.zoomSensitivity : 0.3;
   }
 
   async setZoomSensitivity(sensitivity) {
