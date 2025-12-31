@@ -384,20 +384,61 @@ src/
 
 ## Testing Approach
 
-Currently no automated tests. For manual testing:
+### Automated Testing
+
+Snerk uses Playwright for automated UI testing with Electron support.
+
+**Running Tests:**
+```bash
+npm test              # Run all tests
+npm run test:headed   # Run tests with visible browser
+npm run test:debug    # Run tests in debug mode
+npm run test:report   # Open HTML test report
+```
+
+**Test Coverage:**
+- App launch and window creation
+- UI element presence and visibility
+- Preset loading and display
+- Category toggling and search
+- Keyboard shortcuts
+- Settings dialog
+- Fullscreen mode
+
+**Test Files:**
+- `tests/fixtures.js` - Electron app fixtures for launching app
+- `tests/helpers.js` - Test utilities (folder/file creation)
+- `tests/app.spec.js` - App launch and basic UI tests
+- `tests/presets.spec.js` - Preset management tests
+- `tests/keyboard.spec.js` - Keyboard shortcut tests
+
+**Writing Tests:**
+Use fixtures to launch the app and access the page:
+```javascript
+const { test, expect } = require('./fixtures');
+
+test('should do something', async ({ page, electronApp }) => {
+  await expect(page.locator('#element')).toBeVisible();
+});
+```
+
+See `tests/README.md` for detailed testing guide.
+
+### Manual Testing
+
+For features not yet covered by automated tests:
 
 1. **RAW Support:** Test with .RAF and .ARW files minimum
-2. **Preset Loading:** Check all default presets appear correctly
-3. **Navigation:** Test with 20+ images, verify smooth transitions
-4. **Export:** Test batch export with various formats/quality settings
-5. **Custom Presets:** Add a .yaml file to `~/.snerk/presets/`, verify it loads
-6. **WebGPU Rendering:**
+2. **Navigation:** Test with 20+ images, verify smooth transitions
+3. **Export:** Test batch export with various formats/quality settings
+4. **Custom Presets:** Add a .yaml file to `~/.snerk/presets/`, verify it loads
+5. **WebGPU Rendering:**
    - Test all presets produce correct visual results
    - Verify B&W presets (saturation: 0) produce true grayscale
    - Check dark areas for artifacts (Modern presets with negative highlights)
    - Test preset strength slider (0-100%)
    - Verify smooth performance at full resolution
-7. **Settings Persistence:**
+6. **Settings Persistence:**
    - Change settings, restart app, verify settings persisted
    - Check `~/.snerk/settings.json` file exists and has correct structure
    - Test preset visibility management
