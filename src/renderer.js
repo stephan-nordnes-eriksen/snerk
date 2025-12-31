@@ -236,7 +236,7 @@ async function openFolder() {
   }
 }
 
-async function loadCurrentImage() {
+async function loadCurrentImage(resetZoom = true) {
   const currentImage = fileManager.getCurrentImage();
 
   if (!currentImage) return;
@@ -262,9 +262,11 @@ async function loadCurrentImage() {
     elements.mainImage.src = imageData.src;
     elements.mainImage.classList.add('loaded');
 
-    state.zoom.level = calculateFitZoomLevel();
-    state.zoom.panX = 0;
-    state.zoom.panY = 0;
+    if (resetZoom) {
+      state.zoom.level = calculateFitZoomLevel();
+      state.zoom.panX = 0;
+      state.zoom.panY = 0;
+    }
     applyZoom();
 
     updateNavigationButtons();
@@ -536,7 +538,7 @@ async function selectPreset(presetName) {
   updatePinButton();
 
   if (fileManager.getCurrentImage()) {
-    await loadCurrentImage();
+    await loadCurrentImage(false);
   }
 }
 
@@ -1684,7 +1686,7 @@ elements.nextBtn.addEventListener('click', navigateNext);
 elements.resetPresetEditorBtn.addEventListener('click', resetPresetEditor);
 elements.cancelPresetEditorBtn.addEventListener('click', () => {
   elements.presetEditorPanel.classList.add('hidden');
-  loadCurrentImage();
+  loadCurrentImage(false);
 });
 elements.savePresetEditorBtn.addEventListener('click', savePresetFromEditor);
 elements.copyToCustomBtn.addEventListener('click', copyToCustomPreset);
@@ -1698,7 +1700,7 @@ elements.deletePresetBtn.addEventListener('click', deleteCurrentPreset);
 elements.showConfigBtn.addEventListener('click', showCurrentPresetConfig);
 elements.closePresetEditor.addEventListener('click', () => {
   elements.presetEditorPanel.classList.add('hidden');
-  loadCurrentImage();
+  loadCurrentImage(false);
 });
 elements.zoomFitBtn.addEventListener('click', zoomFitToWindow);
 elements.zoom100Btn.addEventListener('click', zoom100Percent);
