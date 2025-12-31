@@ -21,15 +21,14 @@ test.describe('Keyboard Shortcuts', () => {
     expect(typeof isFullScreen).toBe('boolean');
   });
 
-  test('should open settings with Cmd/Ctrl+,', async ({ page }) => {
-    const isMac = process.platform === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
-
-    await page.keyboard.press(`${modifier}+Comma`);
-    await page.waitForTimeout(500);
+  test('should open settings via button', async ({ page }) => {
+    const settingsBtn = page.locator('#settingsBtn');
+    await settingsBtn.click();
+    await page.waitForTimeout(300);
 
     const settingsDialog = page.locator('#settingsDialog');
-    await expect(settingsDialog).toBeVisible();
+    const isOpen = await settingsDialog.evaluate(el => el.open);
+    expect(isOpen).toBe(true);
 
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);

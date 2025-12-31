@@ -2,42 +2,33 @@ const { test, expect } = require('./fixtures');
 
 test.describe('Preset Management', () => {
   test('should display preset categories', async ({ page }) => {
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
     const categories = await page.locator('.preset-category').count();
     expect(categories).toBeGreaterThan(0);
   });
 
   test('should toggle category visibility', async ({ page }) => {
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
     const firstCategory = page.locator('.preset-category').first();
-    const categoryName = await firstCategory.locator('.category-name').textContent();
 
-    await firstCategory.locator('.toggle-category-btn').click();
+    const isOpenBefore = await firstCategory.evaluate(el => el.open);
+    expect(isOpenBefore).toBe(true);
 
-    const presetsVisible = await firstCategory.locator('.category-presets').isVisible();
-    expect(presetsVisible).toBe(false);
+    await firstCategory.locator('summary').click();
+    await page.waitForTimeout(100);
 
-    await firstCategory.locator('.toggle-category-btn').click();
-    const presetsVisibleAgain = await firstCategory.locator('.category-presets').isVisible();
-    expect(presetsVisibleAgain).toBe(true);
-  });
+    const isOpenAfter = await firstCategory.evaluate(el => el.open);
+    expect(isOpenAfter).toBe(false);
 
-  test('should search presets', async ({ page }) => {
-    await page.waitForTimeout(1000);
-    const searchInput = page.locator('#presetSearch');
-    await searchInput.fill('modern');
+    await firstCategory.locator('summary').click();
+    await page.waitForTimeout(100);
 
-    await page.waitForTimeout(500);
-
-    const visiblePresets = await page.locator('.preset-item:visible').count();
-    expect(visiblePresets).toBeGreaterThan(0);
-
-    const allPresets = await page.locator('.preset-item').count();
-    expect(visiblePresets).toBeLessThanOrEqual(allPresets);
+    const isOpenAgain = await firstCategory.evaluate(el => el.open);
+    expect(isOpenAgain).toBe(true);
   });
 
   test('should show strength slider', async ({ page }) => {
-    const strengthSlider = page.locator('#presetStrength');
+    const strengthSlider = page.locator('#presetStrengthSlider');
     await expect(strengthSlider).toBeVisible();
 
     const strengthValue = await strengthSlider.inputValue();

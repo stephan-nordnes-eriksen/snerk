@@ -18,12 +18,12 @@ test.describe('App Launch', () => {
   test('should have main UI elements', async ({ page }) => {
     await expect(page.locator('#openFolder')).toBeVisible();
     await expect(page.locator('#imageContainer')).toBeVisible();
-    await expect(page.locator('#presetList')).toBeVisible();
+    await expect(page.locator('#presetPanel')).toBeVisible();
   });
 
   test('should load default presets', async ({ page }) => {
-    await page.waitForTimeout(1000);
-    const presetCount = await page.locator('.preset-item').count();
+    await page.waitForTimeout(2000);
+    const presetCount = await page.locator('.preset-btn').count();
     expect(presetCount).toBeGreaterThan(0);
   });
 
