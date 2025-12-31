@@ -10,7 +10,7 @@ Snerk is a minimalistic Electron-based color studio with RAW format support and 
 - When making significant changes, update CLAUDE.md and SPEC.md appropriately. Avoid this for things like bugfixing and style changes.
 - Avoid adding verbose comments and unnecessary code or abstractions. Aim to be as short an concise as possible
 - Avoid altering code / systems that are not part of the immediate task.
-- When making any change, always load the DECISIONS.md to ensure that any change does not undo or otherwise goes against previous decisions. This file should only contain direct quotes from prompts from the user
+- When making any change, always load the DECISIONS.md to ensure that any change does not undo or otherwise goes against previous decisions. This file should only contain direct quotes from prompts from the user. Update DECISIONS.md with direct quotes from the user, nothing else.
 
 ## Architecture Overview
 

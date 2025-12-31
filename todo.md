@@ -40,3 +40,5 @@ todo:
 - [x] when applying a profile, the zoom is reset. It should not do that
 - [x] Make a large library of different color profiles, but they are not visible by default. You have to open a modal and then check the ones you want to be available in the ui. This UI also allows you to hide previously imported styles. The styles should not be removed by this, simply hidden in the main list in the app
 - [x] The default zoom sensitivity should be 0.3
+- [ ] The strength slider shows a black image for any value other than 100%
+- [ ] When pressing "tab" or "p" the zoom is reset. Do not reset the zoom except when pressing the fit/1:1 buttons, this includes when going between images, changing profiles and so on
