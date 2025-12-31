@@ -143,6 +143,31 @@ footer {
   margin-bottom: 2rem;
 }
 
+.preset-category summary {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+  font-weight: bold;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.preset-category summary::-webkit-details-marker {
+  display: none;
+}
+
+.preset-category summary::before {
+  content: '▼ ';
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.preset-category:not([open]) summary::before {
+  transform: rotate(-90deg);
+}
+
 .preset-category h4 {
   margin-bottom: 0.5rem;
   font-size: 0.9rem;

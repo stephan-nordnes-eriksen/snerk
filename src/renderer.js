@@ -185,12 +185,13 @@ function renderPresets() {
 
     if (visiblePresets.length === 0) continue;
 
-    const categoryDiv = document.createElement('div');
-    categoryDiv.className = 'preset-category';
+    const details = document.createElement('details');
+    details.className = 'preset-category';
+    details.open = true;
 
-    const categoryTitle = document.createElement('h4');
-    categoryTitle.textContent = category.replace(/-/g, ' ');
-    categoryDiv.appendChild(categoryTitle);
+    const summary = document.createElement('summary');
+    summary.textContent = category.replace(/-/g, ' ');
+    details.appendChild(summary);
 
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'preset-buttons';
@@ -204,8 +205,8 @@ function renderPresets() {
       buttonContainer.appendChild(button);
     }
 
-    categoryDiv.appendChild(buttonContainer);
-    elements.presetCategories.appendChild(categoryDiv);
+    details.appendChild(buttonContainer);
+    elements.presetCategories.appendChild(details);
   }
 }
 
