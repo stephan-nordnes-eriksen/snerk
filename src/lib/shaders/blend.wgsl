@@ -20,7 +20,7 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
   let original = textureLoad(originalTexture, coords, 0);
   let processed = textureLoad(processedTexture, coords, 0);
 
-  let result = mix(original, processed, uniforms.strength);
+  let result = mix(original, processed, vec4<f32>(uniforms.strength, uniforms.strength, uniforms.strength, uniforms.strength));
 
   textureStore(outputTexture, coords, result);
 }

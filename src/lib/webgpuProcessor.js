@@ -359,6 +359,10 @@ class WebGPUProcessor {
   }
 
   async runBlend(originalTexture, processedTexture, strength, width, height) {
+    console.log('runBlend called with strength:', strength);
+    if (!this.pipelines.blend) {
+      throw new Error('Blend pipeline not initialized');
+    }
     const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
 
     const uniformData = new Float32Array([
@@ -391,8 +395,11 @@ class WebGPUProcessor {
 
     this.device.queue.submit([commandEncoder.finish()]);
 
+    await this.device.queue.onSubmittedWorkDone();
+
     uniformBuffer.destroy();
 
+    console.log('runBlend completed successfully');
     return outputTexture;
   }
 
