@@ -1,0 +1,14 @@
+name: "Acros Green Filter"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.12
+  saturation: 0
+  temperature: 0
+  tint: -5
+  highlights: -12
+  shadows: 8
+  vibrance: 0
+  clarity: 5
+  dehaze: 3

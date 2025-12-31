@@ -1,0 +1,14 @@
+name: "Classic Negative"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.05
+  saturation: 0.95
+  temperature: 8
+  tint: 3
+  highlights: -8
+  shadows: 12
+  vibrance: 5
+  clarity: 0
+  dehaze: 0

@@ -1,0 +1,14 @@
+name: "Vintage"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.08
+  saturation: 0.9
+  temperature: 15
+  tint: 3
+  highlights: -8
+  shadows: 8
+  vibrance: -5
+  clarity: -3
+  dehaze: 0

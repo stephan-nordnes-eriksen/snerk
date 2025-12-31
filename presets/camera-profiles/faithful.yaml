@@ -1,0 +1,14 @@
+name: "Faithful"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 0.95
+  saturation: 0.95
+  temperature: 0
+  tint: 0
+  highlights: 0
+  shadows: 0
+  vibrance: 0
+  clarity: 0
+  dehaze: 0

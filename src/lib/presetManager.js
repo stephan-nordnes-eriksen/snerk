@@ -74,6 +74,8 @@ class PresetManager {
         preset.name = value.replace(/['"]/g, '');
       } else if (key === 'category') {
         preset.category = value.replace(/['"]/g, '');
+      } else if (key === 'visible') {
+        preset.visible = value === 'true' || value === 'yes';
       } else if (key === 'adjustments') {
         currentSection = 'adjustments';
       } else if (key === 'curves') {

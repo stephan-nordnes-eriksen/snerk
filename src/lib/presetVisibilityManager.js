@@ -40,9 +40,12 @@ class PresetVisibilityManager {
     }
   }
 
-  isVisible(presetName) {
+  isVisible(preset) {
+    const presetName = typeof preset === 'string' ? preset : preset.name;
+    const defaultVisible = typeof preset === 'object' && preset.visible !== undefined ? preset.visible : true;
+
     if (!this.visibilityMap.has(presetName)) {
-      return true;
+      return defaultVisible;
     }
     return this.visibilityMap.get(presetName);
   }

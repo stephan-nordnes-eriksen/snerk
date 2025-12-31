@@ -1,0 +1,14 @@
+name: "Eterna Bleach Bypass"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.25
+  saturation: 0.5
+  temperature: 0
+  tint: 0
+  highlights: -15
+  shadows: 15
+  vibrance: -20
+  clarity: 10
+  dehaze: 10

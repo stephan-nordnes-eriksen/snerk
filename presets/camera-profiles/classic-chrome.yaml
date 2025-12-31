@@ -1,0 +1,14 @@
+name: "Classic Chrome"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.12
+  saturation: 0.85
+  temperature: 5
+  tint: 5
+  highlights: -10
+  shadows: 10
+  vibrance: -5
+  clarity: 5
+  dehaze: 5

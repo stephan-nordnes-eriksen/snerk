@@ -1,0 +1,14 @@
+name: "Neutral"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 0.95
+  saturation: 0.85
+  temperature: 0
+  tint: 0
+  highlights: 0
+  shadows: 0
+  vibrance: -10
+  clarity: 0
+  dehaze: 0

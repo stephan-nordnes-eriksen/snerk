@@ -1,0 +1,14 @@
+name: "Acros"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.08
+  saturation: 0
+  temperature: 0
+  tint: 0
+  highlights: -8
+  shadows: 8
+  vibrance: 0
+  clarity: 5
+  dehaze: 0

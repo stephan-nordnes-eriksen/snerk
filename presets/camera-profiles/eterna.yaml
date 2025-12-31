@@ -1,0 +1,14 @@
+name: "Eterna"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 0.88
+  saturation: 0.85
+  temperature: 0
+  tint: 0
+  highlights: 0
+  shadows: 5
+  vibrance: -8
+  clarity: -5
+  dehaze: 0

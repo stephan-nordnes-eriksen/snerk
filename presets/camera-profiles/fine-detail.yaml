@@ -1,0 +1,14 @@
+name: "Fine Detail"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.08
+  saturation: 1.08
+  temperature: 0
+  tint: 0
+  highlights: -5
+  shadows: 5
+  vibrance: 5
+  clarity: 20
+  dehaze: 5

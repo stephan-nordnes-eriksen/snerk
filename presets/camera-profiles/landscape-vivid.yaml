@@ -1,0 +1,14 @@
+name: "Landscape Vivid"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.15
+  saturation: 1.25
+  temperature: -5
+  tint: 0
+  highlights: -8
+  shadows: 10
+  vibrance: 20
+  clarity: 12
+  dehaze: 10

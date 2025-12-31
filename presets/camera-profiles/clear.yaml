@@ -1,0 +1,14 @@
+name: "Clear"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 1.12
+  saturation: 1.08
+  temperature: 0
+  tint: 0
+  highlights: -10
+  shadows: 8
+  vibrance: 10
+  clarity: 18
+  dehaze: 12

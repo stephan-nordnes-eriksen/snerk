@@ -181,7 +181,7 @@ function renderPresets() {
   });
 
   for (const [category, presets] of sortedCategories) {
-    const visiblePresets = presets.filter(preset => presetVisibilityManager.isVisible(preset.name));
+    const visiblePresets = presets.filter(preset => presetVisibilityManager.isVisible(preset));
 
     if (visiblePresets.length === 0) continue;
 
@@ -242,7 +242,7 @@ function showPresetVisibilityDialog() {
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.checked = presetVisibilityManager.isVisible(preset.name);
+      checkbox.checked = presetVisibilityManager.isVisible(preset);
       checkbox.style.marginRight = '0.5rem';
       checkbox.onchange = async () => {
         await presetVisibilityManager.setVisibility(preset.name, checkbox.checked);

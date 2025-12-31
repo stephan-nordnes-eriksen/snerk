@@ -1,0 +1,14 @@
+name: "Monochrome High Contrast"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.18
+  saturation: 0
+  temperature: 0
+  tint: 0
+  highlights: -10
+  shadows: 10
+  vibrance: 0
+  clarity: 10
+  dehaze: 5

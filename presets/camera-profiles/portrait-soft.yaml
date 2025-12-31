@@ -1,0 +1,14 @@
+name: "Portrait Soft"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 1.0
+  saturation: 1.05
+  temperature: 10
+  tint: -3
+  highlights: -8
+  shadows: 8
+  vibrance: 0
+  clarity: -8
+  dehaze: 0

@@ -1,0 +1,14 @@
+name: "Portrait"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 0.98
+  saturation: 1.02
+  temperature: 8
+  tint: -2
+  highlights: -8
+  shadows: 5
+  vibrance: 0
+  clarity: -5
+  dehaze: 0

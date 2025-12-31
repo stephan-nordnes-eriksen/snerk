@@ -1,0 +1,14 @@
+name: "Flat"
+category: "camera-profiles"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 0.85
+  saturation: 0.75
+  temperature: 0
+  tint: 0
+  highlights: 0
+  shadows: 0
+  vibrance: -20
+  clarity: -5
+  dehaze: 0
