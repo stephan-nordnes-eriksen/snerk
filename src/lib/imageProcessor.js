@@ -24,7 +24,7 @@ class ImageProcessor {
       }
 
       const result = await window.snerkAPI.loadImagePreview(imagePath);
-      const imageData = await this.webgpuProcessor.processImage(result.data, null);
+      const imageData = await this.webgpuProcessor.processImage(result.data, null, 1.0);
 
       this.cache.set(cacheKey, imageData);
 
@@ -35,20 +35,20 @@ class ImageProcessor {
     }
   }
 
-  async applyPresetToImage(imagePath, presetConfig) {
+  async applyPresetToImage(imagePath, presetConfig, strength = 1.0) {
     try {
       if (!presetConfig || !presetConfig.adjustments) {
         return await this.loadImage(imagePath);
       }
 
-      const cacheKey = `preset_${imagePath}_${JSON.stringify(presetConfig)}`;
+      const cacheKey = `preset_${imagePath}_${JSON.stringify(presetConfig)}_${strength}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
       const result = await window.snerkAPI.loadImagePreview(imagePath);
-      const imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
+      const imageData = await this.webgpuProcessor.processImage(result.data, presetConfig, strength);
 
       this.cache.set(cacheKey, imageData);
 

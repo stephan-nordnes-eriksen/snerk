@@ -39,7 +39,8 @@ class WebGPUProcessor {
         'hsl.wgsl',
         'splitToning.wgsl',
         'grain.wgsl',
-        'vignette.wgsl'
+        'vignette.wgsl',
+        'blend.wgsl'
       ];
 
       for (const file of shaderFiles) {
@@ -81,7 +82,7 @@ class WebGPUProcessor {
     }
   }
 
-  async processImage(base64Data, presetConfig) {
+  async processImage(base64Data, presetConfig, strength = 1.0) {
     try {
       const imageBlob = this.base64ToBlob(base64Data);
       const imageBitmap = await createImageBitmap(imageBlob);
@@ -98,7 +99,7 @@ class WebGPUProcessor {
       }
 
       const inputTexture = this.createTextureFromBitmap(imageBitmap);
-      const outputTexture = await this.applyPreset(inputTexture, presetConfig, imageBitmap.width, imageBitmap.height);
+      const outputTexture = await this.applyPreset(inputTexture, presetConfig, imageBitmap.width, imageBitmap.height, strength);
       const canvas = await this.textureToCanvas(outputTexture, imageBitmap.width, imageBitmap.height);
       const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
@@ -119,7 +120,7 @@ class WebGPUProcessor {
     }
   }
 
-  async applyPreset(inputTexture, config, width, height) {
+  async applyPreset(inputTexture, config, width, height, strength = 1.0) {
     let currentTexture = inputTexture;
     const adj = config.adjustments || {};
     const texturesToDestroy = [];
@@ -172,6 +173,15 @@ class WebGPUProcessor {
     // Pass 6: Vignette
     if (config.vignette) {
       const nextTexture = await this.runVignette(currentTexture, config.vignette, width, height);
+      if (currentTexture !== inputTexture && nextTexture !== currentTexture) {
+        texturesToDestroy.push(currentTexture);
+      }
+      currentTexture = nextTexture;
+    }
+
+    // Pass 7: Blend with original based on strength
+    if (strength < 1.0) {
+      const nextTexture = await this.runBlend(inputTexture, currentTexture, strength, width, height);
       if (currentTexture !== inputTexture && nextTexture !== currentTexture) {
         texturesToDestroy.push(currentTexture);
       }
@@ -337,6 +347,44 @@ class WebGPUProcessor {
     const commandEncoder = this.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(this.pipelines.vignette);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 8));
+    passEncoder.end();
+
+    this.device.queue.submit([commandEncoder.finish()]);
+
+    uniformBuffer.destroy();
+
+    return outputTexture;
+  }
+
+  async runBlend(originalTexture, processedTexture, strength, width, height) {
+    const outputTexture = this.createTexture(width, height, GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC);
+
+    const uniformData = new Float32Array([
+      strength,
+      0, 0, 0 // padding
+    ]);
+
+    const uniformBuffer = this.device.createBuffer({
+      size: uniformData.byteLength,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+    const bindGroup = this.device.createBindGroup({
+      layout: this.pipelines.blend.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: originalTexture.createView() },
+        { binding: 1, resource: processedTexture.createView() },
+        { binding: 2, resource: outputTexture.createView() },
+        { binding: 3, resource: { buffer: uniformBuffer } }
+      ]
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    const passEncoder = commandEncoder.beginComputePass();
+    passEncoder.setPipeline(this.pipelines.blend);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.dispatchWorkgroups(Math.ceil(width / 8), Math.ceil(height / 8));
     passEncoder.end();

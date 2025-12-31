@@ -22,6 +22,7 @@ const state = {
   currentFolder: null,
   currentPreset: null,
   presets: [],
+  presetStrength: 1.0,
   zoom: {
     level: 1,
     minLevel: 0.05,
@@ -132,6 +133,8 @@ const elements = {
   showShortcutsBtn: document.getElementById('showShortcutsBtn'),
   zoomSensitivitySlider: document.getElementById('zoomSensitivitySlider'),
   zoomSensitivityValue: document.getElementById('zoomSensitivityValue'),
+  presetStrengthSlider: document.getElementById('presetStrengthSlider'),
+  presetStrengthValue: document.getElementById('presetStrengthValue'),
 };
 
 async function initialize() {
@@ -256,7 +259,7 @@ async function loadCurrentImage(resetZoom = true) {
     updateActivePresetUI(pinnedPresetName, activePreset);
 
     const imageData = activePreset
-      ? await imageProcessor.applyPresetToImage(currentImage, activePreset)
+      ? await imageProcessor.applyPresetToImage(currentImage, activePreset, state.presetStrength)
       : await imageProcessor.loadImage(currentImage);
 
     elements.mainImage.src = imageData.src;
@@ -1672,6 +1675,14 @@ elements.zoomSensitivitySlider.addEventListener('input', async (e) => {
   const sensitivity = parseFloat(e.target.value);
   elements.zoomSensitivityValue.textContent = sensitivity.toFixed(1);
   await settingsManager.setZoomSensitivity(sensitivity);
+});
+elements.presetStrengthSlider.addEventListener('input', async (e) => {
+  const strength = parseInt(e.target.value) / 100;
+  state.presetStrength = strength;
+  elements.presetStrengthValue.textContent = `${e.target.value}%`;
+  if (fileManager.getCurrentImage()) {
+    await loadCurrentImage(false);
+  }
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
