@@ -1,0 +1,17 @@
+name: "Faded Vintage"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.1
+  contrast: 0.88
+  saturation: 0.85
+  temperature: 15
+  tint: 3
+  highlights: 15
+  shadows: -8
+  vibrance: -5
+  clarity: -8
+  dehaze: -10
+vignette:
+  amount: 15
+  midpoint: 0.5

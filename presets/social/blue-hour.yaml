@@ -1,0 +1,14 @@
+name: "Blue Hour"
+category: "social"
+visible: false
+adjustments:
+  exposure: -0.05
+  contrast: 1.15
+  saturation: 1.15
+  temperature: -30
+  tint: -5
+  highlights: -10
+  shadows: 12
+  vibrance: 18
+  clarity: 8
+  dehaze: 10

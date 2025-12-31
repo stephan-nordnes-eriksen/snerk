@@ -1,0 +1,20 @@
+name: "Sunset Vibes"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.08
+  contrast: 1.12
+  saturation: 1.25
+  temperature: 35
+  tint: -8
+  highlights: -15
+  shadows: 10
+  vibrance: 20
+  clarity: 5
+  dehaze: 5
+splitToning:
+  shadowHue: 250
+  shadowSaturation: 15
+  highlightHue: 25
+  highlightSaturation: 30
+  balance: 10

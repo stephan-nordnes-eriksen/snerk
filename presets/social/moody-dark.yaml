@@ -1,0 +1,17 @@
+name: "Moody Dark"
+category: "social"
+visible: false
+adjustments:
+  exposure: -0.15
+  contrast: 1.25
+  saturation: 0.9
+  temperature: -5
+  tint: 0
+  highlights: -20
+  shadows: 25
+  vibrance: 5
+  clarity: 10
+  dehaze: 8
+vignette:
+  amount: 35
+  midpoint: 0.35

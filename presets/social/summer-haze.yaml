@@ -1,0 +1,14 @@
+name: "Summer Haze"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.15
+  contrast: 0.85
+  saturation: 1.15
+  temperature: 20
+  tint: 0
+  highlights: 12
+  shadows: -5
+  vibrance: 15
+  clarity: -15
+  dehaze: -12

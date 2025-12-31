@@ -1,0 +1,14 @@
+name: "Pink Blush"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.15
+  contrast: 0.95
+  saturation: 1.05
+  temperature: 20
+  tint: 15
+  highlights: 8
+  shadows: -5
+  vibrance: 5
+  clarity: -8
+  dehaze: -5

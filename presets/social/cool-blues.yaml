@@ -1,0 +1,14 @@
+name: "Cool Blues"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 1.08
+  saturation: 1.05
+  temperature: -25
+  tint: -8
+  highlights: -5
+  shadows: 5
+  vibrance: 10
+  clarity: 8
+  dehaze: 5

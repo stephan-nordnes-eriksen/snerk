@@ -1,0 +1,17 @@
+name: "Vintage Rose"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.1
+  contrast: 0.92
+  saturation: 0.85
+  temperature: 18
+  tint: 12
+  highlights: 10
+  shadows: -5
+  vibrance: -8
+  clarity: -10
+  dehaze: -8
+vignette:
+  amount: 20
+  midpoint: 0.45

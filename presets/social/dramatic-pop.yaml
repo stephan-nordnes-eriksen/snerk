@@ -1,0 +1,17 @@
+name: "Dramatic Pop"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0
+  contrast: 1.35
+  saturation: 1.4
+  temperature: 0
+  tint: 0
+  highlights: -20
+  shadows: 20
+  vibrance: 30
+  clarity: 15
+  dehaze: 15
+vignette:
+  amount: 25
+  midpoint: 0.4

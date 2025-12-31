@@ -1,0 +1,17 @@
+name: "Toasted Orange"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.08
+  contrast: 1.15
+  saturation: 1.25
+  temperature: 30
+  tint: 3
+  highlights: 10
+  shadows: 5
+  vibrance: 20
+  clarity: 8
+  dehaze: 5
+vignette:
+  amount: 20
+  midpoint: 0.5

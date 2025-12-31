@@ -1,0 +1,14 @@
+name: "Frosted Glass"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.2
+  contrast: 0.75
+  saturation: 0.7
+  temperature: -10
+  tint: 5
+  highlights: 25
+  shadows: -18
+  vibrance: -18
+  clarity: -20
+  dehaze: -20

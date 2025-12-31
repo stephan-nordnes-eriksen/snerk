@@ -1,0 +1,14 @@
+name: "Peachy Keen"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.12
+  contrast: 0.95
+  saturation: 1.1
+  temperature: 25
+  tint: 5
+  highlights: 5
+  shadows: -3
+  vibrance: 10
+  clarity: -5
+  dehaze: -3

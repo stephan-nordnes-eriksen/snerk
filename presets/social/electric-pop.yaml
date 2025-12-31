@@ -1,0 +1,14 @@
+name: "Electric Pop"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 1.3
+  saturation: 1.45
+  temperature: 0
+  tint: 5
+  highlights: -18
+  shadows: 15
+  vibrance: 38
+  clarity: 15
+  dehaze: 12

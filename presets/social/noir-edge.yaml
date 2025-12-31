@@ -1,0 +1,17 @@
+name: "Noir Edge"
+category: "social"
+visible: false
+adjustments:
+  exposure: -0.1
+  contrast: 1.4
+  saturation: 0
+  temperature: 0
+  tint: 0
+  highlights: -25
+  shadows: 20
+  vibrance: 0
+  clarity: 15
+  dehaze: 10
+vignette:
+  amount: 40
+  midpoint: 0.3

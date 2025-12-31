@@ -1,0 +1,20 @@
+name: "Metallic Sheen"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 1.2
+  saturation: 0.85
+  temperature: -8
+  tint: 0
+  highlights: 15
+  shadows: 10
+  vibrance: 5
+  clarity: 15
+  dehaze: 8
+splitToning:
+  shadowHue: 200
+  shadowSaturation: 20
+  highlightHue: 45
+  highlightSaturation: 15
+  balance: -20

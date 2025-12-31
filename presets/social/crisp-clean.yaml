@@ -1,0 +1,14 @@
+name: "Crisp Clean"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.1
+  contrast: 1.15
+  saturation: 1.05
+  temperature: 0
+  tint: 0
+  highlights: -8
+  shadows: 5
+  vibrance: 10
+  clarity: 20
+  dehaze: 15

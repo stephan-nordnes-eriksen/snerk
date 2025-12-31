@@ -1,0 +1,14 @@
+name: "Soft Focus"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.18
+  contrast: 0.85
+  saturation: 0.9
+  temperature: 8
+  tint: 3
+  highlights: 15
+  shadows: -8
+  vibrance: -5
+  clarity: -18
+  dehaze: -15

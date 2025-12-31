@@ -1,0 +1,14 @@
+name: "Matte Fade"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.05
+  contrast: 0.78
+  saturation: 0.85
+  temperature: 10
+  tint: 0
+  highlights: 25
+  shadows: -20
+  vibrance: -12
+  clarity: -5
+  dehaze: -15

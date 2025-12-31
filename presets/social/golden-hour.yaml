@@ -1,0 +1,14 @@
+name: "Golden Hour"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.15
+  contrast: 1.05
+  saturation: 1.15
+  temperature: 30
+  tint: -5
+  highlights: -5
+  shadows: 8
+  vibrance: 12
+  clarity: 5
+  dehaze: 3

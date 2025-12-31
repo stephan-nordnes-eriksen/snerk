@@ -1,0 +1,17 @@
+name: "Retro Film"
+category: "social"
+visible: false
+adjustments:
+  exposure: 0.08
+  contrast: 1.15
+  saturation: 0.95
+  temperature: 18
+  tint: 8
+  highlights: -10
+  shadows: 15
+  vibrance: 0
+  clarity: -5
+  dehaze: 0
+grain:
+  amount: 25
+  size: 1.5
