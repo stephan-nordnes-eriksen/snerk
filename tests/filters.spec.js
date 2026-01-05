@@ -135,7 +135,14 @@ test.beforeEach(async ({ page, electronApp }) => {
   }, testFolder);
 
   await page.locator('#openFolder').click();
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
+
+  await page.waitForFunction(() => {
+    const img = document.getElementById('mainImage');
+    return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+  }, {}, { timeout: 10000 });
+
+  await page.waitForTimeout(500);
 });
 
 test.afterEach(async () => {
