@@ -12,7 +12,7 @@ function debounce(func, wait) {
 
 const fileManager = new FileManager();
 const presetManager = new PresetManager();
-const imageProcessor = new ImageProcessor();
+const imageProcessor = new ImageProcessor(document.getElementById('mainImage'));
 const exportConfigManager = new ExportConfigManager();
 const presetPinManager = new PresetPinManager();
 const settingsManager = new SettingsManager();
@@ -396,11 +396,10 @@ async function loadCurrentImage(resetZoom = true) {
 
     updateActivePresetUI(pinnedPresetName, activePreset);
 
-    const imageData = activePreset
-      ? await imageProcessor.applyPresetToImage(currentImage, activePreset, state.presetStrength)
-      : await imageProcessor.loadImage(currentImage);
+    await (activePreset
+      ? imageProcessor.applyPresetToImage(currentImage, activePreset, state.presetStrength)
+      : imageProcessor.loadImage(currentImage));
 
-    elements.mainImage.src = imageData.src;
     elements.mainImage.classList.add('loaded');
 
     if (resetZoom) {
@@ -1361,11 +1360,10 @@ async function updateEditorPreview() {
   const config = getEditorPresetConfig();
 
   try {
-    const imageData = await imageProcessor.applyPresetToImage(
+    await imageProcessor.applyPresetToImage(
       fileManager.getCurrentImage(),
       config
     );
-    elements.mainImage.src = imageData.src;
   } catch (error) {
     console.error('Error updating editor preview:', error);
   } finally {

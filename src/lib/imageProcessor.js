@@ -1,12 +1,13 @@
 class ImageProcessor {
-  constructor() {
+  constructor(canvas) {
     this.cache = new Map();
     this.webgpuProcessor = null;
+    this.canvas = canvas;
   }
 
   async initialize() {
     try {
-      this.webgpuProcessor = new WebGPUProcessor();
+      this.webgpuProcessor = new WebGPUProcessor(this.canvas);
       await this.webgpuProcessor.initialize();
       console.log('WebGPU processor initialized successfully');
     } catch (error) {
@@ -57,7 +58,7 @@ class ImageProcessor {
 
       let imageData;
       if (this.webgpuProcessor) {
-        imageData = await this.webgpuProcessor.processImage(result.data, presetConfig);
+        imageData = await this.webgpuProcessor.exportImage(result.data, presetConfig);
       } else {
         throw new Error('WebGPU processor not initialized');
       }

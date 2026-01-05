@@ -1,5 +1,5 @@
 class WebGPUProcessor {
-  constructor() {
+  constructor(canvas) {
     this.device = null;
     this.pipelines = {};
     this.shaderModules = {};
@@ -7,6 +7,9 @@ class WebGPUProcessor {
     this.currentImageKey = null;
     this.currentImageWidth = 0;
     this.currentImageHeight = 0;
+    this.canvas = canvas;
+    this.canvasContext = null;
+    this.renderPipeline = null;
   }
 
   async initialize() {
@@ -19,7 +22,16 @@ class WebGPUProcessor {
       this.device = await adapter.requestDevice();
       console.log('WebGPU device initialized successfully');
 
+      this.canvasContext = this.canvas.getContext('webgpu');
+      const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
+      this.canvasContext.configure({
+        device: this.device,
+        format: canvasFormat,
+        alphaMode: 'opaque'
+      });
+
       await this.loadShaders();
+      await this.createRenderPipeline(canvasFormat);
       return true;
     } catch (error) {
       console.error('WebGPU initialization failed:', error);
@@ -86,6 +98,70 @@ class WebGPUProcessor {
     }
   }
 
+  async createRenderPipeline(canvasFormat) {
+    const shaderCode = `
+      struct VertexOutput {
+        @builtin(position) position: vec4<f32>,
+        @location(0) texCoord: vec2<f32>,
+      };
+
+      @vertex
+      fn vertexMain(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+        var pos = array<vec2<f32>, 6>(
+          vec2<f32>(-1.0, -1.0),
+          vec2<f32>(1.0, -1.0),
+          vec2<f32>(-1.0, 1.0),
+          vec2<f32>(-1.0, 1.0),
+          vec2<f32>(1.0, -1.0),
+          vec2<f32>(1.0, 1.0)
+        );
+        var texCoord = array<vec2<f32>, 6>(
+          vec2<f32>(0.0, 1.0),
+          vec2<f32>(1.0, 1.0),
+          vec2<f32>(0.0, 0.0),
+          vec2<f32>(0.0, 0.0),
+          vec2<f32>(1.0, 1.0),
+          vec2<f32>(1.0, 0.0)
+        );
+        var output: VertexOutput;
+        output.position = vec4<f32>(pos[vertexIndex], 0.0, 1.0);
+        output.texCoord = texCoord[vertexIndex];
+        return output;
+      }
+
+      @group(0) @binding(0) var textureSampler: sampler;
+      @group(0) @binding(1) var inputTexture: texture_2d<f32>;
+
+      @fragment
+      fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
+        return textureSample(inputTexture, textureSampler, input.texCoord);
+      }
+    `;
+
+    const shaderModule = this.device.createShaderModule({
+      code: shaderCode,
+      label: 'display_shader'
+    });
+
+    this.renderPipeline = this.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: shaderModule,
+        entryPoint: 'vertexMain'
+      },
+      fragment: {
+        module: shaderModule,
+        entryPoint: 'fragmentMain',
+        targets: [{
+          format: canvasFormat
+        }]
+      },
+      primitive: {
+        topology: 'triangle-list'
+      }
+    });
+  }
+
   async processImage(base64Data, presetConfig, strength = 1.0) {
     try {
       const imageKey = base64Data.substring(0, 100);
@@ -108,27 +184,25 @@ class WebGPUProcessor {
       width = this.currentImageWidth;
       height = this.currentImageHeight;
 
-      if (!presetConfig || !presetConfig.adjustments) {
-        const canvas = await this.textureToCanvas(this.currentInputTexture, width, height);
-        const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+      this.canvas.width = width;
+      this.canvas.height = height;
 
-        return {
-          src: dataURL,
-          width: width,
-          height: height
-        };
+      let textureToRender;
+
+      if (!presetConfig || !presetConfig.adjustments) {
+        textureToRender = this.currentInputTexture;
+      } else {
+        textureToRender = await this.applyPreset(this.currentInputTexture, presetConfig, width, height, strength);
       }
 
-      const outputTexture = await this.applyPreset(this.currentInputTexture, presetConfig, width, height, strength);
-      const canvas = await this.textureToCanvas(outputTexture, width, height);
-      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+      this.renderTextureToCanvas(textureToRender);
 
-      await this.device.queue.onSubmittedWorkDone();
-
-      outputTexture.destroy();
+      if (textureToRender !== this.currentInputTexture) {
+        await this.device.queue.onSubmittedWorkDone();
+        textureToRender.destroy();
+      }
 
       return {
-        src: dataURL,
         width: width,
         height: height
       };
@@ -136,6 +210,78 @@ class WebGPUProcessor {
       console.error('Error in WebGPU processing:', error);
       throw error;
     }
+  }
+
+  async exportImage(base64Data, presetConfig, strength = 1.0) {
+    try {
+      const imageBlob = this.base64ToBlob(base64Data);
+      const imageBitmap = await createImageBitmap(imageBlob);
+
+      const inputTexture = this.createTextureFromBitmap(imageBitmap);
+      const width = imageBitmap.width;
+      const height = imageBitmap.height;
+
+      let outputTexture;
+
+      if (!presetConfig || !presetConfig.adjustments) {
+        outputTexture = inputTexture;
+      } else {
+        outputTexture = await this.applyPreset(inputTexture, presetConfig, width, height, strength);
+      }
+
+      const canvas = await this.textureToCanvas(outputTexture, width, height);
+      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+      await this.device.queue.onSubmittedWorkDone();
+
+      inputTexture.destroy();
+      if (outputTexture !== inputTexture) {
+        outputTexture.destroy();
+      }
+
+      return {
+        src: dataURL,
+        width: width,
+        height: height
+      };
+    } catch (error) {
+      console.error('Error in WebGPU export:', error);
+      throw error;
+    }
+  }
+
+  renderTextureToCanvas(texture) {
+    const sampler = this.device.createSampler({
+      magFilter: 'linear',
+      minFilter: 'linear'
+    });
+
+    const bindGroup = this.device.createBindGroup({
+      layout: this.renderPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: sampler },
+        { binding: 1, resource: texture.createView() }
+      ]
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    const textureView = this.canvasContext.getCurrentTexture().createView();
+
+    const renderPass = commandEncoder.beginRenderPass({
+      colorAttachments: [{
+        view: textureView,
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        loadOp: 'clear',
+        storeOp: 'store'
+      }]
+    });
+
+    renderPass.setPipeline(this.renderPipeline);
+    renderPass.setBindGroup(0, bindGroup);
+    renderPass.draw(6);
+    renderPass.end();
+
+    this.device.queue.submit([commandEncoder.finish()]);
   }
 
   async applyPreset(inputTexture, config, width, height, strength = 1.0) {
