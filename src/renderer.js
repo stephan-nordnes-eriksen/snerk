@@ -1823,17 +1823,13 @@ elements.zoomSensitivitySlider.addEventListener('input', async (e) => {
   elements.zoomSensitivityValue.textContent = sensitivity.toFixed(1);
   await settingsManager.setZoomSensitivity(sensitivity);
 });
-const debouncedLoadCurrentImage = debounce(async () => {
-  if (fileManager.getCurrentImage()) {
-    await loadCurrentImage(false);
-  }
-}, 150);
-
-elements.presetStrengthSlider.addEventListener('input', (e) => {
+elements.presetStrengthSlider.addEventListener('input', async (e) => {
   const strength = parseInt(e.target.value) / 100;
   state.presetStrength = strength;
   elements.presetStrengthValue.textContent = `${e.target.value}%`;
-  debouncedLoadCurrentImage();
+  if (fileManager.getCurrentImage()) {
+    await loadCurrentImage(false);
+  }
 });
 elements.togglePresetPanel.addEventListener('click', togglePresetPanel);
 elements.manageExportConfigsBtn.addEventListener('click', showExportConfigDialog);
