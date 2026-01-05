@@ -135,14 +135,12 @@ test.beforeEach(async ({ page, electronApp }) => {
   }, testFolder);
 
   await page.locator('#openFolder').click();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1200);
 
   await page.waitForFunction(() => {
     const img = document.getElementById('mainImage');
     return img && img.naturalWidth > 0 && img.naturalHeight > 0;
   }, {}, { timeout: 10000 });
-
-  await page.waitForTimeout(500);
 });
 
 test.afterEach(async () => {
@@ -191,20 +189,17 @@ async function getImageData(page) {
 }
 
 async function applyPreset(page, presetName) {
-  await page.waitForTimeout(1000);
-
   const testFiltersCategory = page.locator('.preset-category', { has: page.locator('summary:has-text("test filters")') });
   const isOpen = await testFiltersCategory.evaluate(el => el.open);
 
   if (!isOpen) {
     await testFiltersCategory.locator('summary').click();
-    await page.waitForTimeout(300);
   }
 
   const presetBtn = page.locator('.preset-btn', { hasText: presetName });
   await presetBtn.waitFor({ state: 'visible', timeout: 10000 });
   await presetBtn.click();
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(1500);
 
   await page.waitForFunction(() => {
     const img = document.getElementById('mainImage');
@@ -224,9 +219,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).toBeGreaterThan(originalData.avgG);
     expect(filteredData.avgB).toBeGreaterThan(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/exposure-up.png' });
   });
 
   test('should apply exposure decrease filter', async ({ page }) => {
@@ -240,9 +232,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).toBeLessThan(originalData.avgG);
     expect(filteredData.avgB).toBeLessThan(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/exposure-down.png' });
   });
 
   test('should apply contrast increase filter', async ({ page }) => {
@@ -256,9 +245,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).not.toBe(originalData.avgG);
     expect(filteredData.avgB).not.toBe(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/contrast-up.png' });
   });
 
   test('should apply contrast decrease filter', async ({ page }) => {
@@ -272,9 +258,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).not.toBe(originalData.avgG);
     expect(filteredData.avgB).not.toBe(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/contrast-down.png' });
   });
 
   test('should apply saturation zero filter (black and white)', async ({ page }) => {
@@ -289,9 +272,6 @@ test.describe('Filter Verification', () => {
     expect(Math.abs(filteredData.avgG - filteredData.avgB)).toBeLessThan(tolerance);
     expect(Math.abs(filteredData.avgR - filteredData.avgB)).toBeLessThan(tolerance);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/saturation-zero.png' });
   });
 
   test('should apply saturation increase filter', async ({ page }) => {
@@ -305,9 +285,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).not.toBe(originalData.avgG);
     expect(filteredData.avgB).not.toBe(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/saturation-up.png' });
   });
 
   test('should apply temperature warm filter', async ({ page }) => {
@@ -320,9 +297,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
     expect(filteredData.avgB).toBeLessThan(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/temperature-warm.png' });
   });
 
   test('should apply temperature cool filter', async ({ page }) => {
@@ -335,9 +309,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgR).not.toBe(originalData.avgR);
     expect(filteredData.avgB).not.toBe(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/temperature-cool.png' });
   });
 
   test('should apply tint green filter', async ({ page }) => {
@@ -350,9 +321,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgR).not.toBe(originalData.avgR);
     expect(filteredData.avgG).not.toBe(originalData.avgG);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/tint-green.png' });
   });
 
   test('should apply tint magenta filter', async ({ page }) => {
@@ -365,9 +333,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgR).not.toBe(originalData.avgR);
     expect(filteredData.avgG).not.toBe(originalData.avgG);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/tint-magenta.png' });
   });
 
   test('should apply vibrance filter', async ({ page }) => {
@@ -379,9 +344,6 @@ test.describe('Filter Verification', () => {
 
     expect(filteredData.avgR).not.toBe(originalData.avgR);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/vibrance.png' });
   });
 
   test('should apply shadows filter', async ({ page }) => {
@@ -395,9 +357,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).toBeGreaterThan(originalData.avgG);
     expect(filteredData.avgB).toBeGreaterThan(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/shadows.png' });
   });
 
   test('should apply highlights filter', async ({ page }) => {
@@ -411,9 +370,6 @@ test.describe('Filter Verification', () => {
     expect(filteredData.avgG).not.toBe(originalData.avgG);
     expect(filteredData.avgB).not.toBe(originalData.avgB);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/highlights.png' });
   });
 
   test('should apply whites filter', async ({ page }) => {
@@ -425,9 +381,6 @@ test.describe('Filter Verification', () => {
 
     expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/whites.png' });
   });
 
   test('should apply blacks filter', async ({ page }) => {
@@ -439,9 +392,6 @@ test.describe('Filter Verification', () => {
 
     expect(filteredData.avgR).toBeLessThan(originalData.avgR);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/blacks.png' });
   });
 
   test('should apply dehaze filter', async ({ page }) => {
@@ -453,8 +403,5 @@ test.describe('Filter Verification', () => {
 
     expect(filteredData.avgR).not.toBe(originalData.avgR);
 
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/dehaze.png' });
   });
 });
