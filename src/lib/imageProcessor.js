@@ -41,14 +41,25 @@ class ImageProcessor {
         return await this.loadImage(imagePath);
       }
 
-      const cacheKey = `preset_${imagePath}_${JSON.stringify(presetConfig)}_${strength}`;
+      const presetKey = JSON.stringify(presetConfig);
+      const cacheKey = `preset_${imagePath}_${presetKey}_${strength}`;
 
       if (this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
-      const result = await window.snerkAPI.loadImagePreview(imagePath);
-      const imageData = await this.webgpuProcessor.processImage(result.data, presetConfig, strength);
+      const base64CacheKey = `base64_${imagePath}`;
+      let base64Data;
+
+      if (this.cache.has(base64CacheKey)) {
+        base64Data = this.cache.get(base64CacheKey);
+      } else {
+        const result = await window.snerkAPI.loadImagePreview(imagePath);
+        base64Data = result.data;
+        this.cache.set(base64CacheKey, base64Data);
+      }
+
+      const imageData = await this.webgpuProcessor.processImage(base64Data, presetConfig, strength);
 
       this.cache.set(cacheKey, imageData);
 

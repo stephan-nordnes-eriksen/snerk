@@ -3,6 +3,7 @@ class WebGPUProcessor {
     this.device = null;
     this.pipelines = {};
     this.shaderModules = {};
+    this.bitmapCache = new Map();
   }
 
   async initialize() {
@@ -84,8 +85,21 @@ class WebGPUProcessor {
 
   async processImage(base64Data, presetConfig, strength = 1.0) {
     try {
-      const imageBlob = this.base64ToBlob(base64Data);
-      const imageBitmap = await createImageBitmap(imageBlob);
+      const bitmapCacheKey = base64Data.substring(0, 100);
+      let imageBitmap;
+
+      if (this.bitmapCache.has(bitmapCacheKey)) {
+        imageBitmap = this.bitmapCache.get(bitmapCacheKey);
+      } else {
+        const imageBlob = this.base64ToBlob(base64Data);
+        imageBitmap = await createImageBitmap(imageBlob);
+        this.bitmapCache.set(bitmapCacheKey, imageBitmap);
+
+        if (this.bitmapCache.size > 10) {
+          const firstKey = this.bitmapCache.keys().next().value;
+          this.bitmapCache.delete(firstKey);
+        }
+      }
 
       if (!presetConfig || !presetConfig.adjustments) {
         const canvas = this.bitmapToCanvas(imageBitmap);
