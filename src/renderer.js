@@ -200,12 +200,31 @@ function renderPresets() {
     buttonContainer.className = 'preset-buttons';
 
     for (const preset of visiblePresets) {
+      const row = document.createElement('div');
+      row.className = 'preset-row';
+
       const button = document.createElement('button');
       button.className = 'preset-btn secondary';
       button.textContent = preset.name;
       button.dataset.presetName = preset.name;
       button.onclick = () => selectPreset(preset.name);
-      buttonContainer.appendChild(button);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'preset-edit-btn outline secondary';
+      editBtn.innerHTML = '⚙';
+      editBtn.title = 'Edit profile';
+      editBtn.dataset.presetName = preset.name;
+      editBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (!state.currentPreset || state.currentPreset.name !== preset.name) {
+          await selectPreset(preset.name);
+        }
+        showCurrentPresetConfig();
+      };
+
+      row.appendChild(button);
+      row.appendChild(editBtn);
+      buttonContainer.appendChild(row);
     }
 
     details.appendChild(buttonContainer);

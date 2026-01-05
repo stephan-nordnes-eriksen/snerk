@@ -186,6 +186,7 @@ footer {
   display: flex;
   gap: 0.5rem;
   align-items: stretch;
+  position: relative;
 }
 
 .preset-btn {
@@ -216,6 +217,27 @@ footer {
 }
 
 .rename-btn:hover {
+  background-color: var(--pico-primary-hover);
+}
+
+.preset-edit-btn {
+  padding: 0.5rem;
+  margin: 0;
+  min-width: auto;
+  width: 2.5rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.preset-row:has(.preset-btn.active) .preset-edit-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.preset-edit-btn:hover {
   background-color: var(--pico-primary-hover);
 }
 
