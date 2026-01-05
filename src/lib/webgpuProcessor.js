@@ -3,6 +3,10 @@ class WebGPUProcessor {
     this.device = null;
     this.pipelines = {};
     this.shaderModules = {};
+    this.currentInputTexture = null;
+    this.currentImageKey = null;
+    this.currentImageWidth = 0;
+    this.currentImageHeight = 0;
   }
 
   async initialize() {
@@ -84,34 +88,49 @@ class WebGPUProcessor {
 
   async processImage(base64Data, presetConfig, strength = 1.0) {
     try {
-      const imageBlob = this.base64ToBlob(base64Data);
-      const imageBitmap = await createImageBitmap(imageBlob);
+      const imageKey = base64Data.substring(0, 100);
+      let width, height;
+
+      if (this.currentImageKey !== imageKey) {
+        if (this.currentInputTexture) {
+          this.currentInputTexture.destroy();
+        }
+
+        const imageBlob = this.base64ToBlob(base64Data);
+        const imageBitmap = await createImageBitmap(imageBlob);
+
+        this.currentInputTexture = this.createTextureFromBitmap(imageBitmap);
+        this.currentImageKey = imageKey;
+        this.currentImageWidth = imageBitmap.width;
+        this.currentImageHeight = imageBitmap.height;
+      }
+
+      width = this.currentImageWidth;
+      height = this.currentImageHeight;
 
       if (!presetConfig || !presetConfig.adjustments) {
-        const canvas = this.bitmapToCanvas(imageBitmap);
+        const canvas = await this.textureToCanvas(this.currentInputTexture, width, height);
         const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
         return {
           src: dataURL,
-          width: imageBitmap.width,
-          height: imageBitmap.height
+          width: width,
+          height: height
         };
       }
 
-      const inputTexture = this.createTextureFromBitmap(imageBitmap);
-      const outputTexture = await this.applyPreset(inputTexture, presetConfig, imageBitmap.width, imageBitmap.height, strength);
-      const canvas = await this.textureToCanvas(outputTexture, imageBitmap.width, imageBitmap.height);
+      const outputTexture = await this.applyPreset(this.currentInputTexture, presetConfig, width, height, strength);
+      const canvas = await this.textureToCanvas(outputTexture, width, height);
       const dataURL = canvas.toDataURL('image/jpeg', 0.9);
 
       await this.device.queue.onSubmittedWorkDone();
 
-      inputTexture.destroy();
       outputTexture.destroy();
 
       return {
         src: dataURL,
-        width: imageBitmap.width,
-        height: imageBitmap.height
+        width: width,
+        height: height
       };
     } catch (error) {
       console.error('Error in WebGPU processing:', error);
@@ -674,16 +693,12 @@ class WebGPUProcessor {
     return new Blob([ab], { type: 'image/jpeg' });
   }
 
-  bitmapToCanvas(bitmap) {
-    const canvas = document.createElement('canvas');
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(bitmap, 0, 0);
-    return canvas;
-  }
-
   cleanup() {
+    if (this.currentInputTexture) {
+      this.currentInputTexture.destroy();
+      this.currentInputTexture = null;
+      this.currentImageKey = null;
+    }
     if (this.device) {
       this.device.destroy();
       this.device = null;
