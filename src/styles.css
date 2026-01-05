@@ -333,7 +333,7 @@ footer {
 
 #presetEditorPanel {
   position: absolute;
-  right: 1rem;
+  left: 1rem;
   top: 1rem;
   bottom: 1rem;
   width: 350px;
@@ -348,7 +348,7 @@ footer {
 }
 
 #presetEditorPanel.hidden {
-  transform: translateX(calc(100% + 2rem));
+  transform: translateX(calc(-100% - 2rem));
   opacity: 0;
   pointer-events: none;
 }
@@ -376,6 +376,25 @@ footer {
   margin: 0;
   flex: 1;
   min-width: auto;
+}
+
+.panel-footer-icons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.icon-btn {
+  margin: 0;
+  padding: 0.3rem 0.5rem;
+  min-width: auto;
+  width: auto;
+  font-size: 1rem;
+  line-height: 1;
+  flex: 0;
 }
 
 #controls button {

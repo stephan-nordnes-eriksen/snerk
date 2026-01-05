@@ -1379,27 +1379,27 @@ async function updateEditorPreview() {
 
 function resetPresetEditor() {
   elements.editorExposure.value = 0;
-  elements.editorExposureValue.textContent = 0;
+  elements.editorExposureValue.textContent = '0.00';
   elements.editorContrast.value = 0;
-  elements.editorContrastValue.textContent = 0;
+  elements.editorContrastValue.textContent = '0';
   elements.editorSaturation.value = 0;
-  elements.editorSaturationValue.textContent = 0;
+  elements.editorSaturationValue.textContent = '0';
   elements.editorShadows.value = 0;
-  elements.editorShadowsValue.textContent = 0;
+  elements.editorShadowsValue.textContent = '0';
   elements.editorHighlights.value = 0;
-  elements.editorHighlightsValue.textContent = 0;
+  elements.editorHighlightsValue.textContent = '0';
   elements.editorTemperature.value = 0;
-  elements.editorTemperatureValue.textContent = 0;
+  elements.editorTemperatureValue.textContent = '0';
   elements.editorTint.value = 0;
-  elements.editorTintValue.textContent = 0;
+  elements.editorTintValue.textContent = '0';
   elements.editorVibrance.value = 0;
-  elements.editorVibranceValue.textContent = 0;
+  elements.editorVibranceValue.textContent = '0';
   elements.editorClarity.value = 0;
-  elements.editorClarityValue.textContent = 0;
+  elements.editorClarityValue.textContent = '0';
   elements.editorTexture.value = 0;
-  elements.editorTextureValue.textContent = 0;
+  elements.editorTextureValue.textContent = '0';
   elements.editorDehaze.value = 0;
-  elements.editorDehazeValue.textContent = 0;
+  elements.editorDehazeValue.textContent = '0';
 
   if (curveEditors.rgb) curveEditors.rgb.reset();
   if (curveEditors.r) curveEditors.r.reset();
@@ -1581,42 +1581,51 @@ function populateEditorWithPreset(preset) {
   const adj = preset.adjustments;
 
   // Populate all sliders with preset values or defaults
-  elements.editorExposure.value = adj.exposure || 0;
-  elements.editorExposureValue.textContent = adj.exposure || 0;
+  const exposureValue = adj.exposure || 0;
+  elements.editorExposure.value = exposureValue;
+  elements.editorExposureValue.textContent = exposureValue.toFixed(2);
 
   // Contrast needs conversion from multiplier to slider range
   const contrastValue = adj.contrast !== undefined ? (adj.contrast - 1) * 100 : 0;
   elements.editorContrast.value = contrastValue;
-  elements.editorContrastValue.textContent = contrastValue;
+  elements.editorContrastValue.textContent = Math.round(contrastValue);
 
   // Saturation needs conversion from multiplier to slider range
   const saturationValue = adj.saturation !== undefined ? (adj.saturation - 1) * 100 : 0;
   elements.editorSaturation.value = saturationValue;
-  elements.editorSaturationValue.textContent = saturationValue;
+  elements.editorSaturationValue.textContent = Math.round(saturationValue);
 
-  elements.editorShadows.value = adj.shadows || 0;
-  elements.editorShadowsValue.textContent = adj.shadows || 0;
+  const shadowsValue = adj.shadows || 0;
+  elements.editorShadows.value = shadowsValue;
+  elements.editorShadowsValue.textContent = Math.round(shadowsValue);
 
-  elements.editorHighlights.value = adj.highlights || 0;
-  elements.editorHighlightsValue.textContent = adj.highlights || 0;
+  const highlightsValue = adj.highlights || 0;
+  elements.editorHighlights.value = highlightsValue;
+  elements.editorHighlightsValue.textContent = Math.round(highlightsValue);
 
-  elements.editorTemperature.value = adj.temperature || 0;
-  elements.editorTemperatureValue.textContent = adj.temperature || 0;
+  const temperatureValue = adj.temperature || 0;
+  elements.editorTemperature.value = temperatureValue;
+  elements.editorTemperatureValue.textContent = Math.round(temperatureValue);
 
-  elements.editorTint.value = adj.tint || 0;
-  elements.editorTintValue.textContent = adj.tint || 0;
+  const tintValue = adj.tint || 0;
+  elements.editorTint.value = tintValue;
+  elements.editorTintValue.textContent = Math.round(tintValue);
 
-  elements.editorVibrance.value = adj.vibrance || 0;
-  elements.editorVibranceValue.textContent = adj.vibrance || 0;
+  const vibranceValue = adj.vibrance || 0;
+  elements.editorVibrance.value = vibranceValue;
+  elements.editorVibranceValue.textContent = Math.round(vibranceValue);
 
-  elements.editorClarity.value = adj.clarity || 0;
-  elements.editorClarityValue.textContent = adj.clarity || 0;
+  const clarityValue = adj.clarity || 0;
+  elements.editorClarity.value = clarityValue;
+  elements.editorClarityValue.textContent = Math.round(clarityValue);
 
-  elements.editorTexture.value = adj.texture || 0;
-  elements.editorTextureValue.textContent = adj.texture || 0;
+  const textureValue = adj.texture || 0;
+  elements.editorTexture.value = textureValue;
+  elements.editorTextureValue.textContent = Math.round(textureValue);
 
-  elements.editorDehaze.value = adj.dehaze || 0;
-  elements.editorDehazeValue.textContent = adj.dehaze || 0;
+  const dehazeValue = adj.dehaze || 0;
+  elements.editorDehaze.value = dehazeValue;
+  elements.editorDehazeValue.textContent = Math.round(dehazeValue);
 
   if (preset.curves) {
     if (curveEditors.rgb && preset.curves.rgb) curveEditors.rgb.setPoints(preset.curves.rgb);
@@ -1969,7 +1978,10 @@ function requestPreviewUpdate() {
     // Update the value display immediately
     const valueElement = document.getElementById(slider.id + 'Value');
     if (valueElement) {
-      valueElement.textContent = e.target.value;
+      const value = parseFloat(e.target.value);
+      valueElement.textContent = slider.step && parseFloat(slider.step) < 1
+        ? value.toFixed(2)
+        : Math.round(value);
     }
     // Request preview update - it will handle smart queueing
     requestPreviewUpdate();
@@ -2183,6 +2195,14 @@ function endPan() {
 }
 
 document.addEventListener('keydown', (e) => {
+  // Handle Escape key to close preset editor panel
+  if (e.key === 'Escape' && !elements.presetEditorPanel.classList.contains('hidden')) {
+    e.preventDefault();
+    elements.presetEditorPanel.classList.add('hidden');
+    loadCurrentImage(false);
+    return;
+  }
+
   // Don't handle shortcuts when in input fields or dialogs
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
     return;
