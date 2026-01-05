@@ -360,18 +360,16 @@ footer {
 }
 
 #presetEditorContent label {
-  display: block;
-  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
   font-size: 0.9rem;
 }
 
 #presetEditorContent input[type="range"] {
-  margin: 0.25rem 0;
-}
-
-#presetEditorContent small {
-  font-size: 0.8rem;
-  margin-top: 0.1rem;
+  margin: 0 0 1rem 0;
+  width: 100%;
 }
 
 .panel-footer {
@@ -405,6 +403,10 @@ footer {
   font-size: 1rem;
   line-height: 1;
   flex: 0;
+}
+
+#updatePresetBtn {
+  margin-left: auto;
 }
 
 #controls button {
@@ -488,7 +490,11 @@ label small {
 }
 
 #presetEditorContent label small {
-  margin-top: 0.1rem;
+  display: inline;
+  margin: 0;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
 nav ul {

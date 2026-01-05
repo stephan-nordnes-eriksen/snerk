@@ -16,7 +16,7 @@
     <img id="mainImage" alt="Photo preview" />
     <div id="emptyState">
       <p>Open a folder to begin viewing photos</p>
-      <button class="secondary" onclick="document.getElementById('openFolder').click()">
+      <button class="secondary" onclick="document.getElementById('openFolder').click()" title="Open Folder (Cmd/Ctrl+O)">
         Open Folder
       </button>
     </div>
@@ -26,17 +26,17 @@
     <header class="container-fluid">
       <nav>
         <ul>
-          <li><button id="openFolder" class="secondary">Open Folder</button></li>
+          <li><button id="openFolder" class="secondary" title="Open Folder (Cmd/Ctrl+O)">Open Folder</button></li>
           <li>
             <details role="list" id="exportDropdown">
-              <summary aria-haspopup="listbox" class="contrast" id="exportDropdownBtn" disabled>Export</summary>
+              <summary aria-haspopup="listbox" class="contrast" id="exportDropdownBtn" disabled title="Export (Cmd/Ctrl+E)">Export</summary>
               <ul role="listbox">
                 <li><a id="exportCurrentBtn">Current</a></li>
                 <li><a id="exportBtn">All</a></li>
               </ul>
             </details>
           </li>
-          <li><button id="settingsBtn" class="outline secondary">Settings</button></li>
+          <li><button id="settingsBtn" class="outline secondary" title="Settings">Settings</button></li>
         </ul>
       </nav>
     </header>
@@ -44,7 +44,7 @@
     <aside id="presetPanel">
       <div class="panel-header">
         <h3>Color Profiles</h3>
-        <button id="togglePresetPanel" class="outline secondary" aria-label="Toggle panel">◀</button>
+        <button id="togglePresetPanel" class="outline secondary" aria-label="Toggle panel" title="Toggle panel">◀</button>
       </div>
 
       <div id="presetPanelContent">
@@ -67,17 +67,17 @@
     </aside>
 
     <div id="controls">
-      <button id="prevImage" disabled aria-label="Previous image">◀</button>
+      <button id="prevImage" disabled aria-label="Previous image" title="Previous image (← or [)">◀</button>
       <div id="imageInfo">
         <div id="imageCounter">No images loaded</div>
         <small id="imagePath"></small>
       </div>
-      <button id="nextImage" disabled aria-label="Next image">▶</button>
+      <button id="nextImage" disabled aria-label="Next image" title="Next image (→ or ])">▶</button>
     </div>
 
     <div id="rightActions">
-      <button id="zoomFitBtn" class="outline secondary" title="Fit to window">Fit</button>
-      <button id="zoom100Btn" class="outline secondary" title="1:1 pixel zoom">1:1</button>
+      <button id="zoomFitBtn" class="outline secondary" title="Fit to window (Alt+0)">Fit</button>
+      <button id="zoom100Btn" class="outline secondary" title="1:1 pixel zoom (Z)">1:1</button>
       <button id="bwModeBtn" class="outline secondary" title="Toggle black-and-white mode (B)">B&W</button>
       <button id="pinPresetBtn" class="outline secondary" disabled title="Pin current profile to this image">
         📌
@@ -85,7 +85,7 @@
       <button id="showConfigBtn" class="outline secondary" disabled title="Show profile configuration">
         ⚙
       </button>
-      <button id="showShortcutsBtn" class="outline secondary" title="Show keyboard shortcuts">
+      <button id="showShortcutsBtn" class="outline secondary" title="Show keyboard shortcuts (?)">
         ?
       </button>
     </div>
@@ -93,74 +93,74 @@
     <aside id="presetEditorPanel" class="hidden">
       <div class="panel-header">
         <h3>Profile Editor</h3>
-        <button id="closePresetEditor" class="outline secondary" aria-label="Close">×</button>
+        <button id="closePresetEditor" class="outline secondary" aria-label="Close" title="Close (Esc)">×</button>
       </div>
       <div id="presetEditorContent">
         <label>
-          Exposure
-          <input type="range" id="editorExposure" min="-2" max="2" step="0.1" value="0">
+          <span>Exposure</span>
           <small id="editorExposureValue">0</small>
         </label>
+        <input type="range" id="editorExposure" min="-2" max="2" step="0.1" value="0">
 
         <label>
-          Contrast
-          <input type="range" id="editorContrast" min="-100" max="100" step="1" value="0">
+          <span>Contrast</span>
           <small id="editorContrastValue">0</small>
         </label>
+        <input type="range" id="editorContrast" min="-100" max="100" step="1" value="0">
 
         <label>
-          Saturation
-          <input type="range" id="editorSaturation" min="-100" max="100" step="1" value="0">
+          <span>Saturation</span>
           <small id="editorSaturationValue">0</small>
         </label>
+        <input type="range" id="editorSaturation" min="-100" max="100" step="1" value="0">
 
         <label>
-          Shadows
-          <input type="range" id="editorShadows" min="-100" max="100" step="1" value="0">
+          <span>Shadows</span>
           <small id="editorShadowsValue">0</small>
         </label>
+        <input type="range" id="editorShadows" min="-100" max="100" step="1" value="0">
 
         <label>
-          Highlights
-          <input type="range" id="editorHighlights" min="-100" max="100" step="1" value="0">
+          <span>Highlights</span>
           <small id="editorHighlightsValue">0</small>
         </label>
+        <input type="range" id="editorHighlights" min="-100" max="100" step="1" value="0">
 
         <label>
-          Temperature
-          <input type="range" id="editorTemperature" min="-100" max="100" step="1" value="0">
+          <span>Temperature</span>
           <small id="editorTemperatureValue">0</small>
         </label>
+        <input type="range" id="editorTemperature" min="-100" max="100" step="1" value="0">
 
         <label>
-          Tint
-          <input type="range" id="editorTint" min="-150" max="150" step="1" value="0">
+          <span>Tint</span>
           <small id="editorTintValue">0</small>
         </label>
+        <input type="range" id="editorTint" min="-150" max="150" step="1" value="0">
 
         <label>
-          Vibrance
-          <input type="range" id="editorVibrance" min="-100" max="100" step="1" value="0">
+          <span>Vibrance</span>
           <small id="editorVibranceValue">0</small>
         </label>
+        <input type="range" id="editorVibrance" min="-100" max="100" step="1" value="0">
 
         <label>
-          Clarity
-          <input type="range" id="editorClarity" min="-100" max="100" step="1" value="0">
+          <span>Clarity</span>
           <small id="editorClarityValue">0</small>
         </label>
+        <input type="range" id="editorClarity" min="-100" max="100" step="1" value="0">
 
         <label>
-          Texture
-          <input type="range" id="editorTexture" min="-100" max="100" step="1" value="0">
+          <span>Texture</span>
           <small id="editorTextureValue">0</small>
         </label>
+        <input type="range" id="editorTexture" min="-100" max="100" step="1" value="0">
 
         <label>
-          Dehaze
-          <input type="range" id="editorDehaze" min="-100" max="100" step="1" value="0">
+          <span>Dehaze</span>
           <small id="editorDehazeValue">0</small>
         </label>
+        <input type="range" id="editorDehaze" min="-100" max="100" step="1" value="0">
 
         <details>
           <summary>Tone Curves (Advanced)</summary>
@@ -178,22 +178,22 @@
               <canvas id="curveEditorB" class="curve-canvas"></canvas>
             </div>
             <div class="curve-controls">
-              <button type="button" id="resetCurrentCurve" class="secondary">Reset Curve</button>
+              <button type="button" id="resetCurrentCurve" class="secondary" title="Reset current curve to default">Reset Curve</button>
               <small>Double-click to add/remove points. Drag to move points.</small>
             </div>
           </div>
         </details>
       </div>
       <div class="panel-footer">
-        <button id="copyToCustomBtn" class="hidden">Copy to Custom</button>
-        <button id="savePresetEditorBtn">Save as Profile</button>
+        <button id="copyToCustomBtn" class="hidden" title="Copy current settings to Custom category">Copy to Custom</button>
+        <button id="savePresetEditorBtn" title="Save current settings as a new profile">Save as Profile</button>
       </div>
       <div class="panel-footer-icons">
         <button id="resetPresetEditorBtn" class="icon-btn outline secondary" title="Reset All">↺</button>
-        <button id="updatePresetBtn" class="icon-btn hidden" title="Update Profile">✓</button>
         <button id="renamePresetBtn" class="icon-btn outline secondary hidden" title="Rename Profile">✎</button>
         <button id="deletePresetBtn" class="icon-btn outline secondary hidden" title="Delete Profile" style="color: #d32f2f;">🗑</button>
         <button id="cancelPresetEditorBtn" class="icon-btn secondary" title="Cancel">✕</button>
+        <button id="updatePresetBtn" class="icon-btn hidden" title="Update Profile">✓</button>
       </div>
     </aside>
 
@@ -240,10 +240,10 @@
         </label>
       </div>
       <footer>
-        <button id="saveExportConfigBtn" class="outline secondary">Save Config</button>
-        <button id="deleteExportConfigBtn" class="outline secondary hidden" style="color: #d32f2f;">Delete Config</button>
-        <button id="cancelExportConfigBtn" class="secondary">Cancel</button>
-        <button id="confirmExportBtn">Export</button>
+        <button id="saveExportConfigBtn" class="outline secondary" title="Save current export settings as a named configuration">Save Config</button>
+        <button id="deleteExportConfigBtn" class="outline secondary hidden" style="color: #d32f2f;" title="Delete selected export configuration">Delete Config</button>
+        <button id="cancelExportConfigBtn" class="secondary" title="Cancel export">Cancel</button>
+        <button id="confirmExportBtn" title="Start export with current settings">Export</button>
       </footer>
     </article>
   </dialog>
@@ -251,7 +251,7 @@
   <dialog id="exportProgressDialog">
     <article>
       <header>
-        <button aria-label="Close" rel="prev" id="closeExportDialog"></button>
+        <button aria-label="Close" rel="prev" id="closeExportDialog" title="Close export progress"></button>
         <h3>Exporting Images</h3>
       </header>
       <div>
@@ -273,8 +273,8 @@
         </label>
       </div>
       <footer>
-        <button id="renameCancelBtn" class="secondary">Cancel</button>
-        <button id="renameConfirmBtn">OK</button>
+        <button id="renameCancelBtn" class="secondary" title="Cancel">Cancel</button>
+        <button id="renameConfirmBtn" title="Confirm">OK</button>
       </footer>
     </article>
   </dialog>
@@ -286,10 +286,10 @@
       </header>
       <div>
         <h4>Folders</h4>
-        <button id="openSnerkFolderBtn" class="outline">Open Snerk Folder</button>
+        <button id="openSnerkFolderBtn" class="outline" title="Open Snerk configuration folder in file browser">Open Snerk Folder</button>
 
         <h4 style="margin-top: 2rem;">Export Settings</h4>
-        <button id="manageExportConfigsBtn" class="outline">Manage Export Configs</button>
+        <button id="manageExportConfigsBtn" class="outline" title="Manage saved export configurations">Manage Export Configs</button>
 
         <h4 style="margin-top: 2rem;">Zoom Settings</h4>
         <label for="zoomSensitivitySlider">
@@ -306,7 +306,7 @@
         </div>
       </div>
       <footer>
-        <button id="settingsCloseBtn">Close</button>
+        <button id="settingsCloseBtn" title="Close settings">Close</button>
       </footer>
     </article>
   </dialog>
@@ -354,7 +354,7 @@
         </table>
       </div>
       <footer>
-        <button id="shortcutsCloseBtn">Close</button>
+        <button id="shortcutsCloseBtn" title="Close shortcuts help">Close</button>
       </footer>
     </article>
   </dialog>
@@ -369,7 +369,7 @@
         <div id="presetVisibilityList"></div>
       </div>
       <footer>
-        <button id="presetVisibilityCloseBtn">Close</button>
+        <button id="presetVisibilityCloseBtn" title="Close profile visibility settings">Close</button>
       </footer>
     </article>
   </dialog>
