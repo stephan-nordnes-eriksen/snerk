@@ -98,58 +98,10 @@ adjustments:
   }
 });
 
-test.beforeEach(async ({ page, electronApp }) => {
-  testFolder = path.join(os.tmpdir(), `snerk-test-${Date.now()}`);
-  fs.mkdirSync(testFolder, { recursive: true });
-
-  const Canvas = require('canvas');
-  const canvas = Canvas.createCanvas(400, 300);
-  const ctx = canvas.getContext('2d');
-
-  const gradient = ctx.createLinearGradient(0, 0, 400, 0);
-  gradient.addColorStop(0, '#FF0000');
-  gradient.addColorStop(0.25, '#00FF00');
-  gradient.addColorStop(0.5, '#0000FF');
-  gradient.addColorStop(0.75, '#FFFF00');
-  gradient.addColorStop(1, '#FF00FF');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 400, 300);
-
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(50, 50, 100, 100);
-
-  ctx.fillStyle = '#808080';
-  ctx.fillRect(200, 50, 100, 100);
-
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(125, 150, 150, 100);
-
-  const buffer = canvas.toBuffer('image/jpeg', { quality: 0.95 });
-  fs.writeFileSync(path.join(testFolder, 'test-image.jpg'), buffer);
-
-  await electronApp.evaluate(async ({ dialog }, folderPath) => {
-    dialog.showOpenDialog = async () => ({
-      canceled: false,
-      filePaths: [folderPath]
-    });
-  }, testFolder);
-
-  await page.locator('#openFolder').click();
-  await page.waitForTimeout(1200);
-
-  await page.waitForFunction(() => {
-    const img = document.getElementById('mainImage');
-    return img && img.naturalWidth > 0 && img.naturalHeight > 0;
-  }, {}, { timeout: 10000 });
-});
-
-test.afterEach(async () => {
+test.afterAll(async () => {
   if (testFolder && fs.existsSync(testFolder)) {
     fs.rmSync(testFolder, { recursive: true, force: true });
   }
-});
-
-test.afterAll(async () => {
   if (testPresetsFolder && fs.existsSync(testPresetsFolder)) {
     fs.rmSync(testPresetsFolder, { recursive: true, force: true });
   }
@@ -188,220 +140,196 @@ async function getImageData(page) {
   });
 }
 
-async function applyPreset(page, presetName) {
-  const testFiltersCategory = page.locator('.preset-category', { has: page.locator('summary:has-text("test filters")') });
-  const isOpen = await testFiltersCategory.evaluate(el => el.open);
-
-  if (!isOpen) {
-    await testFiltersCategory.locator('summary').click();
-  }
-
-  const presetBtn = page.locator('.preset-btn', { hasText: presetName });
-  await presetBtn.waitFor({ state: 'visible', timeout: 10000 });
-  await presetBtn.click();
-  await page.waitForTimeout(1500);
-
-  await page.waitForFunction(() => {
-    const img = document.getElementById('mainImage');
-    return img && img.naturalWidth > 0 && img.naturalHeight > 0;
-  }, {}, { timeout: 10000 });
-}
-
 test.describe('Filter Verification', () => {
-  test('should apply exposure increase filter', async ({ page }) => {
+  test('should apply all filters correctly in sequence', async ({ page, electronApp }) => {
+    testFolder = path.join(os.tmpdir(), `snerk-test-${Date.now()}`);
+    fs.mkdirSync(testFolder, { recursive: true });
+
+    const Canvas = require('canvas');
+    const canvas = Canvas.createCanvas(400, 300);
+    const ctx = canvas.getContext('2d');
+
+    const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+    gradient.addColorStop(0, '#FF0000');
+    gradient.addColorStop(0.25, '#00FF00');
+    gradient.addColorStop(0.5, '#0000FF');
+    gradient.addColorStop(0.75, '#FFFF00');
+    gradient.addColorStop(1, '#FF00FF');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 400, 300);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(50, 50, 100, 100);
+
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(200, 50, 100, 100);
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(125, 150, 150, 100);
+
+    const buffer = canvas.toBuffer('image/png');
+    fs.writeFileSync(path.join(testFolder, 'test-image.png'), buffer);
+
+    await electronApp.evaluate(async ({ dialog }, folderPath) => {
+      dialog.showOpenDialog = async () => ({
+        canceled: false,
+        filePaths: [folderPath]
+      });
+    }, testFolder);
+
+    await page.locator('#openFolder').click();
+    await page.waitForTimeout(1200);
+
+    await page.waitForFunction(() => {
+      const img = document.getElementById('mainImage');
+      return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+    }, {}, { timeout: 10000 });
+
     const originalData = await getImageData(page);
 
-    await applyPreset(page, 'Test Exposure Up');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
-    expect(filteredData.avgG).toBeGreaterThan(originalData.avgG);
-    expect(filteredData.avgB).toBeGreaterThan(originalData.avgB);
-
-  });
-
-  test('should apply exposure decrease filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Exposure Down');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeLessThan(originalData.avgR);
-    expect(filteredData.avgG).toBeLessThan(originalData.avgG);
-    expect(filteredData.avgB).toBeLessThan(originalData.avgB);
-
-  });
-
-  test('should apply contrast increase filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Contrast Up');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-    expect(filteredData.avgB).not.toBe(originalData.avgB);
-
-  });
-
-  test('should apply contrast decrease filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Contrast Down');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-    expect(filteredData.avgB).not.toBe(originalData.avgB);
-
-  });
-
-  test('should apply saturation zero filter (black and white)', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Saturation Zero');
-
-    const filteredData = await getImageData(page);
-
-    const tolerance = 2;
-    expect(Math.abs(filteredData.avgR - filteredData.avgG)).toBeLessThan(tolerance);
-    expect(Math.abs(filteredData.avgG - filteredData.avgB)).toBeLessThan(tolerance);
-    expect(Math.abs(filteredData.avgR - filteredData.avgB)).toBeLessThan(tolerance);
-
-  });
-
-  test('should apply saturation increase filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Saturation Up');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-    expect(filteredData.avgB).not.toBe(originalData.avgB);
-
-  });
-
-  test('should apply temperature warm filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Temperature Warm');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
-    expect(filteredData.avgB).toBeLessThan(originalData.avgB);
-
-  });
-
-  test('should apply temperature cool filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Temperature Cool');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgB).not.toBe(originalData.avgB);
-
-  });
-
-  test('should apply tint green filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Tint Green');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-
-  });
-
-  test('should apply tint magenta filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Tint Magenta');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-
-  });
-
-  test('should apply vibrance filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Vibrance');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-
-  });
-
-  test('should apply shadows filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Shadows');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
-    expect(filteredData.avgG).toBeGreaterThan(originalData.avgG);
-    expect(filteredData.avgB).toBeGreaterThan(originalData.avgB);
-
-  });
-
-  test('should apply highlights filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Highlights');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-    expect(filteredData.avgG).not.toBe(originalData.avgG);
-    expect(filteredData.avgB).not.toBe(originalData.avgB);
-
-  });
-
-  test('should apply whites filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Whites');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeGreaterThan(originalData.avgR);
-
-  });
-
-  test('should apply blacks filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Blacks');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).toBeLessThan(originalData.avgR);
-
-  });
-
-  test('should apply dehaze filter', async ({ page }) => {
-    const originalData = await getImageData(page);
-
-    await applyPreset(page, 'Test Dehaze');
-
-    const filteredData = await getImageData(page);
-
-    expect(filteredData.avgR).not.toBe(originalData.avgR);
-
+    async function applyPreset(presetName) {
+      const testFiltersCategory = page.locator('.preset-category', { has: page.locator('summary:has-text("test filters")') });
+      const isOpen = await testFiltersCategory.evaluate(el => el.open);
+
+      if (!isOpen) {
+        await testFiltersCategory.locator('summary').click();
+      }
+
+      const presetBtn = page.locator('.preset-btn', { hasText: presetName });
+      await presetBtn.waitFor({ state: 'visible', timeout: 10000 });
+      await presetBtn.click();
+      await page.waitForTimeout(1500);
+
+      await page.waitForFunction(() => {
+        const img = document.getElementById('mainImage');
+        return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+      }, {}, { timeout: 10000 });
+    }
+
+    const filterTests = [
+      {
+        name: 'Test Exposure Up',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeGreaterThan(original.avgR);
+          expect(filtered.avgG).toBeGreaterThan(original.avgG);
+          expect(filtered.avgB).toBeGreaterThan(original.avgB);
+        }
+      },
+      {
+        name: 'Test Exposure Down',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeLessThan(original.avgR);
+          expect(filtered.avgG).toBeLessThan(original.avgG);
+          expect(filtered.avgB).toBeLessThan(original.avgB);
+        }
+      },
+      {
+        name: 'Test Contrast Up',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+          expect(filtered.avgB).not.toBe(original.avgB);
+        }
+      },
+      {
+        name: 'Test Contrast Down',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+          expect(filtered.avgB).not.toBe(original.avgB);
+        }
+      },
+      {
+        name: 'Test Saturation Zero',
+        test: (filtered) => {
+          const tolerance = 2;
+          expect(Math.abs(filtered.avgR - filtered.avgG)).toBeLessThan(tolerance);
+          expect(Math.abs(filtered.avgG - filtered.avgB)).toBeLessThan(tolerance);
+          expect(Math.abs(filtered.avgR - filtered.avgB)).toBeLessThan(tolerance);
+        }
+      },
+      {
+        name: 'Test Saturation Up',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+          expect(filtered.avgB).not.toBe(original.avgB);
+        }
+      },
+      {
+        name: 'Test Temperature Warm',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeGreaterThan(original.avgR);
+          expect(filtered.avgB).toBeLessThan(original.avgB);
+        }
+      },
+      {
+        name: 'Test Temperature Cool',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgB).not.toBe(original.avgB);
+        }
+      },
+      {
+        name: 'Test Tint Green',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+        }
+      },
+      {
+        name: 'Test Tint Magenta',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+        }
+      },
+      {
+        name: 'Test Vibrance',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+        }
+      },
+      {
+        name: 'Test Shadows',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeGreaterThan(original.avgR);
+          expect(filtered.avgG).toBeGreaterThan(original.avgG);
+          expect(filtered.avgB).toBeGreaterThan(original.avgB);
+        }
+      },
+      {
+        name: 'Test Highlights',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+          expect(filtered.avgG).not.toBe(original.avgG);
+          expect(filtered.avgB).not.toBe(original.avgB);
+        }
+      },
+      {
+        name: 'Test Whites',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeGreaterThan(original.avgR);
+        }
+      },
+      {
+        name: 'Test Blacks',
+        test: (filtered, original) => {
+          expect(filtered.avgR).toBeLessThan(original.avgR);
+        }
+      },
+      {
+        name: 'Test Dehaze',
+        test: (filtered, original) => {
+          expect(filtered.avgR).not.toBe(original.avgR);
+        }
+      }
+    ];
+
+    for (const filterTest of filterTests) {
+      await applyPreset(filterTest.name);
+      const filteredData = await getImageData(page);
+      filterTest.test(filteredData, originalData);
+    }
   });
 });
