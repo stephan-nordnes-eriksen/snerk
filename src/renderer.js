@@ -24,6 +24,7 @@ const state = {
   currentPreset: null,
   presets: [],
   presetStrength: 1.0,
+  bwMode: false,
   zoom: {
     level: 1,
     minLevel: 0.05,
@@ -124,6 +125,7 @@ const elements = {
   settingsCloseBtn: document.getElementById('settingsCloseBtn'),
   zoomFitBtn: document.getElementById('zoomFitBtn'),
   zoom100Btn: document.getElementById('zoom100Btn'),
+  bwModeBtn: document.getElementById('bwModeBtn'),
   pinPresetBtn: document.getElementById('pinPresetBtn'),
   infoOverlay: document.getElementById('infoOverlay'),
   infoPathValue: document.getElementById('infoPathValue'),
@@ -349,11 +351,29 @@ async function loadCurrentImage(resetZoom = true) {
     updatePinButton();
 
     const pinnedPresetName = presetPinManager.getPinnedPreset(currentImage);
-    const activePreset = state.previewMode.isActive
+    let activePreset = state.previewMode.isActive
       ? null
       : (pinnedPresetName
         ? presetManager.getPresetByName(pinnedPresetName)
         : state.currentPreset);
+
+    if (state.bwMode) {
+      const bwAdjustment = { saturation: 0 };
+      if (activePreset) {
+        activePreset = {
+          ...activePreset,
+          adjustments: {
+            ...activePreset.adjustments,
+            ...bwAdjustment
+          }
+        };
+      } else {
+        activePreset = {
+          name: 'B&W',
+          adjustments: bwAdjustment
+        };
+      }
+    }
 
     updateActivePresetUI(pinnedPresetName, activePreset);
 
@@ -1818,6 +1838,7 @@ elements.closePresetEditor.addEventListener('click', () => {
 });
 elements.zoomFitBtn.addEventListener('click', zoomFitToWindow);
 elements.zoom100Btn.addEventListener('click', zoom100Percent);
+elements.bwModeBtn.addEventListener('click', toggleBWMode);
 elements.pinPresetBtn.addEventListener('click', togglePinPreset);
 
 elements.exportQuality.addEventListener('input', (e) => {
@@ -2051,6 +2072,22 @@ function rotateImageRight() {
   applyZoom();
 }
 
+async function toggleBWMode() {
+  state.bwMode = !state.bwMode;
+
+  if (state.bwMode) {
+    elements.bwModeBtn.classList.add('active');
+    updateStatus('Black-and-white mode enabled');
+  } else {
+    elements.bwModeBtn.classList.remove('active');
+    updateStatus('Black-and-white mode disabled');
+  }
+
+  if (fileManager.getCurrentImage()) {
+    await loadCurrentImage(false);
+  }
+}
+
 function handleWheel(e) {
   if (!elements.mainImage.classList.contains('loaded')) return;
 
@@ -2264,6 +2301,13 @@ document.addEventListener('keydown', (e) => {
       if (!isDialogOpen) {
         e.preventDefault();
         rotateImageRight();
+      }
+      break;
+    case 'b':
+    case 'B':
+      if (!isDialogOpen) {
+        e.preventDefault();
+        toggleBWMode();
       }
       break;
     default:
