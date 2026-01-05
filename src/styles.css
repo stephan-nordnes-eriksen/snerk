@@ -1,6 +1,6 @@
 :root {
   --viewer-bg: var(--pico-background-color);
-  --ui-bg: rgba(0, 0, 0, 1);
+  --ui-bg: rgba(0, 0, 0, 0.1);
   --ui-backdrop: rgba(0, 0, 0, 0.3);
 }
 
@@ -108,6 +108,7 @@ footer {
 
 .panel-header h3 {
   margin: 0;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 1);
 }
 
 .panel-header button {
@@ -305,6 +306,7 @@ footer {
   min-width: auto;
   font-size: 1.5rem;
   line-height: 1;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 1);
 }
 
 #presetEditorPanel {
@@ -420,7 +422,7 @@ details summary {
   margin-bottom: 0.5rem;
 }
 
-details[open] {
+details {
   margin-top: 1rem;
   margin-bottom: 2rem;
   padding: 1rem;
@@ -436,6 +438,13 @@ label small {
 
 nav ul {
   margin: 0;
+  background: var(--ui-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 0.5rem;
+}
+
+nav ul li .secondary {
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 1);
 }
 
 header nav {
@@ -451,6 +460,7 @@ nav details[role="list"] {
 nav details[role="list"] summary {
   margin: 0;
   padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 
 nav details[role="list"] ul {

@@ -12,3 +12,6 @@ todo:
 - [x] allow whole sections to be added/hidden in the manage visible profiles dialog
 - [x] The Strength slider does not work. Any value other than 100% produces a completely black image. It should apply the filter at percentages, so 50% means that the filter is only applied 50%, so black-and-white becomes not fully black and white until it is at 100%. 0% is effectively the same as not enabling the filter.
 - [x] Allow panning even when you start to drag on the black area outside of the picture, but make sure that you cannot pan the image fully outside of the view
+- [ ] black-and-white temporary setting to work without colors to get "tonality" right
+- [ ] The buttons must be visible when opening the settings for a profile.
+- [ ] Open the color profile settings on the left side, over the "color profiles" panel. Move the edit-button for the color profiles next to the selected profile, but make the button only visible when the profile is selected
