@@ -17,18 +17,8 @@ class ImageProcessor {
 
   async loadImage(imagePath) {
     try {
-      const cacheKey = `preview_${imagePath}`;
-
-      if (this.cache.has(cacheKey)) {
-        return this.cache.get(cacheKey);
-      }
-
-      const result = await window.snerkAPI.loadImagePreview(imagePath);
-      const imageData = await this.webgpuProcessor.processImage(result.data, null, 1.0);
-
-      this.cache.set(cacheKey, imageData);
-
-      return imageData;
+      const base64Data = await this.getBase64Data(imagePath);
+      return await this.webgpuProcessor.processImage(base64Data, null, 1.0);
     } catch (error) {
       console.error('Error loading image:', error);
       throw error;
@@ -41,33 +31,24 @@ class ImageProcessor {
         return await this.loadImage(imagePath);
       }
 
-      const presetKey = JSON.stringify(presetConfig);
-      const cacheKey = `preset_${imagePath}_${presetKey}_${strength}`;
-
-      if (this.cache.has(cacheKey)) {
-        return this.cache.get(cacheKey);
-      }
-
-      const base64CacheKey = `base64_${imagePath}`;
-      let base64Data;
-
-      if (this.cache.has(base64CacheKey)) {
-        base64Data = this.cache.get(base64CacheKey);
-      } else {
-        const result = await window.snerkAPI.loadImagePreview(imagePath);
-        base64Data = result.data;
-        this.cache.set(base64CacheKey, base64Data);
-      }
-
-      const imageData = await this.webgpuProcessor.processImage(base64Data, presetConfig, strength);
-
-      this.cache.set(cacheKey, imageData);
-
-      return imageData;
+      const base64Data = await this.getBase64Data(imagePath);
+      return await this.webgpuProcessor.processImage(base64Data, presetConfig, strength);
     } catch (error) {
       console.error('Error applying preset:', error);
       throw error;
     }
+  }
+
+  async getBase64Data(imagePath) {
+    const cacheKey = `base64_${imagePath}`;
+
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const result = await window.snerkAPI.loadImagePreview(imagePath);
+    this.cache.set(cacheKey, result.data);
+    return result.data;
   }
 
   async exportImage(imagePath, presetConfig, outputPath, format = 'jpeg', quality = 90, rotation = 0) {
