@@ -109,18 +109,35 @@ test.afterAll(async () => {
 
 async function getImageData(page) {
   await page.waitForFunction(() => {
-    const img = document.getElementById('mainImage');
-    return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+    const canvas = document.getElementById('mainImage');
+    return canvas && canvas.width > 0 && canvas.height > 0;
   }, {}, { timeout: 10000 });
 
-  return await page.evaluate(() => {
-    const img = document.getElementById('mainImage');
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d');
+  return await page.evaluate(async () => {
+    const sourceCanvas = document.getElementById('mainImage');
+
+    // Wait for GPU queue to finish rendering
+    if (window.imageProcessor && window.imageProcessor.webgpuProcessor && window.imageProcessor.webgpuProcessor.device) {
+      await window.imageProcessor.webgpuProcessor.device.queue.onSubmittedWorkDone();
+    }
+
+    // Convert canvas to blob, then to ImageData
+    const blob = await new Promise(resolve => sourceCanvas.toBlob(resolve));
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = URL.createObjectURL(blob);
+    });
+
+    // Create a 2D canvas to read pixel data
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = img.width;
+    tempCanvas.height = img.height;
+    const ctx = tempCanvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
 
     let rSum = 0, gSum = 0, bSum = 0;
     for (let i = 0; i < imageData.data.length; i += 4) {
@@ -130,12 +147,14 @@ async function getImageData(page) {
     }
     const pixelCount = imageData.data.length / 4;
 
+    URL.revokeObjectURL(img.src);
+
     return {
       avgR: rSum / pixelCount,
       avgG: gSum / pixelCount,
       avgB: bSum / pixelCount,
-      width: canvas.width,
-      height: canvas.height
+      width: tempCanvas.width,
+      height: tempCanvas.height
     };
   });
 }
@@ -181,8 +200,8 @@ test.describe('Filter Verification', () => {
     await page.waitForTimeout(1200);
 
     await page.waitForFunction(() => {
-      const img = document.getElementById('mainImage');
-      return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+      const canvas = document.getElementById('mainImage');
+      return canvas && canvas.width > 0 && canvas.height > 0;
     }, {}, { timeout: 10000 });
 
     const originalData = await getImageData(page);
@@ -201,8 +220,8 @@ test.describe('Filter Verification', () => {
       await page.waitForTimeout(1500);
 
       await page.waitForFunction(() => {
-        const img = document.getElementById('mainImage');
-        return img && img.naturalWidth > 0 && img.naturalHeight > 0;
+        const canvas = document.getElementById('mainImage');
+        return canvas && canvas.width > 0 && canvas.height > 0;
       }, {}, { timeout: 10000 });
     }
 
