@@ -1821,10 +1821,23 @@ elements.zoomSensitivitySlider.addEventListener('input', async (e) => {
   elements.zoomSensitivityValue.textContent = sensitivity.toFixed(1);
   await settingsManager.setZoomSensitivity(sensitivity);
 });
+elements.zoomSensitivitySlider.addEventListener('dblclick', async () => {
+  elements.zoomSensitivitySlider.value = 0.3;
+  elements.zoomSensitivityValue.textContent = '0.3';
+  await settingsManager.setZoomSensitivity(0.3);
+});
 elements.presetStrengthSlider.addEventListener('input', async (e) => {
   const strength = parseInt(e.target.value) / 100;
   state.presetStrength = strength;
   elements.presetStrengthValue.textContent = `${e.target.value}%`;
+  if (fileManager.getCurrentImage()) {
+    await loadCurrentImage(false);
+  }
+});
+elements.presetStrengthSlider.addEventListener('dblclick', async () => {
+  elements.presetStrengthSlider.value = 100;
+  state.presetStrength = 1;
+  elements.presetStrengthValue.textContent = '100%';
   if (fileManager.getCurrentImage()) {
     await loadCurrentImage(false);
   }
@@ -1869,6 +1882,10 @@ elements.pinPresetBtn.addEventListener('click', togglePinPreset);
 
 elements.exportQuality.addEventListener('input', (e) => {
   elements.qualityValue.textContent = e.target.value;
+});
+elements.exportQuality.addEventListener('dblclick', () => {
+  elements.exportQuality.value = 90;
+  elements.qualityValue.textContent = '90';
 });
 
 // Real-time preview for preset editor sliders with smart state checking
@@ -1982,6 +1999,18 @@ function requestPreviewUpdate() {
         : Math.round(value);
     }
     // Request preview update - it will handle smart queueing
+    requestPreviewUpdate();
+  });
+
+  // Double-click to reset to default (0 for all editor sliders)
+  slider.addEventListener('dblclick', () => {
+    slider.value = 0;
+    const valueElement = document.getElementById(slider.id + 'Value');
+    if (valueElement) {
+      valueElement.textContent = slider.step && parseFloat(slider.step) < 1
+        ? '0.00'
+        : '0';
+    }
     requestPreviewUpdate();
   });
 });
