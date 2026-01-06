@@ -249,6 +249,8 @@ class WebGPUProcessor {
       const width = imageBitmap.width;
       const height = imageBitmap.height;
 
+      // Let GC handle bitmap cleanup
+
       let outputTexture;
 
       if (!presetConfig || !presetConfig.adjustments) {
@@ -798,16 +800,11 @@ class WebGPUProcessor {
              GPUTextureUsage.RENDER_ATTACHMENT
     });
 
-    try {
-      this.device.queue.copyExternalImageToTexture(
-        { source: bitmap, flipY: false },
-        { texture: texture },
-        [bitmap.width, bitmap.height]
-      );
-    } catch (error) {
-      texture.destroy();
-      throw new Error(`Failed to copy bitmap to texture (${bitmap.width}x${bitmap.height}): ${error.message}`);
-    }
+    this.device.queue.copyExternalImageToTexture(
+      { source: bitmap, flipY: false },
+      { texture: texture },
+      [bitmap.width, bitmap.height]
+    );
 
     return texture;
   }
@@ -873,6 +870,7 @@ class WebGPUProcessor {
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
+    // Don't specify type - let createImageBitmap auto-detect from file header
     return new Blob([ab]);
   }
 
