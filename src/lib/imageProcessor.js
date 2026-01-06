@@ -3,21 +3,37 @@ class ImageProcessor {
     this.cache = new Map();
     this.webgpuProcessor = null;
     this.canvas = canvas;
+    this.initPromise = null;
   }
 
   async initialize() {
-    try {
-      this.webgpuProcessor = new WebGPUProcessor(this.canvas);
-      await this.webgpuProcessor.initialize();
-      console.log('WebGPU processor initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize WebGPU processor:', error);
-      throw new Error('WebGPU is required but not available. Please use a browser that supports WebGPU.');
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = (async () => {
+      try {
+        this.webgpuProcessor = new WebGPUProcessor(this.canvas);
+        await this.webgpuProcessor.initialize();
+        console.log('WebGPU processor initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize WebGPU processor:', error);
+        throw new Error('WebGPU is required but not available. Please use a browser that supports WebGPU.');
+      }
+    })();
+
+    return this.initPromise;
+  }
+
+  async ensureInitialized() {
+    if (!this.webgpuProcessor) {
+      await this.initialize();
     }
   }
 
   async loadImage(imagePath) {
     try {
+      await this.ensureInitialized();
       const base64Data = await this.getBase64Data(imagePath);
       return await this.webgpuProcessor.processImage(base64Data, null, 1.0);
     } catch (error) {
@@ -28,6 +44,7 @@ class ImageProcessor {
 
   async applyPresetToImage(imagePath, presetConfig, strength = 1.0) {
     try {
+      await this.ensureInitialized();
       if (!presetConfig || !presetConfig.adjustments) {
         return await this.loadImage(imagePath);
       }

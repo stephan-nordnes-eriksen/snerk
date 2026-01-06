@@ -163,6 +163,10 @@ class WebGPUProcessor {
   }
 
   async processImage(base64Data, presetConfig, strength = 1.0) {
+    if (!this.device || !this.renderPipeline) {
+      throw new Error('WebGPU not initialized. Call initialize() first.');
+    }
+
     try {
       const imageKey = base64Data.substring(0, 100);
       let width, height;

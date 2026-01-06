@@ -417,6 +417,7 @@ async function loadCurrentImage(resetZoom = true) {
   } catch (error) {
     console.error('Error loading image:', error);
     updateStatus('Error loading image');
+    updateNavigationButtons();
   }
 }
 

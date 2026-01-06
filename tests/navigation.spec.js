@@ -5,7 +5,7 @@ const os = require('os');
 
 let testFolder;
 
-test.beforeEach(async () => {
+test.beforeEach(async ({ page }) => {
   testFolder = path.join(os.tmpdir(), `snerk-test-${Date.now()}`);
   fs.mkdirSync(testFolder, { recursive: true });
 
