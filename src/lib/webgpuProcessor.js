@@ -168,6 +168,8 @@ class WebGPUProcessor {
       let width, height;
 
       if (this.currentImageKey !== imageKey) {
+        await this.device.queue.onSubmittedWorkDone();
+
         if (this.currentInputTexture) {
           this.currentInputTexture.destroy();
         }
@@ -184,8 +186,15 @@ class WebGPUProcessor {
       width = this.currentImageWidth;
       height = this.currentImageHeight;
 
-      this.canvas.width = width;
-      this.canvas.height = height;
+      if (this.canvas.width !== width || this.canvas.height !== height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.canvasContext.configure({
+          device: this.device,
+          format: navigator.gpu.getPreferredCanvasFormat(),
+          alphaMode: 'opaque'
+        });
+      }
 
       let textureToRender;
 
@@ -197,8 +206,9 @@ class WebGPUProcessor {
 
       this.renderTextureToCanvas(textureToRender);
 
+      await this.device.queue.onSubmittedWorkDone();
+
       if (textureToRender !== this.currentInputTexture) {
-        await this.device.queue.onSubmittedWorkDone();
         textureToRender.destroy();
       }
 
