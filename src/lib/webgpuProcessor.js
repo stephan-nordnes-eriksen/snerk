@@ -4,6 +4,7 @@ class WebGPUProcessor {
     this.pipelines = {};
     this.shaderModules = {};
     this.currentInputTexture = null;
+    this.currentImageBitmap = null;
     this.currentImageKey = null;
     this.currentImageWidth = 0;
     this.currentImageHeight = 0;
@@ -178,17 +179,27 @@ class WebGPUProcessor {
           this.currentInputTexture.destroy();
         }
 
+        if (this.currentImageBitmap) {
+          this.currentImageBitmap.close();
+          this.currentImageBitmap = null;
+        }
+
         const imageBlob = this.base64ToBlob(base64Data);
+        console.log('[WebGPU] Created blob:', imageBlob.size, 'bytes, type:', imageBlob.type);
+
         const imageBitmap = await createImageBitmap(imageBlob, {
           premultiplyAlpha: 'none',
-          colorSpaceConversion: 'none'
+          imageOrientation: 'from-image'
         });
+
+        console.log('[WebGPU] Created ImageBitmap:', imageBitmap.width, 'x', imageBitmap.height);
 
         if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
           throw new Error(`Failed to create valid ImageBitmap: ${imageBitmap?.width}x${imageBitmap?.height}`);
         }
 
         this.currentInputTexture = this.createTextureFromBitmap(imageBitmap);
+        this.currentImageBitmap = imageBitmap;
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
@@ -234,11 +245,12 @@ class WebGPUProcessor {
   }
 
   async exportImage(base64Data, presetConfig, strength = 1.0) {
+    let imageBitmap = null;
     try {
       const imageBlob = this.base64ToBlob(base64Data);
-      const imageBitmap = await createImageBitmap(imageBlob, {
+      imageBitmap = await createImageBitmap(imageBlob, {
         premultiplyAlpha: 'none',
-        colorSpaceConversion: 'none'
+        imageOrientation: 'from-image'
       });
 
       if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
@@ -248,8 +260,6 @@ class WebGPUProcessor {
       const inputTexture = this.createTextureFromBitmap(imageBitmap);
       const width = imageBitmap.width;
       const height = imageBitmap.height;
-
-      // Let GC handle bitmap cleanup
 
       let outputTexture;
 
@@ -269,6 +279,10 @@ class WebGPUProcessor {
         outputTexture.destroy();
       }
 
+      if (imageBitmap) {
+        imageBitmap.close();
+      }
+
       return {
         src: dataURL,
         width: width,
@@ -276,6 +290,9 @@ class WebGPUProcessor {
       };
     } catch (error) {
       console.error('Error in WebGPU export:', error);
+      if (imageBitmap) {
+        imageBitmap.close();
+      }
       throw error;
     }
   }
@@ -791,6 +808,8 @@ class WebGPUProcessor {
       throw new Error(`Invalid bitmap dimensions: ${bitmap?.width}x${bitmap?.height}`);
     }
 
+    console.log('[WebGPU] Creating texture from bitmap:', bitmap.width, 'x', bitmap.height, 'Type:', bitmap.constructor.name);
+
     const texture = this.device.createTexture({
       size: [bitmap.width, bitmap.height],
       format: 'rgba8unorm',
@@ -800,11 +819,20 @@ class WebGPUProcessor {
              GPUTextureUsage.RENDER_ATTACHMENT
     });
 
-    this.device.queue.copyExternalImageToTexture(
-      { source: bitmap, flipY: false },
-      { texture: texture },
-      [bitmap.width, bitmap.height]
-    );
+    console.log('[WebGPU] Created GPU texture, copying bitmap data...');
+
+    try {
+      this.device.queue.copyExternalImageToTexture(
+        { source: bitmap, flipY: false },
+        { texture: texture },
+        [bitmap.width, bitmap.height]
+      );
+      console.log('[WebGPU] Successfully copied bitmap to texture');
+    } catch (error) {
+      console.error('[WebGPU] Copy failed:', error.message);
+      texture.destroy();
+      throw error;
+    }
 
     return texture;
   }
@@ -879,6 +907,10 @@ class WebGPUProcessor {
       this.currentInputTexture.destroy();
       this.currentInputTexture = null;
       this.currentImageKey = null;
+    }
+    if (this.currentImageBitmap) {
+      this.currentImageBitmap.close();
+      this.currentImageBitmap = null;
     }
     if (this.device) {
       this.device.destroy();
