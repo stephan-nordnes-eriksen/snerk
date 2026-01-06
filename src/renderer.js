@@ -599,8 +599,9 @@ function drawHistogram() {
   const canvas = elements.histogramCanvas;
   const ctx = canvas.getContext('2d');
   const img = elements.mainImage;
+  const { width: intrinsicWidth, height: intrinsicHeight } = getIntrinsicImageDimensions();
 
-  if (!img.complete || !img.naturalWidth) {
+  if (!elements.mainImage.classList.contains('loaded') || !intrinsicWidth || !intrinsicHeight) {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -613,8 +614,8 @@ function drawHistogram() {
   const tempCanvas = document.createElement('canvas');
   const tempCtx = tempCanvas.getContext('2d');
 
-  tempCanvas.width = Math.min(img.naturalWidth, 1000);
-  tempCanvas.height = Math.min(img.naturalHeight, 1000);
+  tempCanvas.width = Math.min(intrinsicWidth, 1000);
+  tempCanvas.height = Math.min(intrinsicHeight, 1000);
 
   tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
@@ -2076,7 +2077,32 @@ function togglePresetPanel() {
   elements.togglePresetPanel.textContent = isCollapsed ? '▶' : '◀';
 }
 
+function getIntrinsicImageDimensions() {
+  const canvas = elements.mainImage;
+  if (!canvas) {
+    return { width: 0, height: 0 };
+  }
+  const width = canvas.width || canvas.naturalWidth || 0;
+  const height = canvas.height || canvas.naturalHeight || 0;
+  return { width, height };
+}
+
+function clampZoomLevel(level) {
+  if (!Number.isFinite(level) || level <= 0) {
+    return 1;
+  }
+  return Math.min(Math.max(level, state.zoom.minLevel), state.zoom.maxLevel);
+}
+
+function resetPanState() {
+  state.zoom.panX = 0;
+  state.zoom.panY = 0;
+  state.zoom.isPanning = false;
+  elements.mainImage.style.cursor = 'grab';
+}
+
 function applyZoom() {
+  state.zoom.level = clampZoomLevel(state.zoom.level);
   const { level, panX, panY } = state.zoom;
   const currentImage = fileManager.getCurrentImage();
   const rotation = currentImage ? (state.rotations.get(currentImage) || 0) : 0;
@@ -2087,26 +2113,26 @@ function applyZoom() {
 function zoomIn() {
   const sensitivity = settingsManager.getZoomSensitivity();
   const step = state.zoom.step * sensitivity;
-  state.zoom.level = Math.min(state.zoom.level + step, state.zoom.maxLevel);
+  const currentLevel = clampZoomLevel(state.zoom.level);
+  state.zoom.level = clampZoomLevel(currentLevel + step);
   applyZoom();
 }
 
 function zoomOut() {
   const sensitivity = settingsManager.getZoomSensitivity();
   const step = state.zoom.step * sensitivity;
-  state.zoom.level = Math.max(state.zoom.level - step, state.zoom.minLevel);
+  const currentLevel = clampZoomLevel(state.zoom.level);
+  state.zoom.level = clampZoomLevel(currentLevel - step);
   applyZoom();
 }
 
 function calculateFitZoomLevel() {
-  if (!elements.mainImage.naturalWidth) return 1;
+  const { width: imgWidth, height: imgHeight } = getIntrinsicImageDimensions();
+  if (!imgWidth || !imgHeight) return 1;
 
   const currentImage = fileManager.getCurrentImage();
   const rotation = currentImage ? (state.rotations.get(currentImage) || 0) : 0;
   const isRotated90or270 = rotation === 90 || rotation === 270;
-
-  const imgWidth = elements.mainImage.naturalWidth;
-  const imgHeight = elements.mainImage.naturalHeight;
 
   const effectiveWidth = isRotated90or270 ? imgHeight : imgWidth;
   const effectiveHeight = isRotated90or270 ? imgWidth : imgHeight;
@@ -2118,31 +2144,34 @@ function calculateFitZoomLevel() {
   const scaleX = containerWidth / effectiveWidth;
   const scaleY = containerHeight / effectiveHeight;
 
-  return Math.min(scaleX, scaleY);
+  const fitLevel = Math.min(scaleX, scaleY);
+  return Number.isFinite(fitLevel) && fitLevel > 0 ? fitLevel : 1;
 }
 
 function resetZoom() {
-  state.zoom.level = calculateFitZoomLevel();
-  state.zoom.panX = 0;
-  state.zoom.panY = 0;
+  state.zoom.level = clampZoomLevel(calculateFitZoomLevel());
+  resetPanState();
   applyZoom();
 }
 
 function zoomFitToWindow() {
-  state.zoom.level = calculateFitZoomLevel();
-  state.zoom.panX = 0;
-  state.zoom.panY = 0;
+  const level = clampZoomLevel(calculateFitZoomLevel());
+  state.zoom.level = level;
+  resetPanState();
+  console.log('[Zoom] Fit to window', { level });
   applyZoom();
 }
 
 function zoom100Percent() {
   if (!elements.mainImage.classList.contains('loaded')) return;
 
-  const img = elements.mainImage;
-  const naturalWidth = img.naturalWidth;
-  const naturalHeight = img.naturalHeight;
-  const displayedWidth = img.clientWidth;
-  const displayedHeight = img.clientHeight;
+  const { width: naturalWidth, height: naturalHeight } = getIntrinsicImageDimensions();
+  if (!naturalWidth || !naturalHeight) {
+    console.warn('[Zoom] Cannot perform 1:1 zoom - intrinsic size unavailable');
+    return;
+  }
+  const displayedWidth = elements.mainImage.clientWidth || naturalWidth;
+  const displayedHeight = elements.mainImage.clientHeight || naturalHeight;
 
   if (displayedWidth === 0 || displayedHeight === 0) return;
 
@@ -2150,9 +2179,9 @@ function zoom100Percent() {
   const scaleY = naturalHeight / displayedHeight;
   const scale = Math.max(scaleX, scaleY);
 
-  state.zoom.level = scale;
-  state.zoom.panX = 0;
-  state.zoom.panY = 0;
+  state.zoom.level = clampZoomLevel(scale);
+  resetPanState();
+  console.log('[Zoom] Set to 1:1', { scale: state.zoom.level });
   applyZoom();
 }
 
@@ -2240,8 +2269,7 @@ function doPan(e) {
 
   const containerWidth = elements.imageContainer.clientWidth;
   const containerHeight = elements.imageContainer.clientHeight;
-  const imageWidth = elements.mainImage.naturalWidth;
-  const imageHeight = elements.mainImage.naturalHeight;
+  const { width: imageWidth, height: imageHeight } = getIntrinsicImageDimensions();
 
   if (imageWidth && imageHeight) {
     const displayWidth = imageWidth * state.zoom.level;
@@ -2462,10 +2490,10 @@ document.addEventListener('keydown', (e) => {
         zoomFitToWindow();
       } else {
         zoom100Percent();
-        state.zoom.level = zoomLevel;
-        state.zoom.panX = 0;
-        state.zoom.panY = 0;
+        state.zoom.level = clampZoomLevel(zoomLevel);
+        resetPanState();
         applyZoom();
+        console.log('[Zoom] Alt shortcut applied', { level: state.zoom.level });
       }
     }
   }
