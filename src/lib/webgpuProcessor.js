@@ -192,6 +192,9 @@ class WebGPUProcessor {
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
+
+        await this.device.queue.onSubmittedWorkDone();
+        imageBitmap.close();
       }
 
       width = this.currentImageWidth;
@@ -249,7 +252,8 @@ class WebGPUProcessor {
       const width = imageBitmap.width;
       const height = imageBitmap.height;
 
-      // Let GC handle bitmap cleanup
+      await this.device.queue.onSubmittedWorkDone();
+      imageBitmap.close();
 
       let outputTexture;
 
@@ -800,11 +804,16 @@ class WebGPUProcessor {
              GPUTextureUsage.RENDER_ATTACHMENT
     });
 
-    this.device.queue.copyExternalImageToTexture(
-      { source: bitmap, flipY: false },
-      { texture: texture },
-      [bitmap.width, bitmap.height]
-    );
+    try {
+      this.device.queue.copyExternalImageToTexture(
+        { source: bitmap, flipY: false },
+        { texture: texture },
+        [bitmap.width, bitmap.height]
+      );
+    } catch (error) {
+      texture.destroy();
+      throw new Error(`Failed to copy bitmap to texture (${bitmap.width}x${bitmap.height}): ${error.message}`);
+    }
 
     return texture;
   }
