@@ -808,6 +808,10 @@ class WebGPUProcessor {
       throw new Error(`Invalid bitmap dimensions: ${bitmap?.width}x${bitmap?.height}`);
     }
 
+    if (bitmap.width > 16384 || bitmap.height > 16384) {
+      throw new Error(`Bitmap dimensions too large: ${bitmap.width}x${bitmap.height} (max 16384)`);
+    }
+
     console.log('[WebGPU] Creating texture from bitmap:', bitmap.width, 'x', bitmap.height, 'Type:', bitmap.constructor.name);
 
     const texture = this.device.createTexture({
@@ -829,6 +833,11 @@ class WebGPUProcessor {
       );
       console.log('[WebGPU] Successfully copied bitmap to texture');
     } catch (error) {
+      console.error('[WebGPU] Copy failed for bitmap:', {
+        width: bitmap.width,
+        height: bitmap.height,
+        type: bitmap.constructor.name
+      });
       console.error('[WebGPU] Copy failed:', error.message);
       texture.destroy();
       throw error;
