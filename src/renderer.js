@@ -362,7 +362,17 @@ async function openFolder() {
 async function loadCurrentImage(resetZoom = true) {
   const currentImage = fileManager.getCurrentImage();
 
-  if (!currentImage) return;
+  if (!currentImage) {
+    console.warn('[Navigation] loadCurrentImage called with no current image');
+    return;
+  }
+
+  const currentIndex = fileManager.getCurrentIndex();
+  console.log('[Navigation] loadCurrentImage start', {
+    path: currentImage,
+    index: currentIndex,
+    resetZoom
+  });
 
   try {
     updateImageCounter();
@@ -414,6 +424,11 @@ async function loadCurrentImage(resetZoom = true) {
     if (!elements.infoOverlay.classList.contains('hidden')) {
       await showImageInfo(currentImage);
     }
+
+    console.log('[Navigation] loadCurrentImage complete', {
+      path: currentImage,
+      index: currentIndex
+    });
   } catch (error) {
     console.error('Error loading image:', error);
     updateStatus('Error loading image');
@@ -650,12 +665,44 @@ function drawHistogram() {
 }
 
 async function navigateNext() {
-  fileManager.getNextImage();
+  const previousIndex = fileManager.getCurrentIndex();
+  const previousImage = fileManager.getCurrentImage();
+  const nextImage = fileManager.getNextImage();
+
+  if (!nextImage) {
+    console.warn('[Navigation] navigateNext called but no images available');
+    return;
+  }
+
+  const newIndex = fileManager.getCurrentIndex();
+  console.log('[Navigation] navigateNext', {
+    fromIndex: previousIndex,
+    toIndex: newIndex,
+    previousImage,
+    nextImage
+  });
+
   await loadCurrentImage(false);
 }
 
 async function navigatePrevious() {
-  fileManager.getPreviousImage();
+  const previousIndex = fileManager.getCurrentIndex();
+  const previousImage = fileManager.getCurrentImage();
+  const nextImage = fileManager.getPreviousImage();
+
+  if (!nextImage) {
+    console.warn('[Navigation] navigatePrevious called but no images available');
+    return;
+  }
+
+  const newIndex = fileManager.getCurrentIndex();
+  console.log('[Navigation] navigatePrevious', {
+    fromIndex: previousIndex,
+    toIndex: newIndex,
+    previousImage,
+    nextImage
+  });
+
   await loadCurrentImage(false);
 }
 

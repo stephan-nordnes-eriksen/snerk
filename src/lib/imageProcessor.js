@@ -35,7 +35,8 @@ class ImageProcessor {
     try {
       await this.ensureInitialized();
       const base64Data = await this.getBase64Data(imagePath);
-      return await this.webgpuProcessor.processImage(base64Data, null, 1.0);
+      console.log('[ImageProcessor] Loading image via WebGPU:', imagePath);
+      return await this.webgpuProcessor.processImage(base64Data, null, 1.0, imagePath);
     } catch (error) {
       console.error('Error loading image:', error);
       throw error;
@@ -50,7 +51,8 @@ class ImageProcessor {
       }
 
       const base64Data = await this.getBase64Data(imagePath);
-      return await this.webgpuProcessor.processImage(base64Data, presetConfig, strength);
+      console.log('[ImageProcessor] Applying preset to image:', imagePath, 'Strength:', strength);
+      return await this.webgpuProcessor.processImage(base64Data, presetConfig, strength, imagePath);
     } catch (error) {
       console.error('Error applying preset:', error);
       throw error;
@@ -61,11 +63,13 @@ class ImageProcessor {
     const cacheKey = `base64_${imagePath}`;
 
     if (this.cache.has(cacheKey)) {
+      console.log('[ImageProcessor] Cache hit for', imagePath);
       return this.cache.get(cacheKey);
     }
 
-    const result = await window.snerkAPI.loadImagePreview(imagePath);
+    const result = await window.snerkAPI.loadFullResolutionImage(imagePath);
     this.cache.set(cacheKey, result.data);
+    console.log('[ImageProcessor] Cache miss for', imagePath, '- fetched', result.data.length, 'base64 chars');
     return result.data;
   }
 

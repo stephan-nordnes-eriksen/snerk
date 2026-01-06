@@ -163,23 +163,35 @@ class WebGPUProcessor {
     });
   }
 
-  async processImage(base64Data, presetConfig, strength = 1.0) {
+  async processImage(base64Data, presetConfig, strength = 1.0, sourceKey = null) {
     if (!this.device || !this.renderPipeline) {
       throw new Error('WebGPU not initialized. Call initialize() first.');
     }
 
     try {
-      const imageKey = base64Data.substring(0, 100);
+      const imageKey = sourceKey
+        ? `${sourceKey}|${base64Data.length}`
+        : base64Data;
       let width, height;
 
-      if (this.currentImageKey !== imageKey) {
+      const isCacheHit = this.currentImageKey === imageKey;
+      console.log('[WebGPU] processImage request', {
+        sourceKey: sourceKey || '[base64]',
+        hasPreset: !!(presetConfig && presetConfig.adjustments),
+        strength,
+        cacheHit: isCacheHit
+      });
+
+      if (!isCacheHit) {
         await this.device.queue.onSubmittedWorkDone();
 
         if (this.currentInputTexture) {
+          console.log('[WebGPU] Destroying previous input texture');
           this.currentInputTexture.destroy();
         }
 
         if (this.currentImageBitmap) {
+          console.log('[WebGPU] Closing previous ImageBitmap');
           this.currentImageBitmap.close();
           this.currentImageBitmap = null;
         }
@@ -203,6 +215,8 @@ class WebGPUProcessor {
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
+      } else {
+        console.log('[WebGPU] Reusing cached texture for', sourceKey || '[base64]');
       }
 
       width = this.currentImageWidth;
@@ -234,10 +248,16 @@ class WebGPUProcessor {
         textureToRender.destroy();
       }
 
-      return {
+      const result = {
         width: width,
         height: height
       };
+      console.log('[WebGPU] Finished processing image', {
+        sourceKey: sourceKey || '[base64]',
+        width,
+        height
+      });
+      return result;
     } catch (error) {
       console.error('Error in WebGPU processing:', error);
       throw error;
