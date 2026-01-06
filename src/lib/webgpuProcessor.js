@@ -177,10 +177,17 @@ class WebGPUProcessor {
         const imageBlob = this.base64ToBlob(base64Data);
         const imageBitmap = await createImageBitmap(imageBlob);
 
+        if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
+          throw new Error(`Failed to create valid ImageBitmap: ${imageBitmap?.width}x${imageBitmap?.height}`);
+        }
+
         this.currentInputTexture = this.createTextureFromBitmap(imageBitmap);
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
+
+        await this.device.queue.onSubmittedWorkDone();
+        imageBitmap.close();
       }
 
       width = this.currentImageWidth;
@@ -227,9 +234,16 @@ class WebGPUProcessor {
       const imageBlob = this.base64ToBlob(base64Data);
       const imageBitmap = await createImageBitmap(imageBlob);
 
+      if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
+        throw new Error(`Failed to create valid ImageBitmap for export: ${imageBitmap?.width}x${imageBitmap?.height}`);
+      }
+
       const inputTexture = this.createTextureFromBitmap(imageBitmap);
       const width = imageBitmap.width;
       const height = imageBitmap.height;
+
+      await this.device.queue.onSubmittedWorkDone();
+      imageBitmap.close();
 
       let outputTexture;
 
@@ -767,6 +781,10 @@ class WebGPUProcessor {
   }
 
   createTextureFromBitmap(bitmap) {
+    if (!bitmap || bitmap.width === 0 || bitmap.height === 0) {
+      throw new Error(`Invalid bitmap dimensions: ${bitmap?.width}x${bitmap?.height}`);
+    }
+
     const texture = this.device.createTexture({
       size: [bitmap.width, bitmap.height],
       format: 'rgba8unorm',
@@ -777,7 +795,7 @@ class WebGPUProcessor {
     });
 
     this.device.queue.copyExternalImageToTexture(
-      { source: bitmap },
+      { source: bitmap, flipY: false },
       { texture: texture },
       [bitmap.width, bitmap.height]
     );
