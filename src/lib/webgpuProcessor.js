@@ -825,22 +825,37 @@ class WebGPUProcessor {
 
     console.log('[WebGPU] Created GPU texture, copying bitmap data...');
 
-    try {
+    const copyImageToTexture = (source) => {
       this.device.queue.copyExternalImageToTexture(
-        { source: bitmap, flipY: false },
-        { texture: texture },
-        [bitmap.width, bitmap.height]
+        { source, flipY: false },
+        { texture },
+        [source.width, source.height]
       );
+    };
+
+    try {
+      copyImageToTexture(bitmap);
       console.log('[WebGPU] Successfully copied bitmap to texture');
     } catch (error) {
-      console.error('[WebGPU] Copy failed for bitmap:', {
-        width: bitmap.width,
-        height: bitmap.height,
-        type: bitmap.constructor.name
-      });
-      console.error('[WebGPU] Copy failed:', error.message);
-      texture.destroy();
-      throw error;
+      console.warn('[WebGPU] Direct copy from ImageBitmap failed, attempting canvas fallback:', error.message);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        copyImageToTexture(canvas);
+        console.log('[WebGPU] Fallback copy from canvas succeeded');
+      } catch (fallbackError) {
+        console.error('[WebGPU] Copy failed for bitmap:', {
+          width: bitmap.width,
+          height: bitmap.height,
+          type: bitmap.constructor.name
+        });
+        console.error('[WebGPU] Canvas fallback also failed:', fallbackError.message);
+        texture.destroy();
+        throw fallbackError;
+      }
     }
 
     return texture;
