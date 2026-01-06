@@ -192,9 +192,6 @@ class WebGPUProcessor {
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
-
-        await this.device.queue.onSubmittedWorkDone();
-        imageBitmap.close();
       }
 
       width = this.currentImageWidth;
@@ -251,9 +248,6 @@ class WebGPUProcessor {
       const inputTexture = this.createTextureFromBitmap(imageBitmap);
       const width = imageBitmap.width;
       const height = imageBitmap.height;
-
-      await this.device.queue.onSubmittedWorkDone();
-      imageBitmap.close();
 
       let outputTexture;
 
@@ -879,7 +873,6 @@ class WebGPUProcessor {
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
-    // Don't specify type - let createImageBitmap auto-detect from file header
     return new Blob([ab]);
   }
 
