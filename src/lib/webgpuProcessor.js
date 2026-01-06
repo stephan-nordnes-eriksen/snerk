@@ -175,7 +175,10 @@ class WebGPUProcessor {
         }
 
         const imageBlob = this.base64ToBlob(base64Data);
-        const imageBitmap = await createImageBitmap(imageBlob);
+        const imageBitmap = await createImageBitmap(imageBlob, {
+          premultiplyAlpha: 'none',
+          colorSpaceConversion: 'none'
+        });
 
         if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
           throw new Error(`Failed to create valid ImageBitmap: ${imageBitmap?.width}x${imageBitmap?.height}`);
@@ -185,9 +188,6 @@ class WebGPUProcessor {
         this.currentImageKey = imageKey;
         this.currentImageWidth = imageBitmap.width;
         this.currentImageHeight = imageBitmap.height;
-
-        await this.device.queue.onSubmittedWorkDone();
-        imageBitmap.close();
       }
 
       width = this.currentImageWidth;
@@ -232,7 +232,10 @@ class WebGPUProcessor {
   async exportImage(base64Data, presetConfig, strength = 1.0) {
     try {
       const imageBlob = this.base64ToBlob(base64Data);
-      const imageBitmap = await createImageBitmap(imageBlob);
+      const imageBitmap = await createImageBitmap(imageBlob, {
+        premultiplyAlpha: 'none',
+        colorSpaceConversion: 'none'
+      });
 
       if (!imageBitmap || imageBitmap.width === 0 || imageBitmap.height === 0) {
         throw new Error(`Failed to create valid ImageBitmap for export: ${imageBitmap?.width}x${imageBitmap?.height}`);
@@ -242,8 +245,7 @@ class WebGPUProcessor {
       const width = imageBitmap.width;
       const height = imageBitmap.height;
 
-      await this.device.queue.onSubmittedWorkDone();
-      imageBitmap.close();
+      // Let GC handle bitmap cleanup
 
       let outputTexture;
 
@@ -864,7 +866,8 @@ class WebGPUProcessor {
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
-    return new Blob([ab], { type: 'image/jpeg' });
+    // Don't specify type - let createImageBitmap auto-detect from file header
+    return new Blob([ab]);
   }
 
   cleanup() {
